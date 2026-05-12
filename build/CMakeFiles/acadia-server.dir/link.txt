@@ -1,0 +1,1 @@
+/usr/bin/c++ -O2 -g -DNDEBUG "CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o" -o acadia-server  libacadia-internal.a 

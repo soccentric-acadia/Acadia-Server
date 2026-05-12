@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/home/sandesh/work/Acadia/Acadia-Server/build",
+  "command": "/usr/bin/c++  -I/home/sandesh/work/Acadia/Acadia-Server -I/home/sandesh/work/Acadia/Acadia-Server/build/generated -isystem /home/sandesh/work/Acadia/Acadia-Server/build/_deps/tomlplusplus-src/include -O2 -g -DNDEBUG -std=gnu++20 -Wall -Wextra -Wno-unused-parameter -o CMakeFiles/acadia-internal.dir/internal/config/config.cpp.o -c /home/sandesh/work/Acadia/Acadia-Server/internal/config/config.cpp",
+  "file": "/home/sandesh/work/Acadia/Acadia-Server/internal/config/config.cpp",
+  "output": "CMakeFiles/acadia-internal.dir/internal/config/config.cpp.o"
+},
+{
+  "directory": "/home/sandesh/work/Acadia/Acadia-Server/build",
+  "command": "/usr/bin/c++  -I/home/sandesh/work/Acadia/Acadia-Server -I/home/sandesh/work/Acadia/Acadia-Server/build/generated -isystem /home/sandesh/work/Acadia/Acadia-Server/build/_deps/tomlplusplus-src/include -O2 -g -DNDEBUG -std=gnu++20 -Wall -Wextra -Wno-unused-parameter -o CMakeFiles/acadia-internal.dir/internal/logging/logger.cpp.o -c /home/sandesh/work/Acadia/Acadia-Server/internal/logging/logger.cpp",
+  "file": "/home/sandesh/work/Acadia/Acadia-Server/internal/logging/logger.cpp",
+  "output": "CMakeFiles/acadia-internal.dir/internal/logging/logger.cpp.o"
+},
+{
+  "directory": "/home/sandesh/work/Acadia/Acadia-Server/build",
+  "command": "/usr/bin/c++  -I/home/sandesh/work/Acadia/Acadia-Server -I/home/sandesh/work/Acadia/Acadia-Server/build/generated -isystem /home/sandesh/work/Acadia/Acadia-Server/build/_deps/tomlplusplus-src/include -O2 -g -DNDEBUG -std=gnu++20 -Wall -Wextra -Wno-unused-parameter -o CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o -c /home/sandesh/work/Acadia/Acadia-Server/cmd/acadia-server/main.cpp",
+  "file": "/home/sandesh/work/Acadia/Acadia-Server/cmd/acadia-server/main.cpp",
+  "output": "CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o"
+},
+{
+  "directory": "/home/sandesh/work/Acadia/Acadia-Server/build",
+  "command": "/usr/bin/c++  -I/home/sandesh/work/Acadia/Acadia-Server -I/home/sandesh/work/Acadia/Acadia-Server/build/generated -isystem /home/sandesh/work/Acadia/Acadia-Server/build/_deps/tomlplusplus-src/include -O2 -g -DNDEBUG -std=gnu++20 -Wall -Wextra -o CMakeFiles/config-test.dir/test/config_test.cpp.o -c /home/sandesh/work/Acadia/Acadia-Server/test/config_test.cpp",
+  "file": "/home/sandesh/work/Acadia/Acadia-Server/test/config_test.cpp",
+  "output": "CMakeFiles/config-test.dir/test/config_test.cpp.o"
+}
+]
