@@ -23,8 +23,8 @@ Notification NotificationRepository::create(const std::string& kind,
     auto rows = db->execSqlSync(
         "INSERT INTO notifications (kind, payload)"
         " VALUES ($1, $2::JSONB)"
-        " RETURNING id, kind, payload::TEXT, read_at::TEXT, created_at::TEXT",
-        kind, payload_json.empty() ? "{}" : payload_json);
+        " RETURNING id,  kind,  payload::TEXT,  read_at::TEXT,  created_at::TEXT", 
+        kind.c_str(),  payload_json.empty() ? "{}" : payload_json.c_str());
     return row_to_notif(rows[0]);
 }
 
@@ -35,7 +35,7 @@ std::vector<Notification> NotificationRepository::list(const NotificationFilter&
         " FROM notifications";
     if (f.unread_only) sql += " WHERE read_at IS NULL";
     sql += " ORDER BY created_at DESC LIMIT $1 OFFSET $2";
-    auto rows = db->execSqlSync(sql, f.limit, f.offset);
+    auto rows = db->execSqlSync(sql,  f.limit,  f.offset);
     std::vector<Notification> out;
     for (const auto& r : rows) out.push_back(row_to_notif(r));
     return out;
@@ -44,7 +44,7 @@ std::vector<Notification> NotificationRepository::list(const NotificationFilter&
 void NotificationRepository::mark_read(const std::string& id) {
     auto db = db::get_db_client();
     db->execSqlSync(
-        "UPDATE notifications SET read_at=NOW() WHERE id=$1::UUID", id);
+        "UPDATE notifications SET read_at=NOW() WHERE id=$1::UUID",  id.c_str());
 }
 
 void NotificationRepository::mark_all_read() {

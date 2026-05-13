@@ -90,7 +90,7 @@ int main() {
     }
 
     // --- Services ---
-    acadia::AuthService          auth_svc;
+    acadia::AuthService          auth_svc{settings.auth};
     acadia::RunService           run_svc;
     acadia::LogService           log_svc;
     acadia::ModuleService        mod_svc{registry};

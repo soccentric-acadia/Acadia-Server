@@ -40,10 +40,10 @@ void TemplateService::remove(const std::string& id, const std::string& actor_use
 std::string TemplateService::instantiate_to_json(const std::string& template_id) {
     auto tpl = get(template_id);
     // Build a JSON object that looks like a TestConfig draft from the template.
-    return R"({"name":")" + tpl.name + R"( (copy)","description":")" +
-           tpl.description + R"(","mode":")" + tpl.mode +
-           R"(","common_config":)" + tpl.common_config_json +
-           R"(,"modules":)" + tpl.modules_json + "}";
+    return std::string("{\"name\":\"") + tpl.name + " (copy)\",\"description\":\"" +
+           tpl.description + "\",\"mode\":\"" + tpl.mode +
+           "\",\"common_config\":" + tpl.common_config_json +
+           ",\"modules\":" + tpl.modules_json + "}";
 }
 
 }  // namespace acadia

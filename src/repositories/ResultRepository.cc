@@ -36,20 +36,20 @@ Result ResultRepository::insert(const Result& r) {
         "INSERT INTO results (run_id, module_id, module_version, mode, status,"
         "  error_message, payload_bytes, payload_type_url)"
         " VALUES ($1::UUID, $2, $3, $4, $5, NULLIF($6,''), $7::BYTEA, $8)"
-        " RETURNING id, run_id, module_id, module_version, timestamp::TEXT,"
-        "  mode, status, error_message, payload_bytes, payload_type_url",
-        r.run_id, r.module_id, r.module_version, r.mode, r.status,
-        r.error_message, payload_hex, r.payload_type_url);
+        " RETURNING id,  run_id,  module_id,  module_version,  timestamp::TEXT, "
+        "  mode,  status,  error_message,  payload_bytes,  payload_type_url", 
+        r.run_id.c_str(),  r.module_id.c_str(),  r.module_version.c_str(),  r.mode.c_str(),  r.status.c_str(), 
+        r.error_message.c_str(),  payload_hex.c_str(),  r.payload_type_url.c_str());
     return row_to_result(rows[0]);
 }
 
 std::optional<Result> ResultRepository::find_by_id(const std::string& id) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id, run_id, module_id, module_version, timestamp::TEXT,"
-        "  mode, status, error_message, payload_bytes, payload_type_url"
-        " FROM results WHERE id = $1::UUID",
-        id);
+        "SELECT id,  run_id,  module_id,  module_version,  timestamp::TEXT, "
+        "  mode,  status,  error_message,  payload_bytes,  payload_type_url"
+        " FROM results WHERE id = $1::UUID", 
+        id.c_str());
     if (rows.empty()) return std::nullopt;
     return row_to_result(rows[0]);
 }
@@ -73,10 +73,10 @@ std::vector<Result> ResultRepository::list(const ResultFilter& f) {
     sql << " ORDER BY timestamp ASC LIMIT " << f.limit << " OFFSET " << f.offset;
     auto rows = [&]() -> drogon::orm::Result {
         switch (params.size()) {
-        case 3: return db->execSqlSync(sql.str(), params[0], params[1], params[2]);
-        case 4: return db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3]);
-        case 5: return db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3], params[4]);
-        default: return db->execSqlSync(sql.str(), params[0], params[1], params[2]);
+        case 3: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str());
+        case 4: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str(),  params[3].c_str());
+        case 5: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str(),  params[3].c_str(),  params[4].c_str());
+        default: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str());
             }
     }();
 
@@ -88,7 +88,7 @@ std::vector<Result> ResultRepository::list(const ResultFilter& f) {
 int64_t ResultRepository::count_for_run(const std::string& run_id) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT COUNT(*) FROM results WHERE run_id=$1::UUID", run_id);
+        "SELECT COUNT(*) FROM results WHERE run_id=$1::UUID",  run_id.c_str());
     return rows[0][0].as<int64_t>();
 }
 

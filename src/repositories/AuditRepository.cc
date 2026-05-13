@@ -13,10 +13,10 @@ void AuditRepository::log(const std::string& user_id,
     auto db = db::get_db_client();
     db->execSqlSync(
         "INSERT INTO audit_log (user_id, action, target_type, target_id, metadata)"
-        " VALUES ($1::UUID, $2, $3, $4, $5::JSONB)",
-        user_id.empty() ? nullptr : user_id.c_str(),
-        action, target_type, target_id,
-        metadata_json.empty() ? "{}" : metadata_json);
+        " VALUES ($1::UUID, $2, $3, $4, $5::JSONB)", 
+        user_id.empty() ? nullptr : user_id.c_str(), 
+        action.c_str(),  target_type.c_str(),  target_id.c_str(), 
+        metadata_json.empty() ? "{}" : metadata_json.c_str());
 }
 
 std::vector<AuditEntry> AuditRepository::list(const AuditFilter& f) {
@@ -38,11 +38,12 @@ std::vector<AuditEntry> AuditRepository::list(const AuditFilter& f) {
     sql << " ORDER BY created_at DESC LIMIT " << f.limit << " OFFSET " << f.offset;
     auto rows = [&]() -> drogon::orm::Result {
         switch (params.size()) {
-            case 2: return db->execSqlSync(sql.str(), params[0], params[1]);
-            case 3: return db->execSqlSync(sql.str(), params[0], params[1], params[2]);
-            case 4: return db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3]);
-            case 5: return db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3], params[4]);
-            default: return db->execSqlSync(sql.str(), params[0], params[1]);
+            case 0: return db->execSqlSync(sql.str());
+            case 1: return db->execSqlSync(sql.str(),  params[0].c_str());
+            case 2: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str());
+            case 3: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str());
+            case 4: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str(),  params[3].c_str());
+            default: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str(),  params[3].c_str(),  params[4].c_str());
         }
     }();
 

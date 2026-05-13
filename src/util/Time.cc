@@ -18,11 +18,14 @@ int64_t utc_now_us() {
 
 std::string to_iso8601(TimePoint tp) {
     auto t = Clock::to_time_t(tp);
+    auto us = std::chrono::duration_cast<std::chrono::microseconds>(tp.time_since_epoch()).count() % 1000000;
     std::tm tm{};
     gmtime_r(&t, &tm);
     char buf[32];
-    std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", &tm);
-    return buf;
+    std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm);
+    char out[48];
+    std::snprintf(out, sizeof(out), "%s.%06lldZ", buf, static_cast<long long>(us));
+    return out;
 }
 
 TimePoint parse_iso8601(const std::string& s) {

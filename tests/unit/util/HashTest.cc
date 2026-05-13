@@ -32,7 +32,7 @@ TEST(HashTest, RandomTokenLength) {
 
 TEST(HashTest, Argon2RoundTrip) {
     std::string pw = "supersecret";
-    auto hash = argon2id_hash(pw, 65536, 1, 1);
-    EXPECT_TRUE(argon2id_verify(hash, pw));
-    EXPECT_FALSE(argon2id_verify(hash, "wrongpassword"));
+    auto hash = argon2id_hash(pw, Argon2Params{65536, 1, 1});
+    EXPECT_TRUE(argon2id_verify(pw, hash));
+    EXPECT_FALSE(argon2id_verify("wrongpassword", hash));
 }

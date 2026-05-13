@@ -24,10 +24,10 @@ LogEntry LogRepository::insert(const LogEntry& e) {
     auto rows = db->execSqlSync(
         "INSERT INTO log_entries (source, severity, message, metadata, run_id)"
         " VALUES ($1, $2, $3, $4::JSONB, $5::UUID)"
-        " RETURNING id, source, severity, timestamp::TEXT, message, metadata::TEXT,"
-        "  run_id::TEXT",
-        e.source, e.severity, e.message,
-        e.metadata_json.empty() ? "{}" : e.metadata_json,
+        " RETURNING id,  source,  severity,  timestamp::TEXT,  message,  metadata::TEXT, "
+        "  run_id::TEXT", 
+        e.source.c_str(),  e.severity.c_str(),  e.message.c_str(), 
+        e.metadata_json.empty() ? "{}" : e.metadata_json.c_str(), 
         e.run_id.empty() ? nullptr : e.run_id.c_str());
     return row_to_log(rows[0]);
 }
@@ -53,11 +53,11 @@ std::vector<LogEntry> LogRepository::list(const LogFilter& f) {
     sql << " ORDER BY timestamp DESC LIMIT " << f.limit << " OFFSET " << f.offset;
     auto rows = [&]() -> drogon::orm::Result {
         switch (params.size()) {
-        case 2: return db->execSqlSync(sql.str(), params[0], params[1]);
-        case 3: return db->execSqlSync(sql.str(), params[0], params[1], params[2]);
-        case 4: return db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3]);
-        case 5: return db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3], params[4]);
-        default: return db->execSqlSync(sql.str(), params[0], params[1]);
+        case 2: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str());
+        case 3: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str());
+        case 4: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str(),  params[3].c_str());
+        case 5: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str(),  params[3].c_str(),  params[4].c_str());
+        default: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str());
             }
     }();
 
@@ -80,8 +80,8 @@ LogBookmark LogRepository::create_bookmark(const std::string& user_id,
     auto rows = db->execSqlSync(
         "INSERT INTO log_bookmarks (user_id, log_id, note)"
         " VALUES ($1::UUID, $2::UUID, $3)"
-        " RETURNING id, user_id::TEXT, log_id::TEXT, note, created_at::TEXT",
-        user_id, log_id, note);
+        " RETURNING id,  user_id::TEXT,  log_id::TEXT,  note,  created_at::TEXT", 
+        user_id.c_str(),  log_id.c_str(),  note.c_str());
     const auto& r = rows[0];
     return LogBookmark{
         r["id"].as<std::string>(),
@@ -95,9 +95,9 @@ LogBookmark LogRepository::create_bookmark(const std::string& user_id,
 std::vector<LogBookmark> LogRepository::list_bookmarks(const std::string& user_id) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id, user_id::TEXT, log_id::TEXT, note, created_at::TEXT"
-        " FROM log_bookmarks WHERE user_id=$1::UUID ORDER BY created_at DESC",
-        user_id);
+        "SELECT id,  user_id::TEXT,  log_id::TEXT,  note,  created_at::TEXT"
+        " FROM log_bookmarks WHERE user_id=$1::UUID ORDER BY created_at DESC", 
+        user_id.c_str());
     std::vector<LogBookmark> out;
     for (const auto& r : rows) {
         out.push_back({
@@ -113,7 +113,7 @@ std::vector<LogBookmark> LogRepository::list_bookmarks(const std::string& user_i
 
 void LogRepository::remove_bookmark(const std::string& id) {
     auto db = db::get_db_client();
-    db->execSqlSync("DELETE FROM log_bookmarks WHERE id=$1::UUID", id);
+    db->execSqlSync("DELETE FROM log_bookmarks WHERE id=$1::UUID",  id.c_str());
 }
 
 SavedLogView LogRepository::create_view(const std::string& user_id,
@@ -123,8 +123,8 @@ SavedLogView LogRepository::create_view(const std::string& user_id,
     auto rows = db->execSqlSync(
         "INSERT INTO saved_log_views (user_id, name, filters)"
         " VALUES ($1::UUID, $2, $3::JSONB)"
-        " RETURNING id, user_id::TEXT, name, filters::TEXT, created_at::TEXT",
-        user_id, name, filters_json.empty() ? "{}" : filters_json);
+        " RETURNING id,  user_id::TEXT,  name,  filters::TEXT,  created_at::TEXT", 
+        user_id.c_str(),  name.c_str(),  filters_json.empty() ? "{}" : filters_json.c_str());
     const auto& r = rows[0];
     return SavedLogView{
         r["id"].as<std::string>(),
@@ -138,9 +138,9 @@ SavedLogView LogRepository::create_view(const std::string& user_id,
 std::vector<SavedLogView> LogRepository::list_views(const std::string& user_id) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id, user_id::TEXT, name, filters::TEXT, created_at::TEXT"
-        " FROM saved_log_views WHERE user_id=$1::UUID ORDER BY created_at DESC",
-        user_id);
+        "SELECT id,  user_id::TEXT,  name,  filters::TEXT,  created_at::TEXT"
+        " FROM saved_log_views WHERE user_id=$1::UUID ORDER BY created_at DESC", 
+        user_id.c_str());
     std::vector<SavedLogView> out;
     for (const auto& r : rows) {
         out.push_back({

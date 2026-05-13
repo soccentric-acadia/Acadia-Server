@@ -12,9 +12,9 @@ ApiToken ApiTokenRepository::create(const std::string& user_id,
     auto rows = db->execSqlSync(
         "INSERT INTO api_tokens (user_id, name, token_hash)"
         " VALUES ($1::UUID, $2, $3)"
-        " RETURNING id, user_id, name, token_hash,"
-        "   last_used_at::TEXT, created_at::TEXT, revoked_at::TEXT",
-        user_id, name, token_hash);
+        " RETURNING id,  user_id,  name,  token_hash, "
+        "   last_used_at::TEXT,  created_at::TEXT,  revoked_at::TEXT", 
+        user_id.c_str(),  name.c_str(),  token_hash.c_str());
     const auto& r = rows[0];
     return ApiToken{
         r["id"].as<std::string>(),
@@ -30,10 +30,10 @@ ApiToken ApiTokenRepository::create(const std::string& user_id,
 std::optional<ApiToken> ApiTokenRepository::find_by_hash(const std::string& token_hash) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id, user_id, name, token_hash,"
-        "  last_used_at::TEXT, created_at::TEXT, revoked_at::TEXT"
-        " FROM api_tokens WHERE token_hash = $1 AND revoked_at IS NULL",
-        token_hash);
+        "SELECT id,  user_id,  name,  token_hash, "
+        "  last_used_at::TEXT,  created_at::TEXT,  revoked_at::TEXT"
+        " FROM api_tokens WHERE token_hash = $1 AND revoked_at IS NULL", 
+        token_hash.c_str());
     if (rows.empty()) return std::nullopt;
     const auto& r = rows[0];
     return ApiToken{
@@ -50,11 +50,11 @@ std::optional<ApiToken> ApiTokenRepository::find_by_hash(const std::string& toke
 std::vector<ApiToken> ApiTokenRepository::list_for_user(const std::string& user_id) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id, user_id, name, token_hash,"
-        "  last_used_at::TEXT, created_at::TEXT, revoked_at::TEXT"
+        "SELECT id,  user_id,  name,  token_hash, "
+        "  last_used_at::TEXT,  created_at::TEXT,  revoked_at::TEXT"
         " FROM api_tokens WHERE user_id = $1::UUID AND revoked_at IS NULL"
-        " ORDER BY created_at DESC",
-        user_id);
+        " ORDER BY created_at DESC", 
+        user_id.c_str());
     std::vector<ApiToken> out;
     for (const auto& r : rows) {
         out.push_back({
@@ -73,15 +73,15 @@ std::vector<ApiToken> ApiTokenRepository::list_for_user(const std::string& user_
 void ApiTokenRepository::revoke(const std::string& id) {
     auto db = db::get_db_client();
     db->execSqlSync(
-        "UPDATE api_tokens SET revoked_at = NOW() WHERE id = $1::UUID",
-        id);
+        "UPDATE api_tokens SET revoked_at = NOW() WHERE id = $1::UUID", 
+        id.c_str());
 }
 
 void ApiTokenRepository::touch(const std::string& id) {
     auto db = db::get_db_client();
     db->execSqlSync(
-        "UPDATE api_tokens SET last_used_at = NOW() WHERE id = $1::UUID",
-        id);
+        "UPDATE api_tokens SET last_used_at = NOW() WHERE id = $1::UUID", 
+        id.c_str());
 }
 
 }  // namespace acadia

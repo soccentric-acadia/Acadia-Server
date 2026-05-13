@@ -1,2 +1,20 @@
-config-test 1 0.0033588
+config-test 3 0.00052772
+BoundedQueueTest.BasicEnqueueDequeue 2 0.00292473
+BoundedQueueTest.CloseUnblocksDequeue 2 0.00308689
+BoundedQueueTest.EnqueueAfterCloseFails 2 0.00192419
+BoundedQueueTest.BackpressureBlocks 2 0.0227583
+ModuleRegistryTest.LoadFromYaml 2 0.00256732
+ModuleRegistryTest.MissingIdWarnsAndSkips 2 0.00326985
+HashTest.Sha256KnownValue 4 0.00152141
+HashTest.Sha256NonEmpty 4 0.00181579
+HashTest.SecureCompareEqual 4 0.000997661
+HashTest.SecureCompareNotEqual 4 0.00160097
+HashTest.RandomTokenLength 4 0.00128851
+HashTest.Argon2RoundTrip 2 0.0760822
+TimeTest.UtcNowIso8601Format 2 0.00360468
+TimeTest.UtcNowUsIsPositive 4 0.00163568
+UuidTest.GenerateIsValid 2 0.00331504
+UuidTest.UniquenessOfGenerated 2 0.00327524
+UuidTest.InvalidUuid 2 0.0036868
+MigrationRunnerTest.RunsMigrationsOnce 0 0
 ---
