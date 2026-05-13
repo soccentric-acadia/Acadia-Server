@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/sandesh/work/Acadia/Acadia-Server -I/home/sandesh/work/Acadia/Acadia-Server/build/generated -isystem /home/sandesh/work/Acadia/Acadia-Server/build/_deps/tomlplusplus-src/include
 
-CXX_FLAGS = -O2 -g -DNDEBUG -std=gnu++20 -Wall -Wextra
+CXX_FLAGS = -g -std=gnu++20 -Wall -Wextra
 

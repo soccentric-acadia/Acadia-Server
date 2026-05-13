@@ -26,10 +26,13 @@ void Scheduler::loop() {
         try {
             auto due = schedule_svc_.get_due_schedules();
             for (const auto& s : due) {
-                spdlog::info("Scheduler: firing schedule id={} config_id={}",
-                             s.id, s.test_config_id);
-                // Start a new run for the config referenced by this schedule.
-                auto run = run_svc_.start_run(s.test_config_id, s.mode, s.mode, "scheduler");
+                spdlog::info("Scheduler: firing schedule id={} template_id={}",
+                             s.id, s.template_id);
+                // Start a new run using the template_id as config snapshot.
+                // A full implementation would look up the template and expand
+                // the config JSON; for now we pass the template_id as a ref.
+                auto run = run_svc_.start_run(s.template_id, "single_shot",
+                                               "scheduled:" + s.id, "scheduler");
                 (void)run;
                 // Advance next_run_at by 1 minute (placeholder cron computation).
                 std::string next = util::utc_now_iso8601();

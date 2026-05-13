@@ -16,14 +16,23 @@ if(ENABLE_COVERAGE)
   add_link_options(--coverage)
 endif()
 
-# ── Dependencies via vcpkg / find_package ─────────────────────────────────────
+# ── Dependencies via find_package (system packages) ──────────────────────────
 find_package(gRPC       CONFIG REQUIRED)
-find_package(protobuf   CONFIG REQUIRED)
+find_package(Protobuf   REQUIRED)   # uses FindProtobuf.cmake → protobuf::libprotobuf
 find_package(Drogon     CONFIG REQUIRED)
 find_package(spdlog     CONFIG REQUIRED)
-find_package(yaml-cpp   CONFIG REQUIRED)
-find_package(GTest      CONFIG REQUIRED)
+find_package(yaml-cpp   REQUIRED)
+find_package(GTest      REQUIRED)
 find_package(OpenSSL    REQUIRED)
+
+# yaml-cpp target name differs between package versions
+if(TARGET yaml-cpp::yaml-cpp)
+  set(YAML_CPP_TARGET yaml-cpp::yaml-cpp)
+elseif(TARGET yaml-cpp)
+  set(YAML_CPP_TARGET yaml-cpp)
+else()
+  message(FATAL_ERROR "yaml-cpp imported target not found")
+endif()
 
 # prometheus-cpp (optional — expose metrics endpoint)
 find_package(prometheus-cpp CONFIG QUIET)
@@ -36,44 +45,59 @@ find_path(ARGON2_INCLUDE argon2.h REQUIRED)
 find_program(PROTOC_EXE      NAMES protoc           REQUIRED)
 find_program(GRPC_CPP_PLUGIN NAMES grpc_cpp_plugin  REQUIRED)
 
-set(PROTO_SRC_DIR "${CMAKE_SOURCE_DIR}/../protos")
+# Normalize to absolute path (protoc does not handle .. in paths)
+get_filename_component(PROTO_SRC_DIR
+  "${CMAKE_SOURCE_DIR}/../Acadia-HAL/protos"
+  ABSOLUTE
+)
 set(PROTO_GEN_DIR "${CMAKE_BINARY_DIR}/generated/proto")
 file(MAKE_DIRECTORY "${PROTO_GEN_DIR}")
 
-# Collect all .proto files recursively
-file(GLOB_RECURSE PROTO_FILES
-  "${PROTO_SRC_DIR}/*.proto"
-)
-
+# Only compile the two protos needed in the server.
+# Module-specific protos are sent as google.protobuf.Any and don't need
+# to be compiled into this binary.
 set(PROTO_SRCS "")
 set(PROTO_HDRS "")
 
-foreach(PROTO_FILE ${PROTO_FILES})
-  get_filename_component(PROTO_NAME "${PROTO_FILE}" NAME_WE)
-  get_filename_component(PROTO_DIR  "${PROTO_FILE}" DIRECTORY)
+# --- common.proto (no gRPC stubs) ---
+set(COMMON_PROTO "${PROTO_SRC_DIR}/common.proto")
+set(COMMON_CC    "${PROTO_GEN_DIR}/common.pb.cc")
+set(COMMON_H     "${PROTO_GEN_DIR}/common.pb.h")
+add_custom_command(
+  OUTPUT  "${COMMON_CC}" "${COMMON_H}"
+  COMMAND "${PROTOC_EXE}"
+          --proto_path=${PROTO_SRC_DIR}
+          --proto_path=/usr/include
+          --cpp_out=${PROTO_GEN_DIR}
+          ${COMMON_PROTO}
+  DEPENDS "${COMMON_PROTO}"
+  COMMENT "Generating protobuf C++ from common.proto"
+  VERBATIM
+)
+list(APPEND PROTO_SRCS "${COMMON_CC}")
+list(APPEND PROTO_HDRS "${COMMON_H}")
 
-  set(PROTO_CC  "${PROTO_GEN_DIR}/${PROTO_NAME}.pb.cc")
-  set(PROTO_H   "${PROTO_GEN_DIR}/${PROTO_NAME}.pb.h")
-  set(GRPC_CC   "${PROTO_GEN_DIR}/${PROTO_NAME}.grpc.pb.cc")
-  set(GRPC_H    "${PROTO_GEN_DIR}/${PROTO_NAME}.grpc.pb.h")
-
-  add_custom_command(
-    OUTPUT  "${PROTO_CC}" "${PROTO_H}" "${GRPC_CC}" "${GRPC_H}"
-    COMMAND "${PROTOC_EXE}"
-            --proto_path="${PROTO_SRC_DIR}"
-            --proto_path="${PROTO_DIR}"
-            --cpp_out="${PROTO_GEN_DIR}"
-            --grpc_out="${PROTO_GEN_DIR}"
-            --plugin=protoc-gen-grpc="${GRPC_CPP_PLUGIN}"
-            "${PROTO_FILE}"
-    DEPENDS "${PROTO_FILE}"
-    COMMENT "Generating C++ from ${PROTO_FILE}"
-    VERBATIM
-  )
-
-  list(APPEND PROTO_SRCS "${PROTO_CC}" "${GRPC_CC}")
-  list(APPEND PROTO_HDRS "${PROTO_H}"  "${GRPC_H}")
-endforeach()
+# --- hal_service.proto (protobuf + gRPC stubs) ---
+set(HAL_PROTO   "${PROTO_SRC_DIR}/hal_service.proto")
+set(HAL_PB_CC   "${PROTO_GEN_DIR}/hal_service.pb.cc")
+set(HAL_PB_H    "${PROTO_GEN_DIR}/hal_service.pb.h")
+set(HAL_GRPC_CC "${PROTO_GEN_DIR}/hal_service.grpc.pb.cc")
+set(HAL_GRPC_H  "${PROTO_GEN_DIR}/hal_service.grpc.pb.h")
+add_custom_command(
+  OUTPUT  "${HAL_PB_CC}" "${HAL_PB_H}" "${HAL_GRPC_CC}" "${HAL_GRPC_H}"
+  COMMAND "${PROTOC_EXE}"
+          --proto_path=${PROTO_SRC_DIR}
+          --proto_path=/usr/include
+          --cpp_out=${PROTO_GEN_DIR}
+          --grpc_out=${PROTO_GEN_DIR}
+          --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+          ${HAL_PROTO}
+  DEPENDS "${HAL_PROTO}" "${COMMON_PROTO}"
+  COMMENT "Generating protobuf+gRPC C++ from hal_service.proto"
+  VERBATIM
+)
+list(APPEND PROTO_SRCS "${HAL_PB_CC}" "${HAL_GRPC_CC}")
+list(APPEND PROTO_HDRS "${HAL_PB_H}"  "${HAL_GRPC_H}")
 
 # Proto static library
 add_library(acadia-proto STATIC ${PROTO_SRCS} ${PROTO_HDRS})
@@ -82,7 +106,7 @@ target_link_libraries(acadia-proto PUBLIC
   gRPC::grpc++
   protobuf::libprotobuf
 )
-target_compile_options(acadia-proto PRIVATE -Wno-unused-parameter)
+target_compile_options(acadia-proto PRIVATE -Wno-unused-parameter -Wno-deprecated-declarations)
 
 # ── Version header ────────────────────────────────────────────────────────────
 set(GENERATED_DIR "${CMAKE_BINARY_DIR}/generated")
@@ -108,7 +132,6 @@ file(GLOB_RECURSE ACADIA_CORE_SRCS
   "${CMAKE_SOURCE_DIR}/src/grpc_server/*.cc"
   "${CMAKE_SOURCE_DIR}/src/rest_api/*.cc"
   "${CMAKE_SOURCE_DIR}/src/orchestration/*.cc"
-  "${CMAKE_SOURCE_DIR}/src/notifications/*.cc"
   "${CMAKE_SOURCE_DIR}/src/util/*.cc"
 )
 
@@ -121,11 +144,15 @@ target_include_directories(acadia-core PUBLIC
   "${ARGON2_INCLUDE}"
 )
 
+target_compile_definitions(acadia-core PUBLIC
+  ACADIA_MIGRATIONS_DIR="${MIGRATIONS_DIR}"
+)
+
 set(ACADIA_CORE_LIBS
   acadia-proto
   Drogon::Drogon
   spdlog::spdlog
-  yaml-cpp::yaml-cpp
+  ${YAML_CPP_TARGET}
   OpenSSL::SSL
   OpenSSL::Crypto
   "${ARGON2_LIB}"
@@ -167,7 +194,6 @@ if(UNIT_TEST_SRCS)
     acadia-core
     GTest::gtest
     GTest::gtest_main
-    GTest::gmock
   )
   target_compile_options(acadia-unit-tests PRIVATE -Wall -Wextra -Wno-unused-parameter)
   include(GoogleTest)
@@ -187,7 +213,6 @@ if(INTEG_TEST_SRCS)
     acadia-core
     GTest::gtest
     GTest::gtest_main
-    GTest::gmock
   )
   target_compile_options(acadia-integration-tests PRIVATE -Wall -Wextra -Wno-unused-parameter)
   include(GoogleTest)
@@ -197,6 +222,7 @@ if(INTEG_TEST_SRCS)
 endif()
 
 # ── Legacy internal lib + config-test (kept for compatibility) ─────────────────
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)  # reuse cached download
 include(FetchContent)
 FetchContent_Declare(
   tomlplusplus

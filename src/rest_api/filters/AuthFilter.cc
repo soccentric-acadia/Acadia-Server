@@ -16,11 +16,12 @@ void AuthFilter::doFilter(const drogon::HttpRequestPtr& req,
     if (!auth_header.empty() && auth_header.rfind("Bearer ", 0) == 0) {
         std::string token = auth_header.substr(7);
         try {
-            auto tok = auth_svc_.authenticate_token(token);
-            req->getAttributes()->insert("user_id", tok.user_id);
-            req->getAttributes()->insert("token_id", tok.id);
-            nextCb();
-            return;
+            auto user_id_opt = auth_svc_.authenticate_token(token);
+            if (user_id_opt) {
+                req->getAttributes()->insert("user_id", *user_id_opt);
+                nextCb();
+                return;
+            }
         } catch (const AuthError&) {}
     }
 
@@ -36,8 +37,9 @@ void AuthFilter::doFilter(const drogon::HttpRequestPtr& req,
     }
 
     // Not authenticated.
-    auto resp = drogon::HttpResponse::newHttpJsonResponse(
-        Json::Value{"{\"error\":\"Unauthorized\"}"});
+    Json::Value err_body;
+    err_body["error"] = "Unauthorized";
+    auto resp = drogon::HttpResponse::newHttpJsonResponse(err_body);
     resp->setStatusCode(drogon::k401Unauthorized);
     failCb(resp);
 }

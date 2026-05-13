@@ -5,12 +5,8 @@
 #include <spdlog/spdlog.h>
 
 #include <memory>
-#include <thread_local>
 #include <unordered_map>
 #include <string>
-
-// thread_local is a C++ keyword, not a header.
-// We use a thread_local map for MDC-style context.
 
 namespace acadia::logging {
 
@@ -34,7 +30,8 @@ public:
         char ts_buf[32];
         std::strftime(ts_buf, sizeof(ts_buf), "%Y-%m-%dT%H:%M:%SZ", &tm);
 
-        std::string level_str{spdlog::level::to_string_view(msg.level)};
+        auto level_sv = spdlog::level::to_string_view(msg.level);
+        std::string level_str(level_sv.data(), level_sv.size());
 
         std::string payload;
         payload.reserve(256);

@@ -69,30 +69,94 @@ include CMakeFiles/acadia-server.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/acadia-server.dir/flags.make
 
-CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o: CMakeFiles/acadia-server.dir/flags.make
-CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o: /home/sandesh/work/Acadia/Acadia-Server/cmd/acadia-server/main.cpp
-CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o: CMakeFiles/acadia-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o -MF CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o.d -o CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o -c /home/sandesh/work/Acadia/Acadia-Server/cmd/acadia-server/main.cpp
+CMakeFiles/acadia-server.dir/src/main.cpp.o: CMakeFiles/acadia-server.dir/flags.make
+CMakeFiles/acadia-server.dir/src/main.cpp.o: /home/sandesh/work/Acadia/Acadia-Server/src/main.cpp
+CMakeFiles/acadia-server.dir/src/main.cpp.o: CMakeFiles/acadia-server.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/acadia-server.dir/src/main.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/acadia-server.dir/src/main.cpp.o -MF CMakeFiles/acadia-server.dir/src/main.cpp.o.d -o CMakeFiles/acadia-server.dir/src/main.cpp.o -c /home/sandesh/work/Acadia/Acadia-Server/src/main.cpp
 
-CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sandesh/work/Acadia/Acadia-Server/cmd/acadia-server/main.cpp > CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.i
+CMakeFiles/acadia-server.dir/src/main.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/acadia-server.dir/src/main.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/sandesh/work/Acadia/Acadia-Server/src/main.cpp > CMakeFiles/acadia-server.dir/src/main.cpp.i
 
-CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sandesh/work/Acadia/Acadia-Server/cmd/acadia-server/main.cpp -o CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.s
+CMakeFiles/acadia-server.dir/src/main.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/acadia-server.dir/src/main.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/sandesh/work/Acadia/Acadia-Server/src/main.cpp -o CMakeFiles/acadia-server.dir/src/main.cpp.s
 
 # Object files for target acadia-server
 acadia__server_OBJECTS = \
-"CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o"
+"CMakeFiles/acadia-server.dir/src/main.cpp.o"
 
 # External object files for target acadia-server
 acadia__server_EXTERNAL_OBJECTS =
 
-acadia-server: CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o
+acadia-server: CMakeFiles/acadia-server.dir/src/main.cpp.o
 acadia-server: CMakeFiles/acadia-server.dir/build.make
-acadia-server: libacadia-internal.a
+acadia-server: libacadia-core.a
+acadia-server: libacadia-proto.a
+acadia-server: /usr/lib/x86_64-linux-gnu/libdrogon.so.1.8.7
+acadia-server: /usr/lib/x86_64-linux-gnu/libtrantor.so.1.5.12
+acadia-server: /usr/lib/x86_64-linux-gnu/libjsoncpp.so
+acadia-server: /usr/lib/x86_64-linux-gnu/libspdlog.so.1.12.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libfmt.so.9.1.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libargon2.so
+acadia-server: /usr/lib/x86_64-linux-gnu/libgrpc++_reflection.so.1.51.1
+acadia-server: /usr/lib/x86_64-linux-gnu/libgrpc++.so.1.51.1
+acadia-server: /usr/lib/x86_64-linux-gnu/libgrpc.so.29.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libssl.so
+acadia-server: /usr/lib/x86_64-linux-gnu/libcrypto.so
+acadia-server: /usr/lib/x86_64-linux-gnu/libz.so
+acadia-server: /usr/lib/x86_64-linux-gnu/libcares.so.2.12.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libaddress_sorting.so.29.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libupb.so.29.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_raw_hash_set.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_hashtablez_sampler.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_hash.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_city.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_low_level_hash.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_statusor.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libgpr.so.29.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_bad_variant_access.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_status.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_strerror.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_random_distributions.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_random_seed_sequences.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_random_internal_pool_urbg.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_random_internal_randen.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_random_internal_randen_hwaes.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_random_internal_randen_hwaes_impl.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_random_internal_randen_slow.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_random_internal_platform.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_random_internal_seed_material.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_random_seed_gen_exception.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_cord.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_bad_optional_access.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_cordz_info.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_cord_internal.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_cordz_functions.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_exponential_biased.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_cordz_handle.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_str_format_internal.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_synchronization.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_stacktrace.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_symbolize.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_debugging_internal.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_demangle_internal.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_graphcycles_internal.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_malloc_internal.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_time.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_strings.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_throw_delegate.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_int128.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_strings_internal.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_base.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_spinlock_wait.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_raw_logging_internal.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_log_severity.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_civil_time.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libabsl_time_zone.so.20220623.0.0
+acadia-server: /usr/lib/x86_64-linux-gnu/libprotobuf.so
 acadia-server: CMakeFiles/acadia-server.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable acadia-server"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/acadia-server.dir/link.txt --verbose=$(VERBOSE)

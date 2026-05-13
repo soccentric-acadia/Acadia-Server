@@ -29,15 +29,15 @@ void ModulesController::list(const drogon::HttpRequestPtr& /*req*/,
 void ModulesController::get(const drogon::HttpRequestPtr& /*req*/,
                              std::function<void(const drogon::HttpResponsePtr&)>&& cb,
                              std::string id) {
-    try {
-        auto m = svc_.get(id);
-        cb(drogon::HttpResponse::newHttpJsonResponse(mod_to_json(m)));
-    } catch (const NotFoundError& e) {
-        Json::Value err; err["error"] = e.what();
+    auto m = svc_.get(id);
+    if (!m) {
+        Json::Value err; err["error"] = "Not found";
         auto resp = drogon::HttpResponse::newHttpJsonResponse(err);
         resp->setStatusCode(drogon::k404NotFound);
         cb(resp);
+        return;
     }
+    cb(drogon::HttpResponse::newHttpJsonResponse(mod_to_json(*m)));
 }
 
 }  // namespace acadia::rest

@@ -16,7 +16,7 @@ void NotificationsController::list(const drogon::HttpRequestPtr& /*req*/,
         v["id"]      = n.id;
         v["kind"]    = n.kind;
         v["payload"] = n.payload_json;
-        v["read"]    = n.is_read;
+        v["read"]    = !n.read_at.empty();
         arr.append(v);
     }
     Json::Value resp; resp["notifications"] = arr;

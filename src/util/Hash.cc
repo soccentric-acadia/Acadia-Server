@@ -86,8 +86,8 @@ std::string argon2id_hash(std::string_view password, const Argon2Params& p) {
 }
 
 bool argon2id_verify(std::string_view password, const std::string& encoded_hash) {
-    int rc = argon2id_verify(encoded_hash.c_str(),
-                             password.data(), password.size());
+    int rc = ::argon2id_verify(encoded_hash.c_str(),
+                               password.data(), password.size());
     return rc == ARGON2_OK;
 }
 

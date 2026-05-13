@@ -27,7 +27,7 @@ set_property(GLOBAL PROPERTY _CMAKE_FindGit_GIT_EXECUTABLE_VERSION
 
 include(ExternalProject)
 ExternalProject_Add(tomlplusplus-populate
-                     "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/marzer/tomlplusplus.git" "EXTERNALPROJECT_INTERNAL_ARGUMENT_SEPARATOR" "GIT_TAG" "v3.4.0" "GIT_SHALLOW" "TRUE"
+                     "UPDATE_DISCONNECTED" "True" "GIT_REPOSITORY" "https://github.com/marzer/tomlplusplus.git" "EXTERNALPROJECT_INTERNAL_ARGUMENT_SEPARATOR" "GIT_TAG" "v3.4.0" "GIT_SHALLOW" "TRUE"
                     SOURCE_DIR          "/home/sandesh/work/Acadia/Acadia-Server/build/_deps/tomlplusplus-src"
                     BINARY_DIR          "/home/sandesh/work/Acadia/Acadia-Server/build/_deps/tomlplusplus-build"
                     CONFIGURE_COMMAND   ""

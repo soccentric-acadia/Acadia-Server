@@ -1,5 +1,6 @@
 #pragma once
 // util/Hash.h — cryptographic hash helpers used by auth and OTA verification.
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <vector>

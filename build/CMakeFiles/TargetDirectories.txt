@@ -1,5 +1,9 @@
-/home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles/acadia-internal.dir
+/home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles/acadia-proto.dir
+/home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles/acadia-core.dir
 /home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles/acadia-server.dir
+/home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles/acadia-unit-tests.dir
+/home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles/acadia-integration-tests.dir
+/home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles/acadia-internal.dir
 /home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles/config-test.dir
 /home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles/test.dir
 /home/sandesh/work/Acadia/Acadia-Server/build/CMakeFiles/edit_cache.dir

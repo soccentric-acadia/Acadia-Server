@@ -1,8 +1,12 @@
 #pragma once
 // services/LogService.h — log ingestion and query.
 #include "repositories/LogRepository.h"
+#include <atomic>
+#include <cstdint>
 #include <functional>
+#include <mutex>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace acadia {

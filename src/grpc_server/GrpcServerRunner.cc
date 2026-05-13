@@ -2,6 +2,7 @@
 
 #include <spdlog/spdlog.h>
 #include <grpcpp/server_builder.h>
+#include <stdexcept>
 
 namespace acadia::grpc {
 

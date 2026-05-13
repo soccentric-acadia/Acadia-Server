@@ -24,12 +24,18 @@ void AuthController::login(const drogon::HttpRequestPtr& req,
     auto username = (*body)["username"].asString();
     auto password = (*body)["password"].asString();
     try {
-        auto user = svc_.login(username, password);
+        auto result = svc_.login(username, password, "");
+        if (!result) {
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(err_json("invalid credentials"));
+            resp->setStatusCode(drogon::k401Unauthorized);
+            cb(resp);
+            return;
+        }
         auto session = req->getSession();
-        session->insert("user_id", user.id);
+        session->insert("user_id", result->user.id);
         Json::Value resp;
-        resp["user_id"]  = user.id;
-        resp["username"] = user.username;
+        resp["user_id"]  = result->user.id;
+        resp["username"] = result->user.username;
         cb(drogon::HttpResponse::newHttpJsonResponse(resp));
     } catch (const AuthError& e) {
         auto resp = drogon::HttpResponse::newHttpJsonResponse(err_json(e.what()));
@@ -51,11 +57,11 @@ void AuthController::create_token(const drogon::HttpRequestPtr& req,
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     auto body = req->getJsonObject();
     std::string label = body ? (*body)["label"].asString() : "default";
-    auto [token_str, token_rec] = svc_.create_api_token(user_id, label);
+    auto [token_rec, token_str] = svc_.create_api_token(user_id, label);
     Json::Value resp;
     resp["token"] = token_str;   // only shown once
     resp["id"]    = token_rec.id;
-    resp["label"] = token_rec.label;
+    resp["label"] = token_rec.name;
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
@@ -67,7 +73,7 @@ void AuthController::list_tokens(const drogon::HttpRequestPtr& req,
     for (const auto& t : tokens) {
         Json::Value v;
         v["id"]    = t.id;
-        v["label"] = t.label;
+        v["label"] = t.name;
         arr.append(v);
     }
     Json::Value resp;

@@ -24,7 +24,10 @@ void TargetHeartbeat::loop() {
     while (running_) {
         std::this_thread::sleep_for(interval_);
         try {
-            target_svc_.heartbeat();
+            auto board = target_svc_.get_board();
+            if (board) {
+                target_svc_.heartbeat(board->id, "online");
+            }
         } catch (const NotFoundError&) {
             // No board registered yet — silently ignore.
         } catch (const std::exception& e) {

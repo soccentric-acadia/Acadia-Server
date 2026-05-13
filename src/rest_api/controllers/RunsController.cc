@@ -10,7 +10,6 @@ static Json::Value run_to_json(const Run& r) {
     v["id"]         = r.id;
     v["status"]     = r.status;
     v["mode"]       = r.mode;
-    v["config_id"]  = r.test_config_id;
     v["created_at"] = r.created_at;
     v["started_at"] = r.started_at;
     v["ended_at"]   = r.ended_at;

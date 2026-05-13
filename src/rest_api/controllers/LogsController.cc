@@ -11,8 +11,8 @@ void LogsController::list(const drogon::HttpRequestPtr& req,
                            std::string run_id) {
     LogFilter f;
     f.run_id = run_id;
-    if (auto p = req->getParameter("q"); !p.empty()) f.fts_query = p;
-    if (auto p = req->getParameter("level"); !p.empty()) f.level = p;
+    if (auto p = req->getParameter("q"); !p.empty()) f.query = p;
+    if (auto p = req->getParameter("level"); !p.empty()) f.severity = p;
     if (auto p = req->getParameter("limit"); !p.empty()) f.limit = std::stoi(p);
     if (auto p = req->getParameter("offset"); !p.empty()) f.offset = std::stoi(p);
 
@@ -22,7 +22,7 @@ void LogsController::list(const drogon::HttpRequestPtr& req,
         Json::Value v;
         v["id"]        = e.id;
         v["run_id"]    = e.run_id;
-        v["level"]     = e.level;
+        v["level"]     = e.severity;
         v["message"]   = e.message;
         v["timestamp"] = e.timestamp;
         arr.append(v);

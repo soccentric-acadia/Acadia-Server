@@ -9,6 +9,6 @@
 /mnt/data/workspace/Acadia/Acadia-Server/build/_deps/tomlplusplus-subbuild/tomlplusplus-populate-prefix/src/tomlplusplus-populate-stamp/tomlplusplus-populate-download.rule
 /mnt/data/workspace/Acadia/Acadia-Server/build/_deps/tomlplusplus-subbuild/tomlplusplus-populate-prefix/src/tomlplusplus-populate-stamp/tomlplusplus-populate-install.rule
 /mnt/data/workspace/Acadia/Acadia-Server/build/_deps/tomlplusplus-subbuild/tomlplusplus-populate-prefix/src/tomlplusplus-populate-stamp/tomlplusplus-populate-mkdir.rule
-/mnt/data/workspace/Acadia/Acadia-Server/build/_deps/tomlplusplus-subbuild/tomlplusplus-populate-prefix/src/tomlplusplus-populate-stamp/tomlplusplus-populate-patch.rule
+/mnt/data/workspace/Acadia/Acadia-Server/build/_deps/tomlplusplus-subbuild/tomlplusplus-populate-prefix/src/tomlplusplus-populate-stamp/tomlplusplus-populate-patch_disconnected.rule
 /mnt/data/workspace/Acadia/Acadia-Server/build/_deps/tomlplusplus-subbuild/tomlplusplus-populate-prefix/src/tomlplusplus-populate-stamp/tomlplusplus-populate-test.rule
-/mnt/data/workspace/Acadia/Acadia-Server/build/_deps/tomlplusplus-subbuild/tomlplusplus-populate-prefix/src/tomlplusplus-populate-stamp/tomlplusplus-populate-update.rule
+/mnt/data/workspace/Acadia/Acadia-Server/build/_deps/tomlplusplus-subbuild/tomlplusplus-populate-prefix/src/tomlplusplus-populate-stamp/tomlplusplus-populate-update_disconnected.rule

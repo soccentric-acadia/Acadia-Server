@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o"
-  "CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o.d"
+  "CMakeFiles/acadia-server.dir/src/main.cpp.o"
+  "CMakeFiles/acadia-server.dir/src/main.cpp.o.d"
   "acadia-server"
   "acadia-server.pdb"
 )

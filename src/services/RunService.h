@@ -5,9 +5,13 @@
 #include "repositories/AuditRepository.h"
 #include "repositories/NotificationRepository.h"
 
+#include <atomic>
+#include <cstdint>
 #include <functional>
+#include <mutex>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace acadia {

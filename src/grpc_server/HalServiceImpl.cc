@@ -31,14 +31,14 @@ HalServiceImpl::HalServiceImpl(RunService&     run_svc,
 }
 
 void HalServiceImpl::persist_result(const std::string& run_id,
-                                     const ::ResultEnvelope& env) {
+                                     const hal::common::ResultEnvelope& env) {
     Result r;
     r.run_id           = run_id;
     r.module_id        = env.module_id();
     r.module_version   = env.module_version();
     r.timestamp        = util::utc_now_iso8601();
     r.mode             = std::to_string(static_cast<int>(env.mode()));
-    r.status           = env.status() == ::TestStatus::PASS ? "pass" : "fail";
+    r.status           = env.status() == hal::common::PASS ? "pass" : "fail";
     r.error_message    = env.error_message();
     r.payload_type_url = env.payload().type_url();
 
@@ -50,9 +50,9 @@ void HalServiceImpl::persist_result(const std::string& run_id,
 }
 
 ::grpc::Status HalServiceImpl::RunSingleShot(
-    ::grpc::ServerContext*     /*ctx*/,
-    const ::SingleShotRequest* req,
-    ::ResultEnvelope*          resp) {
+    ::grpc::ServerContext*          /*ctx*/,
+    const hal::SingleShotRequest*   req,
+    hal::common::ResultEnvelope*    resp) {
 
     auto status = validate_module(req->module_id());
     if (!status.ok()) return status;
@@ -67,7 +67,7 @@ void HalServiceImpl::persist_result(const std::string& run_id,
     // The client will call this RPC and return a ResultEnvelope directly.
     // We echo it back and persist it.
     resp->set_module_id(req->module_id());
-    resp->set_status(::TestStatus::PASS);
+    resp->set_status(hal::common::PASS);
 
     persist_result(run.id, *resp);
     run_svc_.complete_run(run.id, "completed");
@@ -76,9 +76,9 @@ void HalServiceImpl::persist_result(const std::string& run_id,
 }
 
 ::grpc::Status HalServiceImpl::StartLongTerm(
-    ::grpc::ServerContext*               ctx,
-    const ::LongTermRequest*             req,
-    ::grpc::ServerWriter<::ResultEnvelope>* writer) {
+    ::grpc::ServerContext*                              ctx,
+    const hal::LongTermRequest*                        req,
+    ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer) {
 
     auto status = validate_module(req->module_id());
     if (!status.ok()) return status;
@@ -88,24 +88,9 @@ void HalServiceImpl::persist_result(const std::string& run_id,
 
     spdlog::info("grpc: StartLongTerm run_id={} module_id={}", run.id, req->module_id());
 
-    // The actual result stream comes back from the CLIENT in this architecture
-    // via a bidirectional pattern, but per the proto design HalService uses
-    // server-streaming.  The server streams results that IT generates/forwards.
-    // Since the HAL client is the one running tests, this RPC is used to START
-    // the streaming run and then send back results as the client sends them.
-    //
-    // Decision (see README Decisions Log): The streaming RPCs use server-side
-    // streaming.  The client opens the RPC, the server starts the run, and
-    // sends back ResultEnvelopes as the HAL produces them.  In practice, the
-    // client SDK would call this RPC, then immediately begin forwarding HAL
-    // results to the server via a separate ingest path.
-    //
-    // For now, the server sends an acknowledgement envelope and waits for the
-    // context to be cancelled (when the client stops the run).
-
-    ::ResultEnvelope ack;
+    hal::common::ResultEnvelope ack;
     ack.set_module_id(req->module_id());
-    ack.set_status(::TestStatus::PASS);
+    ack.set_status(hal::common::PASS);
     writer->Write(ack);
 
     // Block until client cancels or server shutdown.
@@ -118,9 +103,9 @@ void HalServiceImpl::persist_result(const std::string& run_id,
 }
 
 ::grpc::Status HalServiceImpl::StartMonitoring(
-    ::grpc::ServerContext*               ctx,
-    const ::MonitoringRequest*           req,
-    ::grpc::ServerWriter<::ResultEnvelope>* writer) {
+    ::grpc::ServerContext*                              ctx,
+    const hal::MonitoringRequest*                      req,
+    ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer) {
 
     auto status = validate_module(req->module_id());
     if (!status.ok()) return status;
@@ -130,9 +115,9 @@ void HalServiceImpl::persist_result(const std::string& run_id,
 
     spdlog::info("grpc: StartMonitoring run_id={} module_id={}", run.id, req->module_id());
 
-    ::ResultEnvelope ack;
+    hal::common::ResultEnvelope ack;
     ack.set_module_id(req->module_id());
-    ack.set_status(::TestStatus::PASS);
+    ack.set_status(hal::common::PASS);
     writer->Write(ack);
 
     while (!ctx->IsCancelled()) {
@@ -144,9 +129,9 @@ void HalServiceImpl::persist_result(const std::string& run_id,
 }
 
 ::grpc::Status HalServiceImpl::StartEventBased(
-    ::grpc::ServerContext*               ctx,
-    const ::EventBasedRequest*           req,
-    ::grpc::ServerWriter<::ResultEnvelope>* writer) {
+    ::grpc::ServerContext*                              ctx,
+    const hal::EventBasedRequest*                      req,
+    ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer) {
 
     auto status = validate_module(req->module_id());
     if (!status.ok()) return status;
@@ -156,9 +141,9 @@ void HalServiceImpl::persist_result(const std::string& run_id,
 
     spdlog::info("grpc: StartEventBased run_id={} module_id={}", run.id, req->module_id());
 
-    ::ResultEnvelope ack;
+    hal::common::ResultEnvelope ack;
     ack.set_module_id(req->module_id());
-    ack.set_status(::TestStatus::PASS);
+    ack.set_status(hal::common::PASS);
     writer->Write(ack);
 
     while (!ctx->IsCancelled()) {
@@ -170,27 +155,28 @@ void HalServiceImpl::persist_result(const std::string& run_id,
 }
 
 ::grpc::Status HalServiceImpl::Stop(
-    ::grpc::ServerContext* /*ctx*/,
-    const ::StopRequest*   req,
-    ::StopResponse*        resp) {
+    ::grpc::ServerContext*   /*ctx*/,
+    const hal::StopRequest*  req,
+    hal::StopResponse*       resp) {
 
-    spdlog::info("grpc: Stop run_id={}", req->run_id());
-    run_svc_.cancel_run(req->run_id(), "");
-    resp->set_success(true);
+    spdlog::info("grpc: Stop session_id={}", req->session_id());
+    run_svc_.cancel_run(req->session_id(), "");
+    resp->set_accepted(true);
     return ::grpc::Status::OK;
 }
 
 ::grpc::Status HalServiceImpl::ListModules(
-    ::grpc::ServerContext*      /*ctx*/,
-    const ::ListModulesRequest* /*req*/,
-    ::ListModulesResponse*      resp) {
+    ::grpc::ServerContext*           /*ctx*/,
+    const hal::ListModulesRequest*   /*req*/,
+    hal::ListModulesResponse*        resp) {
 
     for (const auto& m : mod_svc_.list_all()) {
         auto* entry = resp->add_modules();
-        entry->set_module_id(m.id);
-        entry->set_name(m.name);
-        entry->set_description(m.description);
-        entry->set_version(m.version);
+        entry->set_id(m.id);
+        entry->set_config_type(m.config_type_url);
+        entry->set_result_type(m.result_type_url);
+        entry->set_version(0);
+        entry->set_status("active");
     }
     return ::grpc::Status::OK;
 }

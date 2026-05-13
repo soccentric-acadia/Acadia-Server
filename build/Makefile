@@ -172,17 +172,30 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named acadia-internal
+# Target rules for targets named acadia-proto
 
 # Build rule for target.
-acadia-internal: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 acadia-internal
-.PHONY : acadia-internal
+acadia-proto: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 acadia-proto
+.PHONY : acadia-proto
 
 # fast build rule for target.
-acadia-internal/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-internal.dir/build.make CMakeFiles/acadia-internal.dir/build
-.PHONY : acadia-internal/fast
+acadia-proto/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-proto.dir/build.make CMakeFiles/acadia-proto.dir/build
+.PHONY : acadia-proto/fast
+
+#=============================================================================
+# Target rules for targets named acadia-core
+
+# Build rule for target.
+acadia-core: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 acadia-core
+.PHONY : acadia-core
+
+# fast build rule for target.
+acadia-core/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/build
+.PHONY : acadia-core/fast
 
 #=============================================================================
 # Target rules for targets named acadia-server
@@ -198,6 +211,45 @@ acadia-server/fast:
 .PHONY : acadia-server/fast
 
 #=============================================================================
+# Target rules for targets named acadia-unit-tests
+
+# Build rule for target.
+acadia-unit-tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 acadia-unit-tests
+.PHONY : acadia-unit-tests
+
+# fast build rule for target.
+acadia-unit-tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/build
+.PHONY : acadia-unit-tests/fast
+
+#=============================================================================
+# Target rules for targets named acadia-integration-tests
+
+# Build rule for target.
+acadia-integration-tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 acadia-integration-tests
+.PHONY : acadia-integration-tests
+
+# fast build rule for target.
+acadia-integration-tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-integration-tests.dir/build.make CMakeFiles/acadia-integration-tests.dir/build
+.PHONY : acadia-integration-tests/fast
+
+#=============================================================================
+# Target rules for targets named acadia-internal
+
+# Build rule for target.
+acadia-internal: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 acadia-internal
+.PHONY : acadia-internal
+
+# fast build rule for target.
+acadia-internal/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-internal.dir/build.make CMakeFiles/acadia-internal.dir/build
+.PHONY : acadia-internal/fast
+
+#=============================================================================
 # Target rules for targets named config-test
 
 # Build rule for target.
@@ -210,29 +262,77 @@ config-test/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/config-test.dir/build.make CMakeFiles/config-test.dir/build
 .PHONY : config-test/fast
 
-cmd/acadia-server/main.o: cmd/acadia-server/main.cpp.o
-.PHONY : cmd/acadia-server/main.o
+generated/proto/common.pb.o: generated/proto/common.pb.cc.o
+.PHONY : generated/proto/common.pb.o
 
 # target to build an object file
-cmd/acadia-server/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-server.dir/build.make CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.o
-.PHONY : cmd/acadia-server/main.cpp.o
+generated/proto/common.pb.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-proto.dir/build.make CMakeFiles/acadia-proto.dir/generated/proto/common.pb.cc.o
+.PHONY : generated/proto/common.pb.cc.o
 
-cmd/acadia-server/main.i: cmd/acadia-server/main.cpp.i
-.PHONY : cmd/acadia-server/main.i
+generated/proto/common.pb.i: generated/proto/common.pb.cc.i
+.PHONY : generated/proto/common.pb.i
 
 # target to preprocess a source file
-cmd/acadia-server/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-server.dir/build.make CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.i
-.PHONY : cmd/acadia-server/main.cpp.i
+generated/proto/common.pb.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-proto.dir/build.make CMakeFiles/acadia-proto.dir/generated/proto/common.pb.cc.i
+.PHONY : generated/proto/common.pb.cc.i
 
-cmd/acadia-server/main.s: cmd/acadia-server/main.cpp.s
-.PHONY : cmd/acadia-server/main.s
+generated/proto/common.pb.s: generated/proto/common.pb.cc.s
+.PHONY : generated/proto/common.pb.s
 
 # target to generate assembly for a file
-cmd/acadia-server/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-server.dir/build.make CMakeFiles/acadia-server.dir/cmd/acadia-server/main.cpp.s
-.PHONY : cmd/acadia-server/main.cpp.s
+generated/proto/common.pb.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-proto.dir/build.make CMakeFiles/acadia-proto.dir/generated/proto/common.pb.cc.s
+.PHONY : generated/proto/common.pb.cc.s
+
+generated/proto/hal_service.grpc.pb.o: generated/proto/hal_service.grpc.pb.cc.o
+.PHONY : generated/proto/hal_service.grpc.pb.o
+
+# target to build an object file
+generated/proto/hal_service.grpc.pb.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-proto.dir/build.make CMakeFiles/acadia-proto.dir/generated/proto/hal_service.grpc.pb.cc.o
+.PHONY : generated/proto/hal_service.grpc.pb.cc.o
+
+generated/proto/hal_service.grpc.pb.i: generated/proto/hal_service.grpc.pb.cc.i
+.PHONY : generated/proto/hal_service.grpc.pb.i
+
+# target to preprocess a source file
+generated/proto/hal_service.grpc.pb.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-proto.dir/build.make CMakeFiles/acadia-proto.dir/generated/proto/hal_service.grpc.pb.cc.i
+.PHONY : generated/proto/hal_service.grpc.pb.cc.i
+
+generated/proto/hal_service.grpc.pb.s: generated/proto/hal_service.grpc.pb.cc.s
+.PHONY : generated/proto/hal_service.grpc.pb.s
+
+# target to generate assembly for a file
+generated/proto/hal_service.grpc.pb.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-proto.dir/build.make CMakeFiles/acadia-proto.dir/generated/proto/hal_service.grpc.pb.cc.s
+.PHONY : generated/proto/hal_service.grpc.pb.cc.s
+
+generated/proto/hal_service.pb.o: generated/proto/hal_service.pb.cc.o
+.PHONY : generated/proto/hal_service.pb.o
+
+# target to build an object file
+generated/proto/hal_service.pb.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-proto.dir/build.make CMakeFiles/acadia-proto.dir/generated/proto/hal_service.pb.cc.o
+.PHONY : generated/proto/hal_service.pb.cc.o
+
+generated/proto/hal_service.pb.i: generated/proto/hal_service.pb.cc.i
+.PHONY : generated/proto/hal_service.pb.i
+
+# target to preprocess a source file
+generated/proto/hal_service.pb.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-proto.dir/build.make CMakeFiles/acadia-proto.dir/generated/proto/hal_service.pb.cc.i
+.PHONY : generated/proto/hal_service.pb.cc.i
+
+generated/proto/hal_service.pb.s: generated/proto/hal_service.pb.cc.s
+.PHONY : generated/proto/hal_service.pb.s
+
+# target to generate assembly for a file
+generated/proto/hal_service.pb.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-proto.dir/build.make CMakeFiles/acadia-proto.dir/generated/proto/hal_service.pb.cc.s
+.PHONY : generated/proto/hal_service.pb.cc.s
 
 internal/config/config.o: internal/config/config.cpp.o
 .PHONY : internal/config/config.o
@@ -282,6 +382,1182 @@ internal/logging/logger.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-internal.dir/build.make CMakeFiles/acadia-internal.dir/internal/logging/logger.cpp.s
 .PHONY : internal/logging/logger.cpp.s
 
+src/config/Settings.o: src/config/Settings.cc.o
+.PHONY : src/config/Settings.o
+
+# target to build an object file
+src/config/Settings.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/config/Settings.cc.o
+.PHONY : src/config/Settings.cc.o
+
+src/config/Settings.i: src/config/Settings.cc.i
+.PHONY : src/config/Settings.i
+
+# target to preprocess a source file
+src/config/Settings.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/config/Settings.cc.i
+.PHONY : src/config/Settings.cc.i
+
+src/config/Settings.s: src/config/Settings.cc.s
+.PHONY : src/config/Settings.s
+
+# target to generate assembly for a file
+src/config/Settings.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/config/Settings.cc.s
+.PHONY : src/config/Settings.cc.s
+
+src/db/DbClient.o: src/db/DbClient.cc.o
+.PHONY : src/db/DbClient.o
+
+# target to build an object file
+src/db/DbClient.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/db/DbClient.cc.o
+.PHONY : src/db/DbClient.cc.o
+
+src/db/DbClient.i: src/db/DbClient.cc.i
+.PHONY : src/db/DbClient.i
+
+# target to preprocess a source file
+src/db/DbClient.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/db/DbClient.cc.i
+.PHONY : src/db/DbClient.cc.i
+
+src/db/DbClient.s: src/db/DbClient.cc.s
+.PHONY : src/db/DbClient.s
+
+# target to generate assembly for a file
+src/db/DbClient.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/db/DbClient.cc.s
+.PHONY : src/db/DbClient.cc.s
+
+src/db/MigrationRunner.o: src/db/MigrationRunner.cc.o
+.PHONY : src/db/MigrationRunner.o
+
+# target to build an object file
+src/db/MigrationRunner.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/db/MigrationRunner.cc.o
+.PHONY : src/db/MigrationRunner.cc.o
+
+src/db/MigrationRunner.i: src/db/MigrationRunner.cc.i
+.PHONY : src/db/MigrationRunner.i
+
+# target to preprocess a source file
+src/db/MigrationRunner.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/db/MigrationRunner.cc.i
+.PHONY : src/db/MigrationRunner.cc.i
+
+src/db/MigrationRunner.s: src/db/MigrationRunner.cc.s
+.PHONY : src/db/MigrationRunner.s
+
+# target to generate assembly for a file
+src/db/MigrationRunner.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/db/MigrationRunner.cc.s
+.PHONY : src/db/MigrationRunner.cc.s
+
+src/grpc_server/GrpcServerRunner.o: src/grpc_server/GrpcServerRunner.cc.o
+.PHONY : src/grpc_server/GrpcServerRunner.o
+
+# target to build an object file
+src/grpc_server/GrpcServerRunner.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/grpc_server/GrpcServerRunner.cc.o
+.PHONY : src/grpc_server/GrpcServerRunner.cc.o
+
+src/grpc_server/GrpcServerRunner.i: src/grpc_server/GrpcServerRunner.cc.i
+.PHONY : src/grpc_server/GrpcServerRunner.i
+
+# target to preprocess a source file
+src/grpc_server/GrpcServerRunner.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/grpc_server/GrpcServerRunner.cc.i
+.PHONY : src/grpc_server/GrpcServerRunner.cc.i
+
+src/grpc_server/GrpcServerRunner.s: src/grpc_server/GrpcServerRunner.cc.s
+.PHONY : src/grpc_server/GrpcServerRunner.s
+
+# target to generate assembly for a file
+src/grpc_server/GrpcServerRunner.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/grpc_server/GrpcServerRunner.cc.s
+.PHONY : src/grpc_server/GrpcServerRunner.cc.s
+
+src/grpc_server/HalServiceImpl.o: src/grpc_server/HalServiceImpl.cc.o
+.PHONY : src/grpc_server/HalServiceImpl.o
+
+# target to build an object file
+src/grpc_server/HalServiceImpl.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/grpc_server/HalServiceImpl.cc.o
+.PHONY : src/grpc_server/HalServiceImpl.cc.o
+
+src/grpc_server/HalServiceImpl.i: src/grpc_server/HalServiceImpl.cc.i
+.PHONY : src/grpc_server/HalServiceImpl.i
+
+# target to preprocess a source file
+src/grpc_server/HalServiceImpl.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/grpc_server/HalServiceImpl.cc.i
+.PHONY : src/grpc_server/HalServiceImpl.cc.i
+
+src/grpc_server/HalServiceImpl.s: src/grpc_server/HalServiceImpl.cc.s
+.PHONY : src/grpc_server/HalServiceImpl.s
+
+# target to generate assembly for a file
+src/grpc_server/HalServiceImpl.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/grpc_server/HalServiceImpl.cc.s
+.PHONY : src/grpc_server/HalServiceImpl.cc.s
+
+src/logging/LoggingSetup.o: src/logging/LoggingSetup.cc.o
+.PHONY : src/logging/LoggingSetup.o
+
+# target to build an object file
+src/logging/LoggingSetup.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/logging/LoggingSetup.cc.o
+.PHONY : src/logging/LoggingSetup.cc.o
+
+src/logging/LoggingSetup.i: src/logging/LoggingSetup.cc.i
+.PHONY : src/logging/LoggingSetup.i
+
+# target to preprocess a source file
+src/logging/LoggingSetup.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/logging/LoggingSetup.cc.i
+.PHONY : src/logging/LoggingSetup.cc.i
+
+src/logging/LoggingSetup.s: src/logging/LoggingSetup.cc.s
+.PHONY : src/logging/LoggingSetup.s
+
+# target to generate assembly for a file
+src/logging/LoggingSetup.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/logging/LoggingSetup.cc.s
+.PHONY : src/logging/LoggingSetup.cc.s
+
+src/main.o: src/main.cpp.o
+.PHONY : src/main.o
+
+# target to build an object file
+src/main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-server.dir/build.make CMakeFiles/acadia-server.dir/src/main.cpp.o
+.PHONY : src/main.cpp.o
+
+src/main.i: src/main.cpp.i
+.PHONY : src/main.i
+
+# target to preprocess a source file
+src/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-server.dir/build.make CMakeFiles/acadia-server.dir/src/main.cpp.i
+.PHONY : src/main.cpp.i
+
+src/main.s: src/main.cpp.s
+.PHONY : src/main.s
+
+# target to generate assembly for a file
+src/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-server.dir/build.make CMakeFiles/acadia-server.dir/src/main.cpp.s
+.PHONY : src/main.cpp.s
+
+src/orchestration/OtaOrchestrator.o: src/orchestration/OtaOrchestrator.cc.o
+.PHONY : src/orchestration/OtaOrchestrator.o
+
+# target to build an object file
+src/orchestration/OtaOrchestrator.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/orchestration/OtaOrchestrator.cc.o
+.PHONY : src/orchestration/OtaOrchestrator.cc.o
+
+src/orchestration/OtaOrchestrator.i: src/orchestration/OtaOrchestrator.cc.i
+.PHONY : src/orchestration/OtaOrchestrator.i
+
+# target to preprocess a source file
+src/orchestration/OtaOrchestrator.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/orchestration/OtaOrchestrator.cc.i
+.PHONY : src/orchestration/OtaOrchestrator.cc.i
+
+src/orchestration/OtaOrchestrator.s: src/orchestration/OtaOrchestrator.cc.s
+.PHONY : src/orchestration/OtaOrchestrator.s
+
+# target to generate assembly for a file
+src/orchestration/OtaOrchestrator.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/orchestration/OtaOrchestrator.cc.s
+.PHONY : src/orchestration/OtaOrchestrator.cc.s
+
+src/orchestration/RunManager.o: src/orchestration/RunManager.cc.o
+.PHONY : src/orchestration/RunManager.o
+
+# target to build an object file
+src/orchestration/RunManager.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/orchestration/RunManager.cc.o
+.PHONY : src/orchestration/RunManager.cc.o
+
+src/orchestration/RunManager.i: src/orchestration/RunManager.cc.i
+.PHONY : src/orchestration/RunManager.i
+
+# target to preprocess a source file
+src/orchestration/RunManager.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/orchestration/RunManager.cc.i
+.PHONY : src/orchestration/RunManager.cc.i
+
+src/orchestration/RunManager.s: src/orchestration/RunManager.cc.s
+.PHONY : src/orchestration/RunManager.s
+
+# target to generate assembly for a file
+src/orchestration/RunManager.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/orchestration/RunManager.cc.s
+.PHONY : src/orchestration/RunManager.cc.s
+
+src/orchestration/Scheduler.o: src/orchestration/Scheduler.cc.o
+.PHONY : src/orchestration/Scheduler.o
+
+# target to build an object file
+src/orchestration/Scheduler.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/orchestration/Scheduler.cc.o
+.PHONY : src/orchestration/Scheduler.cc.o
+
+src/orchestration/Scheduler.i: src/orchestration/Scheduler.cc.i
+.PHONY : src/orchestration/Scheduler.i
+
+# target to preprocess a source file
+src/orchestration/Scheduler.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/orchestration/Scheduler.cc.i
+.PHONY : src/orchestration/Scheduler.cc.i
+
+src/orchestration/Scheduler.s: src/orchestration/Scheduler.cc.s
+.PHONY : src/orchestration/Scheduler.s
+
+# target to generate assembly for a file
+src/orchestration/Scheduler.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/orchestration/Scheduler.cc.s
+.PHONY : src/orchestration/Scheduler.cc.s
+
+src/orchestration/TargetHeartbeat.o: src/orchestration/TargetHeartbeat.cc.o
+.PHONY : src/orchestration/TargetHeartbeat.o
+
+# target to build an object file
+src/orchestration/TargetHeartbeat.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/orchestration/TargetHeartbeat.cc.o
+.PHONY : src/orchestration/TargetHeartbeat.cc.o
+
+src/orchestration/TargetHeartbeat.i: src/orchestration/TargetHeartbeat.cc.i
+.PHONY : src/orchestration/TargetHeartbeat.i
+
+# target to preprocess a source file
+src/orchestration/TargetHeartbeat.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/orchestration/TargetHeartbeat.cc.i
+.PHONY : src/orchestration/TargetHeartbeat.cc.i
+
+src/orchestration/TargetHeartbeat.s: src/orchestration/TargetHeartbeat.cc.s
+.PHONY : src/orchestration/TargetHeartbeat.s
+
+# target to generate assembly for a file
+src/orchestration/TargetHeartbeat.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/orchestration/TargetHeartbeat.cc.s
+.PHONY : src/orchestration/TargetHeartbeat.cc.s
+
+src/registry/ModuleRegistry.o: src/registry/ModuleRegistry.cc.o
+.PHONY : src/registry/ModuleRegistry.o
+
+# target to build an object file
+src/registry/ModuleRegistry.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/registry/ModuleRegistry.cc.o
+.PHONY : src/registry/ModuleRegistry.cc.o
+
+src/registry/ModuleRegistry.i: src/registry/ModuleRegistry.cc.i
+.PHONY : src/registry/ModuleRegistry.i
+
+# target to preprocess a source file
+src/registry/ModuleRegistry.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/registry/ModuleRegistry.cc.i
+.PHONY : src/registry/ModuleRegistry.cc.i
+
+src/registry/ModuleRegistry.s: src/registry/ModuleRegistry.cc.s
+.PHONY : src/registry/ModuleRegistry.s
+
+# target to generate assembly for a file
+src/registry/ModuleRegistry.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/registry/ModuleRegistry.cc.s
+.PHONY : src/registry/ModuleRegistry.cc.s
+
+src/repositories/ApiTokenRepository.o: src/repositories/ApiTokenRepository.cc.o
+.PHONY : src/repositories/ApiTokenRepository.o
+
+# target to build an object file
+src/repositories/ApiTokenRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/ApiTokenRepository.cc.o
+.PHONY : src/repositories/ApiTokenRepository.cc.o
+
+src/repositories/ApiTokenRepository.i: src/repositories/ApiTokenRepository.cc.i
+.PHONY : src/repositories/ApiTokenRepository.i
+
+# target to preprocess a source file
+src/repositories/ApiTokenRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/ApiTokenRepository.cc.i
+.PHONY : src/repositories/ApiTokenRepository.cc.i
+
+src/repositories/ApiTokenRepository.s: src/repositories/ApiTokenRepository.cc.s
+.PHONY : src/repositories/ApiTokenRepository.s
+
+# target to generate assembly for a file
+src/repositories/ApiTokenRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/ApiTokenRepository.cc.s
+.PHONY : src/repositories/ApiTokenRepository.cc.s
+
+src/repositories/AuditRepository.o: src/repositories/AuditRepository.cc.o
+.PHONY : src/repositories/AuditRepository.o
+
+# target to build an object file
+src/repositories/AuditRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/AuditRepository.cc.o
+.PHONY : src/repositories/AuditRepository.cc.o
+
+src/repositories/AuditRepository.i: src/repositories/AuditRepository.cc.i
+.PHONY : src/repositories/AuditRepository.i
+
+# target to preprocess a source file
+src/repositories/AuditRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/AuditRepository.cc.i
+.PHONY : src/repositories/AuditRepository.cc.i
+
+src/repositories/AuditRepository.s: src/repositories/AuditRepository.cc.s
+.PHONY : src/repositories/AuditRepository.s
+
+# target to generate assembly for a file
+src/repositories/AuditRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/AuditRepository.cc.s
+.PHONY : src/repositories/AuditRepository.cc.s
+
+src/repositories/LogRepository.o: src/repositories/LogRepository.cc.o
+.PHONY : src/repositories/LogRepository.o
+
+# target to build an object file
+src/repositories/LogRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/LogRepository.cc.o
+.PHONY : src/repositories/LogRepository.cc.o
+
+src/repositories/LogRepository.i: src/repositories/LogRepository.cc.i
+.PHONY : src/repositories/LogRepository.i
+
+# target to preprocess a source file
+src/repositories/LogRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/LogRepository.cc.i
+.PHONY : src/repositories/LogRepository.cc.i
+
+src/repositories/LogRepository.s: src/repositories/LogRepository.cc.s
+.PHONY : src/repositories/LogRepository.s
+
+# target to generate assembly for a file
+src/repositories/LogRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/LogRepository.cc.s
+.PHONY : src/repositories/LogRepository.cc.s
+
+src/repositories/NotificationRepository.o: src/repositories/NotificationRepository.cc.o
+.PHONY : src/repositories/NotificationRepository.o
+
+# target to build an object file
+src/repositories/NotificationRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/NotificationRepository.cc.o
+.PHONY : src/repositories/NotificationRepository.cc.o
+
+src/repositories/NotificationRepository.i: src/repositories/NotificationRepository.cc.i
+.PHONY : src/repositories/NotificationRepository.i
+
+# target to preprocess a source file
+src/repositories/NotificationRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/NotificationRepository.cc.i
+.PHONY : src/repositories/NotificationRepository.cc.i
+
+src/repositories/NotificationRepository.s: src/repositories/NotificationRepository.cc.s
+.PHONY : src/repositories/NotificationRepository.s
+
+# target to generate assembly for a file
+src/repositories/NotificationRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/NotificationRepository.cc.s
+.PHONY : src/repositories/NotificationRepository.cc.s
+
+src/repositories/OtaRepository.o: src/repositories/OtaRepository.cc.o
+.PHONY : src/repositories/OtaRepository.o
+
+# target to build an object file
+src/repositories/OtaRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/OtaRepository.cc.o
+.PHONY : src/repositories/OtaRepository.cc.o
+
+src/repositories/OtaRepository.i: src/repositories/OtaRepository.cc.i
+.PHONY : src/repositories/OtaRepository.i
+
+# target to preprocess a source file
+src/repositories/OtaRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/OtaRepository.cc.i
+.PHONY : src/repositories/OtaRepository.cc.i
+
+src/repositories/OtaRepository.s: src/repositories/OtaRepository.cc.s
+.PHONY : src/repositories/OtaRepository.s
+
+# target to generate assembly for a file
+src/repositories/OtaRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/OtaRepository.cc.s
+.PHONY : src/repositories/OtaRepository.cc.s
+
+src/repositories/ResultRepository.o: src/repositories/ResultRepository.cc.o
+.PHONY : src/repositories/ResultRepository.o
+
+# target to build an object file
+src/repositories/ResultRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/ResultRepository.cc.o
+.PHONY : src/repositories/ResultRepository.cc.o
+
+src/repositories/ResultRepository.i: src/repositories/ResultRepository.cc.i
+.PHONY : src/repositories/ResultRepository.i
+
+# target to preprocess a source file
+src/repositories/ResultRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/ResultRepository.cc.i
+.PHONY : src/repositories/ResultRepository.cc.i
+
+src/repositories/ResultRepository.s: src/repositories/ResultRepository.cc.s
+.PHONY : src/repositories/ResultRepository.s
+
+# target to generate assembly for a file
+src/repositories/ResultRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/ResultRepository.cc.s
+.PHONY : src/repositories/ResultRepository.cc.s
+
+src/repositories/RunRepository.o: src/repositories/RunRepository.cc.o
+.PHONY : src/repositories/RunRepository.o
+
+# target to build an object file
+src/repositories/RunRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/RunRepository.cc.o
+.PHONY : src/repositories/RunRepository.cc.o
+
+src/repositories/RunRepository.i: src/repositories/RunRepository.cc.i
+.PHONY : src/repositories/RunRepository.i
+
+# target to preprocess a source file
+src/repositories/RunRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/RunRepository.cc.i
+.PHONY : src/repositories/RunRepository.cc.i
+
+src/repositories/RunRepository.s: src/repositories/RunRepository.cc.s
+.PHONY : src/repositories/RunRepository.s
+
+# target to generate assembly for a file
+src/repositories/RunRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/RunRepository.cc.s
+.PHONY : src/repositories/RunRepository.cc.s
+
+src/repositories/ScheduleRepository.o: src/repositories/ScheduleRepository.cc.o
+.PHONY : src/repositories/ScheduleRepository.o
+
+# target to build an object file
+src/repositories/ScheduleRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/ScheduleRepository.cc.o
+.PHONY : src/repositories/ScheduleRepository.cc.o
+
+src/repositories/ScheduleRepository.i: src/repositories/ScheduleRepository.cc.i
+.PHONY : src/repositories/ScheduleRepository.i
+
+# target to preprocess a source file
+src/repositories/ScheduleRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/ScheduleRepository.cc.i
+.PHONY : src/repositories/ScheduleRepository.cc.i
+
+src/repositories/ScheduleRepository.s: src/repositories/ScheduleRepository.cc.s
+.PHONY : src/repositories/ScheduleRepository.s
+
+# target to generate assembly for a file
+src/repositories/ScheduleRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/ScheduleRepository.cc.s
+.PHONY : src/repositories/ScheduleRepository.cc.s
+
+src/repositories/TargetRepository.o: src/repositories/TargetRepository.cc.o
+.PHONY : src/repositories/TargetRepository.o
+
+# target to build an object file
+src/repositories/TargetRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/TargetRepository.cc.o
+.PHONY : src/repositories/TargetRepository.cc.o
+
+src/repositories/TargetRepository.i: src/repositories/TargetRepository.cc.i
+.PHONY : src/repositories/TargetRepository.i
+
+# target to preprocess a source file
+src/repositories/TargetRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/TargetRepository.cc.i
+.PHONY : src/repositories/TargetRepository.cc.i
+
+src/repositories/TargetRepository.s: src/repositories/TargetRepository.cc.s
+.PHONY : src/repositories/TargetRepository.s
+
+# target to generate assembly for a file
+src/repositories/TargetRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/TargetRepository.cc.s
+.PHONY : src/repositories/TargetRepository.cc.s
+
+src/repositories/TemplateRepository.o: src/repositories/TemplateRepository.cc.o
+.PHONY : src/repositories/TemplateRepository.o
+
+# target to build an object file
+src/repositories/TemplateRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/TemplateRepository.cc.o
+.PHONY : src/repositories/TemplateRepository.cc.o
+
+src/repositories/TemplateRepository.i: src/repositories/TemplateRepository.cc.i
+.PHONY : src/repositories/TemplateRepository.i
+
+# target to preprocess a source file
+src/repositories/TemplateRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/TemplateRepository.cc.i
+.PHONY : src/repositories/TemplateRepository.cc.i
+
+src/repositories/TemplateRepository.s: src/repositories/TemplateRepository.cc.s
+.PHONY : src/repositories/TemplateRepository.s
+
+# target to generate assembly for a file
+src/repositories/TemplateRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/TemplateRepository.cc.s
+.PHONY : src/repositories/TemplateRepository.cc.s
+
+src/repositories/TestConfigRepository.o: src/repositories/TestConfigRepository.cc.o
+.PHONY : src/repositories/TestConfigRepository.o
+
+# target to build an object file
+src/repositories/TestConfigRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/TestConfigRepository.cc.o
+.PHONY : src/repositories/TestConfigRepository.cc.o
+
+src/repositories/TestConfigRepository.i: src/repositories/TestConfigRepository.cc.i
+.PHONY : src/repositories/TestConfigRepository.i
+
+# target to preprocess a source file
+src/repositories/TestConfigRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/TestConfigRepository.cc.i
+.PHONY : src/repositories/TestConfigRepository.cc.i
+
+src/repositories/TestConfigRepository.s: src/repositories/TestConfigRepository.cc.s
+.PHONY : src/repositories/TestConfigRepository.s
+
+# target to generate assembly for a file
+src/repositories/TestConfigRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/TestConfigRepository.cc.s
+.PHONY : src/repositories/TestConfigRepository.cc.s
+
+src/repositories/UserRepository.o: src/repositories/UserRepository.cc.o
+.PHONY : src/repositories/UserRepository.o
+
+# target to build an object file
+src/repositories/UserRepository.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/UserRepository.cc.o
+.PHONY : src/repositories/UserRepository.cc.o
+
+src/repositories/UserRepository.i: src/repositories/UserRepository.cc.i
+.PHONY : src/repositories/UserRepository.i
+
+# target to preprocess a source file
+src/repositories/UserRepository.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/UserRepository.cc.i
+.PHONY : src/repositories/UserRepository.cc.i
+
+src/repositories/UserRepository.s: src/repositories/UserRepository.cc.s
+.PHONY : src/repositories/UserRepository.s
+
+# target to generate assembly for a file
+src/repositories/UserRepository.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/repositories/UserRepository.cc.s
+.PHONY : src/repositories/UserRepository.cc.s
+
+src/rest_api/DrogonAppFactory.o: src/rest_api/DrogonAppFactory.cc.o
+.PHONY : src/rest_api/DrogonAppFactory.o
+
+# target to build an object file
+src/rest_api/DrogonAppFactory.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/DrogonAppFactory.cc.o
+.PHONY : src/rest_api/DrogonAppFactory.cc.o
+
+src/rest_api/DrogonAppFactory.i: src/rest_api/DrogonAppFactory.cc.i
+.PHONY : src/rest_api/DrogonAppFactory.i
+
+# target to preprocess a source file
+src/rest_api/DrogonAppFactory.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/DrogonAppFactory.cc.i
+.PHONY : src/rest_api/DrogonAppFactory.cc.i
+
+src/rest_api/DrogonAppFactory.s: src/rest_api/DrogonAppFactory.cc.s
+.PHONY : src/rest_api/DrogonAppFactory.s
+
+# target to generate assembly for a file
+src/rest_api/DrogonAppFactory.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/DrogonAppFactory.cc.s
+.PHONY : src/rest_api/DrogonAppFactory.cc.s
+
+src/rest_api/controllers/AuthController.o: src/rest_api/controllers/AuthController.cc.o
+.PHONY : src/rest_api/controllers/AuthController.o
+
+# target to build an object file
+src/rest_api/controllers/AuthController.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/AuthController.cc.o
+.PHONY : src/rest_api/controllers/AuthController.cc.o
+
+src/rest_api/controllers/AuthController.i: src/rest_api/controllers/AuthController.cc.i
+.PHONY : src/rest_api/controllers/AuthController.i
+
+# target to preprocess a source file
+src/rest_api/controllers/AuthController.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/AuthController.cc.i
+.PHONY : src/rest_api/controllers/AuthController.cc.i
+
+src/rest_api/controllers/AuthController.s: src/rest_api/controllers/AuthController.cc.s
+.PHONY : src/rest_api/controllers/AuthController.s
+
+# target to generate assembly for a file
+src/rest_api/controllers/AuthController.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/AuthController.cc.s
+.PHONY : src/rest_api/controllers/AuthController.cc.s
+
+src/rest_api/controllers/ConfigsController.o: src/rest_api/controllers/ConfigsController.cc.o
+.PHONY : src/rest_api/controllers/ConfigsController.o
+
+# target to build an object file
+src/rest_api/controllers/ConfigsController.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/ConfigsController.cc.o
+.PHONY : src/rest_api/controllers/ConfigsController.cc.o
+
+src/rest_api/controllers/ConfigsController.i: src/rest_api/controllers/ConfigsController.cc.i
+.PHONY : src/rest_api/controllers/ConfigsController.i
+
+# target to preprocess a source file
+src/rest_api/controllers/ConfigsController.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/ConfigsController.cc.i
+.PHONY : src/rest_api/controllers/ConfigsController.cc.i
+
+src/rest_api/controllers/ConfigsController.s: src/rest_api/controllers/ConfigsController.cc.s
+.PHONY : src/rest_api/controllers/ConfigsController.s
+
+# target to generate assembly for a file
+src/rest_api/controllers/ConfigsController.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/ConfigsController.cc.s
+.PHONY : src/rest_api/controllers/ConfigsController.cc.s
+
+src/rest_api/controllers/HealthController.o: src/rest_api/controllers/HealthController.cc.o
+.PHONY : src/rest_api/controllers/HealthController.o
+
+# target to build an object file
+src/rest_api/controllers/HealthController.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/HealthController.cc.o
+.PHONY : src/rest_api/controllers/HealthController.cc.o
+
+src/rest_api/controllers/HealthController.i: src/rest_api/controllers/HealthController.cc.i
+.PHONY : src/rest_api/controllers/HealthController.i
+
+# target to preprocess a source file
+src/rest_api/controllers/HealthController.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/HealthController.cc.i
+.PHONY : src/rest_api/controllers/HealthController.cc.i
+
+src/rest_api/controllers/HealthController.s: src/rest_api/controllers/HealthController.cc.s
+.PHONY : src/rest_api/controllers/HealthController.s
+
+# target to generate assembly for a file
+src/rest_api/controllers/HealthController.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/HealthController.cc.s
+.PHONY : src/rest_api/controllers/HealthController.cc.s
+
+src/rest_api/controllers/LogsController.o: src/rest_api/controllers/LogsController.cc.o
+.PHONY : src/rest_api/controllers/LogsController.o
+
+# target to build an object file
+src/rest_api/controllers/LogsController.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/LogsController.cc.o
+.PHONY : src/rest_api/controllers/LogsController.cc.o
+
+src/rest_api/controllers/LogsController.i: src/rest_api/controllers/LogsController.cc.i
+.PHONY : src/rest_api/controllers/LogsController.i
+
+# target to preprocess a source file
+src/rest_api/controllers/LogsController.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/LogsController.cc.i
+.PHONY : src/rest_api/controllers/LogsController.cc.i
+
+src/rest_api/controllers/LogsController.s: src/rest_api/controllers/LogsController.cc.s
+.PHONY : src/rest_api/controllers/LogsController.s
+
+# target to generate assembly for a file
+src/rest_api/controllers/LogsController.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/LogsController.cc.s
+.PHONY : src/rest_api/controllers/LogsController.cc.s
+
+src/rest_api/controllers/ModulesController.o: src/rest_api/controllers/ModulesController.cc.o
+.PHONY : src/rest_api/controllers/ModulesController.o
+
+# target to build an object file
+src/rest_api/controllers/ModulesController.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/ModulesController.cc.o
+.PHONY : src/rest_api/controllers/ModulesController.cc.o
+
+src/rest_api/controllers/ModulesController.i: src/rest_api/controllers/ModulesController.cc.i
+.PHONY : src/rest_api/controllers/ModulesController.i
+
+# target to preprocess a source file
+src/rest_api/controllers/ModulesController.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/ModulesController.cc.i
+.PHONY : src/rest_api/controllers/ModulesController.cc.i
+
+src/rest_api/controllers/ModulesController.s: src/rest_api/controllers/ModulesController.cc.s
+.PHONY : src/rest_api/controllers/ModulesController.s
+
+# target to generate assembly for a file
+src/rest_api/controllers/ModulesController.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/ModulesController.cc.s
+.PHONY : src/rest_api/controllers/ModulesController.cc.s
+
+src/rest_api/controllers/NotificationsController.o: src/rest_api/controllers/NotificationsController.cc.o
+.PHONY : src/rest_api/controllers/NotificationsController.o
+
+# target to build an object file
+src/rest_api/controllers/NotificationsController.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/NotificationsController.cc.o
+.PHONY : src/rest_api/controllers/NotificationsController.cc.o
+
+src/rest_api/controllers/NotificationsController.i: src/rest_api/controllers/NotificationsController.cc.i
+.PHONY : src/rest_api/controllers/NotificationsController.i
+
+# target to preprocess a source file
+src/rest_api/controllers/NotificationsController.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/NotificationsController.cc.i
+.PHONY : src/rest_api/controllers/NotificationsController.cc.i
+
+src/rest_api/controllers/NotificationsController.s: src/rest_api/controllers/NotificationsController.cc.s
+.PHONY : src/rest_api/controllers/NotificationsController.s
+
+# target to generate assembly for a file
+src/rest_api/controllers/NotificationsController.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/NotificationsController.cc.s
+.PHONY : src/rest_api/controllers/NotificationsController.cc.s
+
+src/rest_api/controllers/OtaController.o: src/rest_api/controllers/OtaController.cc.o
+.PHONY : src/rest_api/controllers/OtaController.o
+
+# target to build an object file
+src/rest_api/controllers/OtaController.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/OtaController.cc.o
+.PHONY : src/rest_api/controllers/OtaController.cc.o
+
+src/rest_api/controllers/OtaController.i: src/rest_api/controllers/OtaController.cc.i
+.PHONY : src/rest_api/controllers/OtaController.i
+
+# target to preprocess a source file
+src/rest_api/controllers/OtaController.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/OtaController.cc.i
+.PHONY : src/rest_api/controllers/OtaController.cc.i
+
+src/rest_api/controllers/OtaController.s: src/rest_api/controllers/OtaController.cc.s
+.PHONY : src/rest_api/controllers/OtaController.s
+
+# target to generate assembly for a file
+src/rest_api/controllers/OtaController.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/OtaController.cc.s
+.PHONY : src/rest_api/controllers/OtaController.cc.s
+
+src/rest_api/controllers/RunsController.o: src/rest_api/controllers/RunsController.cc.o
+.PHONY : src/rest_api/controllers/RunsController.o
+
+# target to build an object file
+src/rest_api/controllers/RunsController.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/RunsController.cc.o
+.PHONY : src/rest_api/controllers/RunsController.cc.o
+
+src/rest_api/controllers/RunsController.i: src/rest_api/controllers/RunsController.cc.i
+.PHONY : src/rest_api/controllers/RunsController.i
+
+# target to preprocess a source file
+src/rest_api/controllers/RunsController.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/RunsController.cc.i
+.PHONY : src/rest_api/controllers/RunsController.cc.i
+
+src/rest_api/controllers/RunsController.s: src/rest_api/controllers/RunsController.cc.s
+.PHONY : src/rest_api/controllers/RunsController.s
+
+# target to generate assembly for a file
+src/rest_api/controllers/RunsController.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/RunsController.cc.s
+.PHONY : src/rest_api/controllers/RunsController.cc.s
+
+src/rest_api/controllers/TargetsController.o: src/rest_api/controllers/TargetsController.cc.o
+.PHONY : src/rest_api/controllers/TargetsController.o
+
+# target to build an object file
+src/rest_api/controllers/TargetsController.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/TargetsController.cc.o
+.PHONY : src/rest_api/controllers/TargetsController.cc.o
+
+src/rest_api/controllers/TargetsController.i: src/rest_api/controllers/TargetsController.cc.i
+.PHONY : src/rest_api/controllers/TargetsController.i
+
+# target to preprocess a source file
+src/rest_api/controllers/TargetsController.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/TargetsController.cc.i
+.PHONY : src/rest_api/controllers/TargetsController.cc.i
+
+src/rest_api/controllers/TargetsController.s: src/rest_api/controllers/TargetsController.cc.s
+.PHONY : src/rest_api/controllers/TargetsController.s
+
+# target to generate assembly for a file
+src/rest_api/controllers/TargetsController.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/controllers/TargetsController.cc.s
+.PHONY : src/rest_api/controllers/TargetsController.cc.s
+
+src/rest_api/filters/AuthFilter.o: src/rest_api/filters/AuthFilter.cc.o
+.PHONY : src/rest_api/filters/AuthFilter.o
+
+# target to build an object file
+src/rest_api/filters/AuthFilter.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/filters/AuthFilter.cc.o
+.PHONY : src/rest_api/filters/AuthFilter.cc.o
+
+src/rest_api/filters/AuthFilter.i: src/rest_api/filters/AuthFilter.cc.i
+.PHONY : src/rest_api/filters/AuthFilter.i
+
+# target to preprocess a source file
+src/rest_api/filters/AuthFilter.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/filters/AuthFilter.cc.i
+.PHONY : src/rest_api/filters/AuthFilter.cc.i
+
+src/rest_api/filters/AuthFilter.s: src/rest_api/filters/AuthFilter.cc.s
+.PHONY : src/rest_api/filters/AuthFilter.s
+
+# target to generate assembly for a file
+src/rest_api/filters/AuthFilter.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/rest_api/filters/AuthFilter.cc.s
+.PHONY : src/rest_api/filters/AuthFilter.cc.s
+
+src/services/AuthService.o: src/services/AuthService.cc.o
+.PHONY : src/services/AuthService.o
+
+# target to build an object file
+src/services/AuthService.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/AuthService.cc.o
+.PHONY : src/services/AuthService.cc.o
+
+src/services/AuthService.i: src/services/AuthService.cc.i
+.PHONY : src/services/AuthService.i
+
+# target to preprocess a source file
+src/services/AuthService.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/AuthService.cc.i
+.PHONY : src/services/AuthService.cc.i
+
+src/services/AuthService.s: src/services/AuthService.cc.s
+.PHONY : src/services/AuthService.s
+
+# target to generate assembly for a file
+src/services/AuthService.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/AuthService.cc.s
+.PHONY : src/services/AuthService.cc.s
+
+src/services/ConfigService.o: src/services/ConfigService.cc.o
+.PHONY : src/services/ConfigService.o
+
+# target to build an object file
+src/services/ConfigService.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/ConfigService.cc.o
+.PHONY : src/services/ConfigService.cc.o
+
+src/services/ConfigService.i: src/services/ConfigService.cc.i
+.PHONY : src/services/ConfigService.i
+
+# target to preprocess a source file
+src/services/ConfigService.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/ConfigService.cc.i
+.PHONY : src/services/ConfigService.cc.i
+
+src/services/ConfigService.s: src/services/ConfigService.cc.s
+.PHONY : src/services/ConfigService.s
+
+# target to generate assembly for a file
+src/services/ConfigService.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/ConfigService.cc.s
+.PHONY : src/services/ConfigService.cc.s
+
+src/services/LogService.o: src/services/LogService.cc.o
+.PHONY : src/services/LogService.o
+
+# target to build an object file
+src/services/LogService.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/LogService.cc.o
+.PHONY : src/services/LogService.cc.o
+
+src/services/LogService.i: src/services/LogService.cc.i
+.PHONY : src/services/LogService.i
+
+# target to preprocess a source file
+src/services/LogService.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/LogService.cc.i
+.PHONY : src/services/LogService.cc.i
+
+src/services/LogService.s: src/services/LogService.cc.s
+.PHONY : src/services/LogService.s
+
+# target to generate assembly for a file
+src/services/LogService.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/LogService.cc.s
+.PHONY : src/services/LogService.cc.s
+
+src/services/ModuleService.o: src/services/ModuleService.cc.o
+.PHONY : src/services/ModuleService.o
+
+# target to build an object file
+src/services/ModuleService.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/ModuleService.cc.o
+.PHONY : src/services/ModuleService.cc.o
+
+src/services/ModuleService.i: src/services/ModuleService.cc.i
+.PHONY : src/services/ModuleService.i
+
+# target to preprocess a source file
+src/services/ModuleService.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/ModuleService.cc.i
+.PHONY : src/services/ModuleService.cc.i
+
+src/services/ModuleService.s: src/services/ModuleService.cc.s
+.PHONY : src/services/ModuleService.s
+
+# target to generate assembly for a file
+src/services/ModuleService.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/ModuleService.cc.s
+.PHONY : src/services/ModuleService.cc.s
+
+src/services/NotificationService.o: src/services/NotificationService.cc.o
+.PHONY : src/services/NotificationService.o
+
+# target to build an object file
+src/services/NotificationService.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/NotificationService.cc.o
+.PHONY : src/services/NotificationService.cc.o
+
+src/services/NotificationService.i: src/services/NotificationService.cc.i
+.PHONY : src/services/NotificationService.i
+
+# target to preprocess a source file
+src/services/NotificationService.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/NotificationService.cc.i
+.PHONY : src/services/NotificationService.cc.i
+
+src/services/NotificationService.s: src/services/NotificationService.cc.s
+.PHONY : src/services/NotificationService.s
+
+# target to generate assembly for a file
+src/services/NotificationService.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/NotificationService.cc.s
+.PHONY : src/services/NotificationService.cc.s
+
+src/services/OtaService.o: src/services/OtaService.cc.o
+.PHONY : src/services/OtaService.o
+
+# target to build an object file
+src/services/OtaService.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/OtaService.cc.o
+.PHONY : src/services/OtaService.cc.o
+
+src/services/OtaService.i: src/services/OtaService.cc.i
+.PHONY : src/services/OtaService.i
+
+# target to preprocess a source file
+src/services/OtaService.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/OtaService.cc.i
+.PHONY : src/services/OtaService.cc.i
+
+src/services/OtaService.s: src/services/OtaService.cc.s
+.PHONY : src/services/OtaService.s
+
+# target to generate assembly for a file
+src/services/OtaService.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/OtaService.cc.s
+.PHONY : src/services/OtaService.cc.s
+
+src/services/RunService.o: src/services/RunService.cc.o
+.PHONY : src/services/RunService.o
+
+# target to build an object file
+src/services/RunService.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/RunService.cc.o
+.PHONY : src/services/RunService.cc.o
+
+src/services/RunService.i: src/services/RunService.cc.i
+.PHONY : src/services/RunService.i
+
+# target to preprocess a source file
+src/services/RunService.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/RunService.cc.i
+.PHONY : src/services/RunService.cc.i
+
+src/services/RunService.s: src/services/RunService.cc.s
+.PHONY : src/services/RunService.s
+
+# target to generate assembly for a file
+src/services/RunService.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/RunService.cc.s
+.PHONY : src/services/RunService.cc.s
+
+src/services/ScheduleService.o: src/services/ScheduleService.cc.o
+.PHONY : src/services/ScheduleService.o
+
+# target to build an object file
+src/services/ScheduleService.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/ScheduleService.cc.o
+.PHONY : src/services/ScheduleService.cc.o
+
+src/services/ScheduleService.i: src/services/ScheduleService.cc.i
+.PHONY : src/services/ScheduleService.i
+
+# target to preprocess a source file
+src/services/ScheduleService.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/ScheduleService.cc.i
+.PHONY : src/services/ScheduleService.cc.i
+
+src/services/ScheduleService.s: src/services/ScheduleService.cc.s
+.PHONY : src/services/ScheduleService.s
+
+# target to generate assembly for a file
+src/services/ScheduleService.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/ScheduleService.cc.s
+.PHONY : src/services/ScheduleService.cc.s
+
+src/services/TargetService.o: src/services/TargetService.cc.o
+.PHONY : src/services/TargetService.o
+
+# target to build an object file
+src/services/TargetService.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/TargetService.cc.o
+.PHONY : src/services/TargetService.cc.o
+
+src/services/TargetService.i: src/services/TargetService.cc.i
+.PHONY : src/services/TargetService.i
+
+# target to preprocess a source file
+src/services/TargetService.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/TargetService.cc.i
+.PHONY : src/services/TargetService.cc.i
+
+src/services/TargetService.s: src/services/TargetService.cc.s
+.PHONY : src/services/TargetService.s
+
+# target to generate assembly for a file
+src/services/TargetService.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/TargetService.cc.s
+.PHONY : src/services/TargetService.cc.s
+
+src/services/TemplateService.o: src/services/TemplateService.cc.o
+.PHONY : src/services/TemplateService.o
+
+# target to build an object file
+src/services/TemplateService.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/TemplateService.cc.o
+.PHONY : src/services/TemplateService.cc.o
+
+src/services/TemplateService.i: src/services/TemplateService.cc.i
+.PHONY : src/services/TemplateService.i
+
+# target to preprocess a source file
+src/services/TemplateService.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/TemplateService.cc.i
+.PHONY : src/services/TemplateService.cc.i
+
+src/services/TemplateService.s: src/services/TemplateService.cc.s
+.PHONY : src/services/TemplateService.s
+
+# target to generate assembly for a file
+src/services/TemplateService.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/services/TemplateService.cc.s
+.PHONY : src/services/TemplateService.cc.s
+
+src/util/Hash.o: src/util/Hash.cc.o
+.PHONY : src/util/Hash.o
+
+# target to build an object file
+src/util/Hash.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/util/Hash.cc.o
+.PHONY : src/util/Hash.cc.o
+
+src/util/Hash.i: src/util/Hash.cc.i
+.PHONY : src/util/Hash.i
+
+# target to preprocess a source file
+src/util/Hash.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/util/Hash.cc.i
+.PHONY : src/util/Hash.cc.i
+
+src/util/Hash.s: src/util/Hash.cc.s
+.PHONY : src/util/Hash.s
+
+# target to generate assembly for a file
+src/util/Hash.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/util/Hash.cc.s
+.PHONY : src/util/Hash.cc.s
+
+src/util/ProtoJson.o: src/util/ProtoJson.cc.o
+.PHONY : src/util/ProtoJson.o
+
+# target to build an object file
+src/util/ProtoJson.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/util/ProtoJson.cc.o
+.PHONY : src/util/ProtoJson.cc.o
+
+src/util/ProtoJson.i: src/util/ProtoJson.cc.i
+.PHONY : src/util/ProtoJson.i
+
+# target to preprocess a source file
+src/util/ProtoJson.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/util/ProtoJson.cc.i
+.PHONY : src/util/ProtoJson.cc.i
+
+src/util/ProtoJson.s: src/util/ProtoJson.cc.s
+.PHONY : src/util/ProtoJson.s
+
+# target to generate assembly for a file
+src/util/ProtoJson.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/util/ProtoJson.cc.s
+.PHONY : src/util/ProtoJson.cc.s
+
+src/util/Time.o: src/util/Time.cc.o
+.PHONY : src/util/Time.o
+
+# target to build an object file
+src/util/Time.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/util/Time.cc.o
+.PHONY : src/util/Time.cc.o
+
+src/util/Time.i: src/util/Time.cc.i
+.PHONY : src/util/Time.i
+
+# target to preprocess a source file
+src/util/Time.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/util/Time.cc.i
+.PHONY : src/util/Time.cc.i
+
+src/util/Time.s: src/util/Time.cc.s
+.PHONY : src/util/Time.s
+
+# target to generate assembly for a file
+src/util/Time.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/util/Time.cc.s
+.PHONY : src/util/Time.cc.s
+
+src/util/Uuid.o: src/util/Uuid.cc.o
+.PHONY : src/util/Uuid.o
+
+# target to build an object file
+src/util/Uuid.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/util/Uuid.cc.o
+.PHONY : src/util/Uuid.cc.o
+
+src/util/Uuid.i: src/util/Uuid.cc.i
+.PHONY : src/util/Uuid.i
+
+# target to preprocess a source file
+src/util/Uuid.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/util/Uuid.cc.i
+.PHONY : src/util/Uuid.cc.i
+
+src/util/Uuid.s: src/util/Uuid.cc.s
+.PHONY : src/util/Uuid.s
+
+# target to generate assembly for a file
+src/util/Uuid.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-core.dir/build.make CMakeFiles/acadia-core.dir/src/util/Uuid.cc.s
+.PHONY : src/util/Uuid.cc.s
+
 test/config_test.o: test/config_test.cpp.o
 .PHONY : test/config_test.o
 
@@ -306,6 +1582,150 @@ test/config_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/config-test.dir/build.make CMakeFiles/config-test.dir/test/config_test.cpp.s
 .PHONY : test/config_test.cpp.s
 
+tests/integration/MigrationRunnerTest.o: tests/integration/MigrationRunnerTest.cc.o
+.PHONY : tests/integration/MigrationRunnerTest.o
+
+# target to build an object file
+tests/integration/MigrationRunnerTest.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-integration-tests.dir/build.make CMakeFiles/acadia-integration-tests.dir/tests/integration/MigrationRunnerTest.cc.o
+.PHONY : tests/integration/MigrationRunnerTest.cc.o
+
+tests/integration/MigrationRunnerTest.i: tests/integration/MigrationRunnerTest.cc.i
+.PHONY : tests/integration/MigrationRunnerTest.i
+
+# target to preprocess a source file
+tests/integration/MigrationRunnerTest.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-integration-tests.dir/build.make CMakeFiles/acadia-integration-tests.dir/tests/integration/MigrationRunnerTest.cc.i
+.PHONY : tests/integration/MigrationRunnerTest.cc.i
+
+tests/integration/MigrationRunnerTest.s: tests/integration/MigrationRunnerTest.cc.s
+.PHONY : tests/integration/MigrationRunnerTest.s
+
+# target to generate assembly for a file
+tests/integration/MigrationRunnerTest.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-integration-tests.dir/build.make CMakeFiles/acadia-integration-tests.dir/tests/integration/MigrationRunnerTest.cc.s
+.PHONY : tests/integration/MigrationRunnerTest.cc.s
+
+tests/unit/grpc/StreamBackpressureTest.o: tests/unit/grpc/StreamBackpressureTest.cc.o
+.PHONY : tests/unit/grpc/StreamBackpressureTest.o
+
+# target to build an object file
+tests/unit/grpc/StreamBackpressureTest.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/grpc/StreamBackpressureTest.cc.o
+.PHONY : tests/unit/grpc/StreamBackpressureTest.cc.o
+
+tests/unit/grpc/StreamBackpressureTest.i: tests/unit/grpc/StreamBackpressureTest.cc.i
+.PHONY : tests/unit/grpc/StreamBackpressureTest.i
+
+# target to preprocess a source file
+tests/unit/grpc/StreamBackpressureTest.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/grpc/StreamBackpressureTest.cc.i
+.PHONY : tests/unit/grpc/StreamBackpressureTest.cc.i
+
+tests/unit/grpc/StreamBackpressureTest.s: tests/unit/grpc/StreamBackpressureTest.cc.s
+.PHONY : tests/unit/grpc/StreamBackpressureTest.s
+
+# target to generate assembly for a file
+tests/unit/grpc/StreamBackpressureTest.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/grpc/StreamBackpressureTest.cc.s
+.PHONY : tests/unit/grpc/StreamBackpressureTest.cc.s
+
+tests/unit/registry/ModuleRegistryTest.o: tests/unit/registry/ModuleRegistryTest.cc.o
+.PHONY : tests/unit/registry/ModuleRegistryTest.o
+
+# target to build an object file
+tests/unit/registry/ModuleRegistryTest.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/registry/ModuleRegistryTest.cc.o
+.PHONY : tests/unit/registry/ModuleRegistryTest.cc.o
+
+tests/unit/registry/ModuleRegistryTest.i: tests/unit/registry/ModuleRegistryTest.cc.i
+.PHONY : tests/unit/registry/ModuleRegistryTest.i
+
+# target to preprocess a source file
+tests/unit/registry/ModuleRegistryTest.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/registry/ModuleRegistryTest.cc.i
+.PHONY : tests/unit/registry/ModuleRegistryTest.cc.i
+
+tests/unit/registry/ModuleRegistryTest.s: tests/unit/registry/ModuleRegistryTest.cc.s
+.PHONY : tests/unit/registry/ModuleRegistryTest.s
+
+# target to generate assembly for a file
+tests/unit/registry/ModuleRegistryTest.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/registry/ModuleRegistryTest.cc.s
+.PHONY : tests/unit/registry/ModuleRegistryTest.cc.s
+
+tests/unit/util/HashTest.o: tests/unit/util/HashTest.cc.o
+.PHONY : tests/unit/util/HashTest.o
+
+# target to build an object file
+tests/unit/util/HashTest.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/util/HashTest.cc.o
+.PHONY : tests/unit/util/HashTest.cc.o
+
+tests/unit/util/HashTest.i: tests/unit/util/HashTest.cc.i
+.PHONY : tests/unit/util/HashTest.i
+
+# target to preprocess a source file
+tests/unit/util/HashTest.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/util/HashTest.cc.i
+.PHONY : tests/unit/util/HashTest.cc.i
+
+tests/unit/util/HashTest.s: tests/unit/util/HashTest.cc.s
+.PHONY : tests/unit/util/HashTest.s
+
+# target to generate assembly for a file
+tests/unit/util/HashTest.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/util/HashTest.cc.s
+.PHONY : tests/unit/util/HashTest.cc.s
+
+tests/unit/util/TimeTest.o: tests/unit/util/TimeTest.cc.o
+.PHONY : tests/unit/util/TimeTest.o
+
+# target to build an object file
+tests/unit/util/TimeTest.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/util/TimeTest.cc.o
+.PHONY : tests/unit/util/TimeTest.cc.o
+
+tests/unit/util/TimeTest.i: tests/unit/util/TimeTest.cc.i
+.PHONY : tests/unit/util/TimeTest.i
+
+# target to preprocess a source file
+tests/unit/util/TimeTest.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/util/TimeTest.cc.i
+.PHONY : tests/unit/util/TimeTest.cc.i
+
+tests/unit/util/TimeTest.s: tests/unit/util/TimeTest.cc.s
+.PHONY : tests/unit/util/TimeTest.s
+
+# target to generate assembly for a file
+tests/unit/util/TimeTest.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/util/TimeTest.cc.s
+.PHONY : tests/unit/util/TimeTest.cc.s
+
+tests/unit/util/UuidTest.o: tests/unit/util/UuidTest.cc.o
+.PHONY : tests/unit/util/UuidTest.o
+
+# target to build an object file
+tests/unit/util/UuidTest.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/util/UuidTest.cc.o
+.PHONY : tests/unit/util/UuidTest.cc.o
+
+tests/unit/util/UuidTest.i: tests/unit/util/UuidTest.cc.i
+.PHONY : tests/unit/util/UuidTest.i
+
+# target to preprocess a source file
+tests/unit/util/UuidTest.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/util/UuidTest.cc.i
+.PHONY : tests/unit/util/UuidTest.cc.i
+
+tests/unit/util/UuidTest.s: tests/unit/util/UuidTest.cc.s
+.PHONY : tests/unit/util/UuidTest.s
+
+# target to generate assembly for a file
+tests/unit/util/UuidTest.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/acadia-unit-tests.dir/build.make CMakeFiles/acadia-unit-tests.dir/tests/unit/util/UuidTest.cc.s
+.PHONY : tests/unit/util/UuidTest.cc.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -319,21 +1739,196 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... acadia-core"
+	@echo "... acadia-integration-tests"
 	@echo "... acadia-internal"
+	@echo "... acadia-proto"
 	@echo "... acadia-server"
+	@echo "... acadia-unit-tests"
 	@echo "... config-test"
-	@echo "... cmd/acadia-server/main.o"
-	@echo "... cmd/acadia-server/main.i"
-	@echo "... cmd/acadia-server/main.s"
+	@echo "... generated/proto/common.pb.o"
+	@echo "... generated/proto/common.pb.i"
+	@echo "... generated/proto/common.pb.s"
+	@echo "... generated/proto/hal_service.grpc.pb.o"
+	@echo "... generated/proto/hal_service.grpc.pb.i"
+	@echo "... generated/proto/hal_service.grpc.pb.s"
+	@echo "... generated/proto/hal_service.pb.o"
+	@echo "... generated/proto/hal_service.pb.i"
+	@echo "... generated/proto/hal_service.pb.s"
 	@echo "... internal/config/config.o"
 	@echo "... internal/config/config.i"
 	@echo "... internal/config/config.s"
 	@echo "... internal/logging/logger.o"
 	@echo "... internal/logging/logger.i"
 	@echo "... internal/logging/logger.s"
+	@echo "... src/config/Settings.o"
+	@echo "... src/config/Settings.i"
+	@echo "... src/config/Settings.s"
+	@echo "... src/db/DbClient.o"
+	@echo "... src/db/DbClient.i"
+	@echo "... src/db/DbClient.s"
+	@echo "... src/db/MigrationRunner.o"
+	@echo "... src/db/MigrationRunner.i"
+	@echo "... src/db/MigrationRunner.s"
+	@echo "... src/grpc_server/GrpcServerRunner.o"
+	@echo "... src/grpc_server/GrpcServerRunner.i"
+	@echo "... src/grpc_server/GrpcServerRunner.s"
+	@echo "... src/grpc_server/HalServiceImpl.o"
+	@echo "... src/grpc_server/HalServiceImpl.i"
+	@echo "... src/grpc_server/HalServiceImpl.s"
+	@echo "... src/logging/LoggingSetup.o"
+	@echo "... src/logging/LoggingSetup.i"
+	@echo "... src/logging/LoggingSetup.s"
+	@echo "... src/main.o"
+	@echo "... src/main.i"
+	@echo "... src/main.s"
+	@echo "... src/orchestration/OtaOrchestrator.o"
+	@echo "... src/orchestration/OtaOrchestrator.i"
+	@echo "... src/orchestration/OtaOrchestrator.s"
+	@echo "... src/orchestration/RunManager.o"
+	@echo "... src/orchestration/RunManager.i"
+	@echo "... src/orchestration/RunManager.s"
+	@echo "... src/orchestration/Scheduler.o"
+	@echo "... src/orchestration/Scheduler.i"
+	@echo "... src/orchestration/Scheduler.s"
+	@echo "... src/orchestration/TargetHeartbeat.o"
+	@echo "... src/orchestration/TargetHeartbeat.i"
+	@echo "... src/orchestration/TargetHeartbeat.s"
+	@echo "... src/registry/ModuleRegistry.o"
+	@echo "... src/registry/ModuleRegistry.i"
+	@echo "... src/registry/ModuleRegistry.s"
+	@echo "... src/repositories/ApiTokenRepository.o"
+	@echo "... src/repositories/ApiTokenRepository.i"
+	@echo "... src/repositories/ApiTokenRepository.s"
+	@echo "... src/repositories/AuditRepository.o"
+	@echo "... src/repositories/AuditRepository.i"
+	@echo "... src/repositories/AuditRepository.s"
+	@echo "... src/repositories/LogRepository.o"
+	@echo "... src/repositories/LogRepository.i"
+	@echo "... src/repositories/LogRepository.s"
+	@echo "... src/repositories/NotificationRepository.o"
+	@echo "... src/repositories/NotificationRepository.i"
+	@echo "... src/repositories/NotificationRepository.s"
+	@echo "... src/repositories/OtaRepository.o"
+	@echo "... src/repositories/OtaRepository.i"
+	@echo "... src/repositories/OtaRepository.s"
+	@echo "... src/repositories/ResultRepository.o"
+	@echo "... src/repositories/ResultRepository.i"
+	@echo "... src/repositories/ResultRepository.s"
+	@echo "... src/repositories/RunRepository.o"
+	@echo "... src/repositories/RunRepository.i"
+	@echo "... src/repositories/RunRepository.s"
+	@echo "... src/repositories/ScheduleRepository.o"
+	@echo "... src/repositories/ScheduleRepository.i"
+	@echo "... src/repositories/ScheduleRepository.s"
+	@echo "... src/repositories/TargetRepository.o"
+	@echo "... src/repositories/TargetRepository.i"
+	@echo "... src/repositories/TargetRepository.s"
+	@echo "... src/repositories/TemplateRepository.o"
+	@echo "... src/repositories/TemplateRepository.i"
+	@echo "... src/repositories/TemplateRepository.s"
+	@echo "... src/repositories/TestConfigRepository.o"
+	@echo "... src/repositories/TestConfigRepository.i"
+	@echo "... src/repositories/TestConfigRepository.s"
+	@echo "... src/repositories/UserRepository.o"
+	@echo "... src/repositories/UserRepository.i"
+	@echo "... src/repositories/UserRepository.s"
+	@echo "... src/rest_api/DrogonAppFactory.o"
+	@echo "... src/rest_api/DrogonAppFactory.i"
+	@echo "... src/rest_api/DrogonAppFactory.s"
+	@echo "... src/rest_api/controllers/AuthController.o"
+	@echo "... src/rest_api/controllers/AuthController.i"
+	@echo "... src/rest_api/controllers/AuthController.s"
+	@echo "... src/rest_api/controllers/ConfigsController.o"
+	@echo "... src/rest_api/controllers/ConfigsController.i"
+	@echo "... src/rest_api/controllers/ConfigsController.s"
+	@echo "... src/rest_api/controllers/HealthController.o"
+	@echo "... src/rest_api/controllers/HealthController.i"
+	@echo "... src/rest_api/controllers/HealthController.s"
+	@echo "... src/rest_api/controllers/LogsController.o"
+	@echo "... src/rest_api/controllers/LogsController.i"
+	@echo "... src/rest_api/controllers/LogsController.s"
+	@echo "... src/rest_api/controllers/ModulesController.o"
+	@echo "... src/rest_api/controllers/ModulesController.i"
+	@echo "... src/rest_api/controllers/ModulesController.s"
+	@echo "... src/rest_api/controllers/NotificationsController.o"
+	@echo "... src/rest_api/controllers/NotificationsController.i"
+	@echo "... src/rest_api/controllers/NotificationsController.s"
+	@echo "... src/rest_api/controllers/OtaController.o"
+	@echo "... src/rest_api/controllers/OtaController.i"
+	@echo "... src/rest_api/controllers/OtaController.s"
+	@echo "... src/rest_api/controllers/RunsController.o"
+	@echo "... src/rest_api/controllers/RunsController.i"
+	@echo "... src/rest_api/controllers/RunsController.s"
+	@echo "... src/rest_api/controllers/TargetsController.o"
+	@echo "... src/rest_api/controllers/TargetsController.i"
+	@echo "... src/rest_api/controllers/TargetsController.s"
+	@echo "... src/rest_api/filters/AuthFilter.o"
+	@echo "... src/rest_api/filters/AuthFilter.i"
+	@echo "... src/rest_api/filters/AuthFilter.s"
+	@echo "... src/services/AuthService.o"
+	@echo "... src/services/AuthService.i"
+	@echo "... src/services/AuthService.s"
+	@echo "... src/services/ConfigService.o"
+	@echo "... src/services/ConfigService.i"
+	@echo "... src/services/ConfigService.s"
+	@echo "... src/services/LogService.o"
+	@echo "... src/services/LogService.i"
+	@echo "... src/services/LogService.s"
+	@echo "... src/services/ModuleService.o"
+	@echo "... src/services/ModuleService.i"
+	@echo "... src/services/ModuleService.s"
+	@echo "... src/services/NotificationService.o"
+	@echo "... src/services/NotificationService.i"
+	@echo "... src/services/NotificationService.s"
+	@echo "... src/services/OtaService.o"
+	@echo "... src/services/OtaService.i"
+	@echo "... src/services/OtaService.s"
+	@echo "... src/services/RunService.o"
+	@echo "... src/services/RunService.i"
+	@echo "... src/services/RunService.s"
+	@echo "... src/services/ScheduleService.o"
+	@echo "... src/services/ScheduleService.i"
+	@echo "... src/services/ScheduleService.s"
+	@echo "... src/services/TargetService.o"
+	@echo "... src/services/TargetService.i"
+	@echo "... src/services/TargetService.s"
+	@echo "... src/services/TemplateService.o"
+	@echo "... src/services/TemplateService.i"
+	@echo "... src/services/TemplateService.s"
+	@echo "... src/util/Hash.o"
+	@echo "... src/util/Hash.i"
+	@echo "... src/util/Hash.s"
+	@echo "... src/util/ProtoJson.o"
+	@echo "... src/util/ProtoJson.i"
+	@echo "... src/util/ProtoJson.s"
+	@echo "... src/util/Time.o"
+	@echo "... src/util/Time.i"
+	@echo "... src/util/Time.s"
+	@echo "... src/util/Uuid.o"
+	@echo "... src/util/Uuid.i"
+	@echo "... src/util/Uuid.s"
 	@echo "... test/config_test.o"
 	@echo "... test/config_test.i"
 	@echo "... test/config_test.s"
+	@echo "... tests/integration/MigrationRunnerTest.o"
+	@echo "... tests/integration/MigrationRunnerTest.i"
+	@echo "... tests/integration/MigrationRunnerTest.s"
+	@echo "... tests/unit/grpc/StreamBackpressureTest.o"
+	@echo "... tests/unit/grpc/StreamBackpressureTest.i"
+	@echo "... tests/unit/grpc/StreamBackpressureTest.s"
+	@echo "... tests/unit/registry/ModuleRegistryTest.o"
+	@echo "... tests/unit/registry/ModuleRegistryTest.i"
+	@echo "... tests/unit/registry/ModuleRegistryTest.s"
+	@echo "... tests/unit/util/HashTest.o"
+	@echo "... tests/unit/util/HashTest.i"
+	@echo "... tests/unit/util/HashTest.s"
+	@echo "... tests/unit/util/TimeTest.o"
+	@echo "... tests/unit/util/TimeTest.i"
+	@echo "... tests/unit/util/TimeTest.s"
+	@echo "... tests/unit/util/UuidTest.o"
+	@echo "... tests/unit/util/UuidTest.i"
+	@echo "... tests/unit/util/UuidTest.s"
 .PHONY : help
 
 

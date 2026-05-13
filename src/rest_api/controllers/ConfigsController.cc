@@ -13,7 +13,7 @@ static Json::Value cfg_to_json(const TestConfig& c) {
     v["name"]        = c.name;
     v["description"] = c.description;
     v["mode"]        = c.mode;
-    v["archived"]    = c.archived;
+    v["archived"]    = c.is_archived;
     v["created_at"]  = c.created_at;
     return v;
 }
