@@ -9,12 +9,16 @@ TargetsController::TargetsController(TargetService& svc) : svc_(svc) {}
 
 static Json::Value board_to_json(const Board& b) {
     Json::Value v;
-    v["id"]        = b.id;
-    v["name"]      = b.name;
-    v["hostname"]  = b.hostname;
-    v["model"]     = b.model;
-    v["status"]    = b.status;
-    v["last_seen"] = b.last_seen;
+    v["id"]             = b.id;
+    v["name"]           = b.name;
+    v["hostname"]       = b.hostname;
+    v["model"]          = b.model;
+    v["status"]         = b.status;
+    v["first_seen"]     = b.first_seen;
+    v["last_seen"]      = b.last_seen;
+    v["os_version"]     = b.os_version;
+    v["hal_version"]    = b.hal_version;
+    v["client_version"] = b.client_version;
     return v;
 }
 
@@ -43,9 +47,12 @@ void TargetsController::register_board(const drogon::HttpRequestPtr& req,
     auto body = req->getJsonObject();
     Board b;
     if (body) {
-        b.name     = (*body)["name"].asString();
-        b.hostname = (*body)["hostname"].asString();
-        b.model    = (*body)["model"].asString();
+        b.name           = (*body)["name"].asString();
+        b.hostname       = (*body)["hostname"].asString();
+        b.model          = (*body)["model"].asString();
+        b.os_version     = (*body)["os_version"].asString();
+        b.hal_version    = (*body)["hal_version"].asString();
+        b.client_version = (*body)["client_version"].asString();
     }
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     auto created = svc_.register_board(b, user_id);
@@ -57,9 +64,12 @@ void TargetsController::update_board(const drogon::HttpRequestPtr& req,
     auto body = req->getJsonObject();
     Board b;
     if (body) {
-        b.name     = (*body)["name"].asString();
-        b.hostname = (*body)["hostname"].asString();
-        b.model    = (*body)["model"].asString();
+        b.name           = (*body)["name"].asString();
+        b.hostname       = (*body)["hostname"].asString();
+        b.model          = (*body)["model"].asString();
+        b.os_version     = (*body)["os_version"].asString();
+        b.hal_version    = (*body)["hal_version"].asString();
+        b.client_version = (*body)["client_version"].asString();
     }
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     svc_.update_board(b, user_id);
@@ -73,10 +83,22 @@ void TargetsController::update_board(const drogon::HttpRequestPtr& req,
 
 void TargetsController::heartbeat(const drogon::HttpRequestPtr& req,
                                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-    // Get board id from body or from existing board record
     auto board = svc_.get_board();
     if (board) {
         svc_.heartbeat(board->id, "online");
+        // Optionally update version fields if provided in heartbeat body.
+        auto body = req->getJsonObject();
+        if (body && (!(*body)["hal_version"].isNull() || !(*body)["client_version"].isNull())) {
+            Board patch;
+            patch.os_version     = (*body)["os_version"].asString();
+            patch.hal_version    = (*body)["hal_version"].asString();
+            patch.client_version = (*body)["client_version"].asString();
+            patch.hostname       = (*body)["hostname"].asString();
+            // Only update if non-empty to avoid overwriting with empty strings.
+            if (!patch.hal_version.empty() || !patch.client_version.empty()) {
+                svc_.update_board(patch, "heartbeat");
+            }
+        }
     }
     Json::Value resp; resp["ok"] = true;
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));

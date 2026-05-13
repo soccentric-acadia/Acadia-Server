@@ -2,29 +2,55 @@
 #include "util/Errors.h"
 #include <drogon/HttpResponse.h>
 #include <json/json.h>
+#include <sstream>
 
 namespace acadia::rest {
 
 static Json::Value run_to_json(const Run& r) {
     Json::Value v;
-    v["id"]         = r.id;
-    v["status"]     = r.status;
-    v["mode"]       = r.mode;
-    v["created_at"] = r.created_at;
-    v["started_at"] = r.started_at;
-    v["ended_at"]   = r.ended_at;
+    v["id"]               = r.id;
+    v["name"]             = r.name;
+    v["description"]      = r.description;
+    v["mode"]             = r.mode;
+    v["status"]           = r.status;
+    v["baseline_flag"]    = r.baseline_flag;
+    v["notes"]            = r.notes;
+    v["error_message"]    = r.error_message;
+    v["created_at"]       = r.created_at;
+    v["created_by"]       = r.created_by;
+    v["started_at"]       = r.started_at;
+    v["ended_at"]         = r.ended_at;
+    // Parse tags_json inline so callers get an object, not a string.
+    if (!r.tags_json.empty() && r.tags_json != "null") {
+        Json::CharReaderBuilder rb;
+        Json::Value tags;
+        std::string errs;
+        std::istringstream ss(r.tags_json);
+        if (Json::parseFromStream(rb, ss, &tags, &errs)) v["tags"] = tags;
+        else v["tags"] = Json::objectValue;
+    } else {
+        v["tags"] = Json::objectValue;
+    }
     return v;
 }
 
 RunsController::RunsController(RunService& svc) : svc_(svc) {}
 
-void RunsController::list(const drogon::HttpRequestPtr& /*req*/,
+void RunsController::list(const drogon::HttpRequestPtr& req,
                            std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-    auto runs = svc_.list_runs({});
+    RunFilter f;
+    f.status = req->getParameter("status");
+    f.mode   = req->getParameter("mode");
+    auto lim = req->getParameter("limit");
+    auto off = req->getParameter("offset");
+    if (!lim.empty()) f.limit  = std::stoi(lim);
+    if (!off.empty()) f.offset = std::stoi(off);
+    auto runs = svc_.list_runs(f);
     Json::Value arr{Json::arrayValue};
     for (const auto& r : runs) arr.append(run_to_json(r));
     Json::Value resp;
-    resp["runs"] = arr;
+    resp["runs"]  = arr;
+    resp["total"] = static_cast<int>(runs.size());
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
