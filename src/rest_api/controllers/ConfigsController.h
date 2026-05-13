@@ -5,7 +5,7 @@
 
 namespace acadia::rest {
 
-class ConfigsController : public drogon::HttpController<ConfigsController> {
+class ConfigsController : public drogon::HttpController<ConfigsController, false> {
 public:
     explicit ConfigsController(ConfigService& svc);
 

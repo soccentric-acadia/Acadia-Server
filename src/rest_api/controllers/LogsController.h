@@ -5,7 +5,7 @@
 
 namespace acadia::rest {
 
-class LogsController : public drogon::HttpController<LogsController> {
+class LogsController : public drogon::HttpController<LogsController, false> {
 public:
     explicit LogsController(LogService& svc);
 

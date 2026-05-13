@@ -5,7 +5,7 @@
 
 namespace acadia::rest {
 
-class AuthController : public drogon::HttpController<AuthController> {
+class AuthController : public drogon::HttpController<AuthController, false> {
 public:
     explicit AuthController(AuthService& svc);
 

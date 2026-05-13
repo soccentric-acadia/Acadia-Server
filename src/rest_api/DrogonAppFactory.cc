@@ -36,7 +36,7 @@ void configure_drogon_app(const Settings&      settings,
     app.addListener(host, port);
 
     // Session support
-    app.enableSession(3600, drogon::CookieSameSite::kStrict);
+    app.enableSession(3600, drogon::Cookie::SameSite::kStrict);
 
     // Thread count
     int threads = static_cast<int>(settings.concurrency.http_threads);

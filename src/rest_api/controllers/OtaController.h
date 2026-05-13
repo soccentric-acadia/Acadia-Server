@@ -5,7 +5,7 @@
 
 namespace acadia::rest {
 
-class OtaController : public drogon::HttpController<OtaController> {
+class OtaController : public drogon::HttpController<OtaController, false> {
 public:
     explicit OtaController(OtaService& svc);
 

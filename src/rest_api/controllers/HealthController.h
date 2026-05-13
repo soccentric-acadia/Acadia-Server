@@ -4,7 +4,7 @@
 
 namespace acadia::rest {
 
-class HealthController : public drogon::HttpController<HealthController> {
+class HealthController : public drogon::HttpController<HealthController, false> {
 public:
     METHOD_LIST_BEGIN
     ADD_METHOD_TO(HealthController::get, "/api/v1/health", drogon::Get);

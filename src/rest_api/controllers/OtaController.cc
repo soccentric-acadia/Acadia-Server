@@ -1,6 +1,7 @@
 #include "rest_api/controllers/OtaController.h"
 #include "util/Errors.h"
 #include <drogon/HttpResponse.h>
+#include <drogon/MultiPart.h>
 #include <json/json.h>
 #include <spdlog/spdlog.h>
 
@@ -46,18 +47,22 @@ void OtaController::get(const drogon::HttpRequestPtr& /*req*/,
 
 void OtaController::upload(const drogon::HttpRequestPtr& req,
                             std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-    // Multipart upload: file is written to a tmp path by Drogon.
-    auto files = req->getUploadFiles();
-    if (files.empty()) {
+    // Multipart upload: parse the multipart body to extract the uploaded file.
+    drogon::MultiPartParser mp;
+    if (mp.parse(req) != 0 || mp.getFiles().empty()) {
         Json::Value err; err["error"] = "no file uploaded";
         auto resp = drogon::HttpResponse::newHttpJsonResponse(err);
         resp->setStatusCode(drogon::k400BadRequest);
         cb(resp);
         return;
     }
-    const auto& f = files[0];
+    const auto& f = mp.getFiles()[0];
+    // Save the uploaded artifact to a temporary path under the upload dir.
+    std::string tmp_name = "ota_" + f.getFileName();
+    f.saveAs(tmp_name);
+    std::string saved_path = drogon::app().getUploadPath() + "/" + tmp_name;
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
-    auto upgrade = svc_.accept_artifact(f.getFileName(), f.path(), user_id);
+    auto upgrade = svc_.accept_artifact(f.getFileName(), saved_path, user_id);
     cb(drogon::HttpResponse::newHttpJsonResponse(ota_to_json(upgrade)));
 }
 

@@ -83,19 +83,17 @@ std::vector<Run> RunRepository::list(const RunFilter& f) {
         ++p;
     }
 
-    sql << " ORDER BY created_at DESC LIMIT $" << p++ << " OFFSET $" << p++;
-    params.push_back(std::to_string(f.limit));
-    params.push_back(std::to_string(f.offset));
-
+    sql << " ORDER BY created_at DESC LIMIT " << f.limit << " OFFSET " << f.offset;
     // Build the SQL call with variable parameters
-    drogon::orm::Result rows;
-    switch (params.size()) {
-        case 2:  rows = db->execSqlSync(sql.str(), params[0], params[1]); break;
-        case 3:  rows = db->execSqlSync(sql.str(), params[0], params[1], params[2]); break;
-        case 4:  rows = db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3]); break;
-        case 5:  rows = db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3], params[4]); break;
-        default: rows = db->execSqlSync(sql.str(), params[0], params[1]); break;
-    }
+    auto rows = [&]() -> drogon::orm::Result {
+        switch (params.size()) {
+        case 2:  return db->execSqlSync(sql.str(), params[0], params[1]);
+        case 3:  return db->execSqlSync(sql.str(), params[0], params[1], params[2]);
+        case 4:  return db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3]);
+        case 5:  return db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3], params[4]);
+        default: return db->execSqlSync(sql.str(), params[0], params[1]);
+            }
+    }();
 
     std::vector<Run> out;
     for (const auto& r : rows) out.push_back(row_to_run(r));

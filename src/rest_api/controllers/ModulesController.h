@@ -5,7 +5,7 @@
 
 namespace acadia::rest {
 
-class ModulesController : public drogon::HttpController<ModulesController> {
+class ModulesController : public drogon::HttpController<ModulesController, false> {
 public:
     explicit ModulesController(ModuleService& svc);
 

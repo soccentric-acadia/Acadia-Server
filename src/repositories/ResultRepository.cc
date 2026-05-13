@@ -70,17 +70,15 @@ std::vector<Result> ResultRepository::list(const ResultFilter& f) {
     if (!f.since.empty())     { sql << " AND timestamp>=$"<< p++; params.push_back(f.since); }
     if (!f.until.empty())     { sql << " AND timestamp<=$"<< p++; params.push_back(f.until); }
 
-    sql << " ORDER BY timestamp ASC LIMIT $" << p++ << " OFFSET $" << p++;
-    params.push_back(std::to_string(f.limit));
-    params.push_back(std::to_string(f.offset));
-
-    drogon::orm::Result rows;
-    switch (params.size()) {
-        case 3: rows = db->execSqlSync(sql.str(), params[0], params[1], params[2]); break;
-        case 4: rows = db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3]); break;
-        case 5: rows = db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3], params[4]); break;
-        default: rows = db->execSqlSync(sql.str(), params[0], params[1], params[2]); break;
-    }
+    sql << " ORDER BY timestamp ASC LIMIT " << f.limit << " OFFSET " << f.offset;
+    auto rows = [&]() -> drogon::orm::Result {
+        switch (params.size()) {
+        case 3: return db->execSqlSync(sql.str(), params[0], params[1], params[2]);
+        case 4: return db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3]);
+        case 5: return db->execSqlSync(sql.str(), params[0], params[1], params[2], params[3], params[4]);
+        default: return db->execSqlSync(sql.str(), params[0], params[1], params[2]);
+            }
+    }();
 
     std::vector<Result> out;
     for (const auto& r : rows) out.push_back(row_to_result(r));

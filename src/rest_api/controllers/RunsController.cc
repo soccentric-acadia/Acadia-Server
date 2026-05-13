@@ -1,4 +1,5 @@
 #include "rest_api/controllers/RunsController.h"
+#include "repositories/ResultRepository.h"
 #include "util/Errors.h"
 #include <drogon/HttpResponse.h>
 #include <json/json.h>
@@ -103,6 +104,67 @@ void RunsController::resume(const drogon::HttpRequestPtr& req,
     svc_.resume_run(id, user_id);
     Json::Value resp; resp["ok"] = true;
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
+}
+
+void RunsController::results(const drogon::HttpRequestPtr& req,
+                              std::function<void(const drogon::HttpResponsePtr&)>&& cb,
+                              std::string id) {
+    ResultFilter f;
+    f.run_id = id;
+    if (auto v = req->getOptionalParameter<std::string>("module_id")) f.module_id = *v;
+    if (auto v = req->getOptionalParameter<std::string>("status"))    f.status    = *v;
+    if (auto v = req->getOptionalParameter<std::string>("since"))     f.since     = *v;
+    if (auto v = req->getOptionalParameter<std::string>("until"))     f.until     = *v;
+    if (auto v = req->getOptionalParameter<int>("limit"))             f.limit     = *v;
+    if (auto v = req->getOptionalParameter<int>("offset"))            f.offset    = *v;
+
+    auto rows = svc_.get_results(f);
+
+    Json::Value arr(Json::arrayValue);
+    for (const auto& r : rows) {
+        Json::Value o;
+        o["id"]               = r.id;
+        o["run_id"]           = r.run_id;
+        o["module_id"]        = r.module_id;
+        o["module_version"]   = r.module_version;
+        o["timestamp"]        = r.timestamp;
+        o["mode"]             = r.mode;
+        o["status"]           = r.status;
+        o["error_message"]    = r.error_message;
+        o["payload_type_url"] = r.payload_type_url;
+        // payload_bytes as base64 is omitted here; clients use the dedicated
+        // /api/v1/results/{id}/payload endpoint if they need raw bytes.
+        arr.append(o);
+    }
+
+    Json::Value resp;
+    resp["results"] = arr;
+    resp["total"]   = static_cast<int>(rows.size());
+    cb(drogon::HttpResponse::newHttpJsonResponse(resp));
+}
+
+void RunsController::events(const drogon::HttpRequestPtr& /*req*/,
+                             std::function<void(const drogon::HttpResponsePtr&)>&& cb,
+                             std::string id) {
+    // SSE endpoint — returns a minimal event-stream response with the run's
+    // current state. A full implementation would push events asynchronously
+    // via subscribe_results() as state transitions and results arrive.
+    std::string body;
+    try {
+        auto run = svc_.get_run(id);
+        body += "event: state\n";
+        body += "data: {\"type\":\"state\",\"run_id\":\"" + id + "\",\"status\":\"" + run.status + "\"}\n\n";
+    } catch (...) {
+        body += "event: error\n";
+        body += "data: {\"type\":\"error\",\"message\":\"run not found\"}\n\n";
+    }
+
+    auto resp = drogon::HttpResponse::newHttpResponse();
+    resp->setContentTypeString("text/event-stream");
+    resp->addHeader("Cache-Control", "no-cache");
+    resp->addHeader("X-Acadia-Run-Id", id);
+    resp->setBody(body);
+    cb(resp);
 }
 
 }  // namespace acadia::rest

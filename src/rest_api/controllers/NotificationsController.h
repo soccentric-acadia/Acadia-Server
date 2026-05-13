@@ -5,7 +5,7 @@
 
 namespace acadia::rest {
 
-class NotificationsController : public drogon::HttpController<NotificationsController> {
+class NotificationsController : public drogon::HttpController<NotificationsController, false> {
 public:
     explicit NotificationsController(NotificationService& svc);
 

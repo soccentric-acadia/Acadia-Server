@@ -5,7 +5,7 @@
 
 namespace acadia::rest {
 
-class TargetsController : public drogon::HttpController<TargetsController> {
+class TargetsController : public drogon::HttpController<TargetsController, false> {
 public:
     explicit TargetsController(TargetService& svc);
 
