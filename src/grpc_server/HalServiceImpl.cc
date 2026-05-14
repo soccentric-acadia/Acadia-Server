@@ -2,7 +2,11 @@
 #include "grpc_server/StreamBackpressure.h"
 #include "util/Uuid.h"
 #include "util/Time.h"
+#include "util/ResultConvert.h"
 
+#include "common.pb.h"
+
+#include <google/protobuf/any.pb.h>
 #include <spdlog/spdlog.h>
 
 #include <thread>
@@ -32,21 +36,46 @@ HalServiceImpl::HalServiceImpl(RunService&     run_svc,
 
 void HalServiceImpl::persist_result(const std::string& run_id,
                                      const hal::common::ResultEnvelope& env) {
-    Result r;
-    r.run_id           = run_id;
-    r.module_id        = env.module_id();
-    r.module_version   = env.module_version();
-    r.timestamp        = util::utc_now_iso8601();
-    r.mode             = std::to_string(static_cast<int>(env.mode()));
-    r.status           = env.status() == hal::common::PASS ? "pass" : "fail";
-    r.error_message    = env.error_message();
-    r.payload_type_url = env.payload().type_url();
+    // Unpack the Any payload as a TestResult proto.
+    const std::string expected_url = "type.googleapis.com/hal.common.TestResult";
+    if (env.payload().type_url() != expected_url) {
+        spdlog::warn("grpc: persist_result: unexpected type_url='{}' run_id={}",
+                     env.payload().type_url(), run_id);
+        // Fall back: build a minimal Result from the envelope fields.
+        Result r;
+        r.run_id           = run_id;
+        r.module_id        = env.module_id();
+        r.module_version   = env.module_version();
+        r.timestamp        = util::utc_now_iso8601();
+        r.mode             = std::to_string(static_cast<int>(env.mode()));
+        r.status           = static_cast<int16_t>(env.status());
+        r.error_message    = env.error_message();
+        r.payload_type_url = env.payload().type_url();
+        std::string serialized = env.payload().value();
+        r.payload_bytes.assign(serialized.begin(), serialized.end());
+        run_svc_.ingest_result(r);
+        return;
+    }
 
-    // Serialize the Any payload bytes
-    std::string serialized = env.payload().value();
-    r.payload_bytes.assign(serialized.begin(), serialized.end());
+    hal::common::TestResult tr;
+    if (!env.payload().UnpackTo(&tr)) {
+        spdlog::error("grpc: persist_result: failed to unpack TestResult run_id={}", run_id);
+        return;
+    }
 
-    run_svc_.ingest_result(r);
+    // Reject UNSPECIFIED status at the boundary.
+    if (tr.output().status() == hal::common::TEST_STATUS_UNSPECIFIED) {
+        spdlog::warn("grpc: persist_result: UNSPECIFIED status rejected run_id={} module_id={}",
+                     run_id, env.module_id());
+        return;
+    }
+
+    const std::string module_version = env.module_version().empty()
+        ? std::to_string(static_cast<int>(env.mode()))
+        : env.module_version();
+    const std::string mode = std::to_string(static_cast<int>(env.mode()));
+
+    run_svc_.ingest_test_result(tr, run_id, module_version, mode);
 }
 
 ::grpc::Status HalServiceImpl::RunSingleShot(
