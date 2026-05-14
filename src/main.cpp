@@ -27,6 +27,7 @@
 #include "orchestration/Scheduler.h"
 #include "orchestration/TargetHeartbeat.h"
 #include "orchestration/OtaOrchestrator.h"
+#include "orchestration/RetentionScheduler.h"
 
 #include <spdlog/spdlog.h>
 #include <drogon/drogon.h>
@@ -106,10 +107,12 @@ int main() {
     acadia::orchestration::Scheduler       scheduler{schedule_svc, run_svc};
     acadia::orchestration::TargetHeartbeat heartbeat{target_svc};
     acadia::orchestration::OtaOrchestrator ota_orch{ota_svc};
+    acadia::RetentionScheduler             retention{run_svc};
 
     scheduler.start();
     heartbeat.start();
     ota_orch.start();
+    retention.start();
 
     // --- gRPC Server (in background thread) ---
     acadia::grpc::HalServiceImpl hal_service{run_svc, log_svc, mod_svc, settings};
@@ -149,6 +152,7 @@ int main() {
     spdlog::info("Shutting down...");
     scheduler.stop();
     heartbeat.stop();
+    retention.stop();
     ota_orch.stop();
     grpc_runner.shutdown();
     if (grpc_thread.joinable()) grpc_thread.join();

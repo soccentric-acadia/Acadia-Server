@@ -104,4 +104,19 @@ void TargetsController::heartbeat(const drogon::HttpRequestPtr& req,
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
+void TargetsController::delete_board(const drogon::HttpRequestPtr& req,
+                                      std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+    std::string user_id = req->getAttributes()->get<std::string>("user_id");
+    try {
+        svc_.remove_board(user_id);
+        Json::Value resp; resp["ok"] = true;
+        cb(drogon::HttpResponse::newHttpJsonResponse(resp));
+    } catch (const NotFoundError& e) {
+        Json::Value err; err["error"] = e.what();
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(err);
+        resp->setStatusCode(drogon::k404NotFound);
+        cb(resp);
+    }
+}
+
 }  // namespace acadia::rest

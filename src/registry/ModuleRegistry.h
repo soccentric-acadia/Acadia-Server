@@ -16,6 +16,7 @@ struct ModuleInfo {
     std::string name;
     std::string description;
     std::string version;
+    std::string category;        // e.g. "compute", "sensors", "connectivity"
     // proto type_url for the module's Result message
     std::string result_type_url;
     // proto type_url for the module's Config message

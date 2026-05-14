@@ -9,10 +9,13 @@ ModulesController::ModulesController(ModuleService& svc) : svc_(svc) {}
 
 static Json::Value mod_to_json(const ModuleInfo& m) {
     Json::Value v;
-    v["id"]          = m.id;
-    v["name"]        = m.name;
-    v["description"] = m.description;
-    v["version"]     = m.version;
+    v["id"]              = m.id;
+    v["name"]            = m.name;
+    v["description"]     = m.description;
+    v["version"]         = m.version;
+    v["category"]        = m.category;
+    v["result_type_url"] = m.result_type_url;
+    v["config_type_url"] = m.config_type_url;
     return v;
 }
 

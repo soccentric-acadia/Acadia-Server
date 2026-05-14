@@ -91,4 +91,27 @@ void AuthController::revoke_token(const drogon::HttpRequestPtr& req,
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
+void AuthController::change_password(const drogon::HttpRequestPtr& req,
+                                      std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+    std::string user_id = req->getAttributes()->get<std::string>("user_id");
+    auto body = req->getJsonObject();
+    if (!body) {
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(err_json("invalid json"));
+        resp->setStatusCode(drogon::k400BadRequest);
+        cb(resp);
+        return;
+    }
+    std::string old_password = (*body)["current_password"].asString();
+    std::string new_password = (*body)["new_password"].asString();
+    try {
+        svc_.change_password(user_id, old_password, new_password);
+        Json::Value resp; resp["ok"] = true;
+        cb(drogon::HttpResponse::newHttpJsonResponse(resp));
+    } catch (const AuthError& e) {
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(err_json(e.what()));
+        resp->setStatusCode(drogon::k401Unauthorized);
+        cb(resp);
+    }
+}
+
 }  // namespace acadia::rest

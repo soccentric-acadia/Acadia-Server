@@ -99,6 +99,30 @@ add_custom_command(
 list(APPEND PROTO_SRCS "${HAL_PB_CC}" "${HAL_GRPC_CC}")
 list(APPEND PROTO_HDRS "${HAL_PB_H}"  "${HAL_GRPC_H}")
 
+# --- client_service.proto (protobuf + gRPC stubs) ---
+# The on-target Client App connects to the Server via this bidi-streaming service.
+# It sends TestResultBatch (with hal.common.TestResult payloads) and receives run commands.
+set(CLIENT_PROTO   "${PROTO_SRC_DIR}/client_service.proto")
+set(CLIENT_PB_CC   "${PROTO_GEN_DIR}/client_service.pb.cc")
+set(CLIENT_PB_H    "${PROTO_GEN_DIR}/client_service.pb.h")
+set(CLIENT_GRPC_CC "${PROTO_GEN_DIR}/client_service.grpc.pb.cc")
+set(CLIENT_GRPC_H  "${PROTO_GEN_DIR}/client_service.grpc.pb.h")
+add_custom_command(
+  OUTPUT  "${CLIENT_PB_CC}" "${CLIENT_PB_H}" "${CLIENT_GRPC_CC}" "${CLIENT_GRPC_H}"
+  COMMAND "${PROTOC_EXE}"
+          --proto_path=${PROTO_SRC_DIR}
+          --proto_path=/usr/include
+          --cpp_out=${PROTO_GEN_DIR}
+          --grpc_out=${PROTO_GEN_DIR}
+          --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+          ${CLIENT_PROTO}
+  DEPENDS "${CLIENT_PROTO}" "${COMMON_PROTO}"
+  COMMENT "Generating protobuf+gRPC C++ from client_service.proto"
+  VERBATIM
+)
+list(APPEND PROTO_SRCS "${CLIENT_PB_CC}" "${CLIENT_GRPC_CC}")
+list(APPEND PROTO_HDRS "${CLIENT_PB_H}"  "${CLIENT_GRPC_H}")
+
 # Proto static library
 add_library(acadia-proto STATIC ${PROTO_SRCS} ${PROTO_HDRS})
 target_include_directories(acadia-proto PUBLIC "${PROTO_GEN_DIR}")

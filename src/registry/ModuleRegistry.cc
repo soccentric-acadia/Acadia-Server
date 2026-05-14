@@ -30,6 +30,7 @@ void ModuleRegistry::load(const std::string& path) {
         m.name        = node["name"]        ? node["name"].as<std::string>()        : m.id;
         m.description = node["description"] ? node["description"].as<std::string>() : "";
         m.version     = node["version"]     ? node["version"].as<std::string>()     : "0.0.0";
+        m.category    = node["category"]    ? node["category"].as<std::string>()    : "other";
         m.result_type_url = node["result_type_url"] ?
             node["result_type_url"].as<std::string>() : "";
         m.config_type_url = node["config_type_url"] ?

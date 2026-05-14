@@ -13,6 +13,7 @@ public:
     ADD_METHOD_TO(TargetsController::get_board,    "/api/v1/target",          drogon::Get);
     ADD_METHOD_TO(TargetsController::register_board,"/api/v1/target",         drogon::Post);
     ADD_METHOD_TO(TargetsController::update_board, "/api/v1/target",          drogon::Put);
+    ADD_METHOD_TO(TargetsController::delete_board, "/api/v1/target",          drogon::Delete);
     ADD_METHOD_TO(TargetsController::heartbeat,    "/api/v1/target/heartbeat",drogon::Post);
     METHOD_LIST_END
 
@@ -21,6 +22,8 @@ public:
     void register_board(const drogon::HttpRequestPtr&,
                         std::function<void(const drogon::HttpResponsePtr&)>&&);
     void update_board(const drogon::HttpRequestPtr&,
+                      std::function<void(const drogon::HttpResponsePtr&)>&&);
+    void delete_board(const drogon::HttpRequestPtr&,
                       std::function<void(const drogon::HttpResponsePtr&)>&&);
     void heartbeat(const drogon::HttpRequestPtr&,
                    std::function<void(const drogon::HttpResponsePtr&)>&&);
