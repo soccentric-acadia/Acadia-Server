@@ -52,13 +52,14 @@ public:
 
     void delete_rule(const std::string& id);
 
-private:
-    NotificationRepository notif_repo_;
-
+protected:
     // Returns true if lhs <op> rhs according to `op`.
     // Throws ThresholdTypeError if types are incompatible.
     static bool compare(const Json::Value& lhs, const std::string& op,
                         const Json::Value& rhs);
+
+private:
+    NotificationRepository notif_repo_;
 
     // Extract the typed value object from the metrics JSON for a given key.
     // Returns Json::nullValue if the key is absent.
