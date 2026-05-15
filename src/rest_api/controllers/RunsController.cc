@@ -7,6 +7,11 @@
 #include <json/json.h>
 #include <map>
 #include <sstream>
+#include <condition_variable>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <cstring>
 
 namespace acadia::rest {
 
@@ -239,24 +244,82 @@ void RunsController::results(const drogon::HttpRequestPtr& req,
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
+// SSE context for live run event streaming — shared between subscribe callback
+// and the Drogon stream-response callback.
+namespace {
+struct RunSseCtx {
+    std::mutex              mtx;
+    std::condition_variable cv;
+    std::queue<std::string> msgs;    // ready-to-send SSE lines
+    bool                    done{false};
+};
+}  // namespace
+
 void RunsController::events(const drogon::HttpRequestPtr& /*req*/,
                              std::function<void(const drogon::HttpResponsePtr&)>&& cb,
                              std::string id) {
-    std::string body;
+    // Emit initial run-state event.
+    std::string initial;
     try {
         auto run = svc_.get_run(id);
-        body += "event: state\n";
-        body += "data: {\"type\":\"state\",\"run_id\":\"" + id + "\",\"status\":\"" + run.status + "\"}\n\n";
+        initial  = "event: state\ndata: {\"type\":\"state\",\"run_id\":\"" + id
+                 + "\",\"status\":\"" + run.status + "\"}\n\n";
     } catch (...) {
-        body += "event: error\n";
-        body += "data: {\"type\":\"error\",\"message\":\"run not found\"}\n\n";
+        initial  = "event: error\ndata: {\"type\":\"error\","
+                   "\"message\":\"run not found\"}\n\n";
     }
 
-    auto resp = drogon::HttpResponse::newHttpResponse();
-    resp->setContentTypeString("text/event-stream");
+    auto ctx = std::make_shared<RunSseCtx>();
+    {
+        std::lock_guard lk(ctx->mtx);
+        ctx->msgs.push(std::move(initial));
+    }
+    ctx->cv.notify_one();
+
+    // Subscribe to live results for this run.
+    Json::StreamWriterBuilder fwb;
+    fwb["indentation"] = "";
+    uint64_t sub_id = svc_.subscribe_results(id, [ctx, fwb](const Result& r) {
+        std::ostringstream ss;
+        std::unique_ptr<Json::StreamWriter>(fwb.newStreamWriter())->write(result_to_json(r), &ss);
+        std::string line = "event: result\ndata: " + ss.str() + "\n\n";
+        {
+            std::lock_guard lk(ctx->mtx);
+            ctx->msgs.push(std::move(line));
+        }
+        ctx->cv.notify_one();
+    });
+
+    auto resp = drogon::HttpResponse::newStreamResponse(
+        [ctx, sub_id_captured = sub_id, &svc = svc_](char* buf, std::size_t len) mutable -> std::size_t {
+            std::unique_lock lk(ctx->mtx);
+            // Wait up to 20 s for new data; send keepalive comment on timeout.
+            ctx->cv.wait_for(lk, std::chrono::seconds(20), [&]{
+                return !ctx->msgs.empty() || ctx->done;
+            });
+            if (ctx->msgs.empty()) {
+                if (ctx->done) {
+                    svc.unsubscribe_results(sub_id_captured);
+                    return 0;
+                }
+                static const char ka[] = ": keepalive\n\n";
+                static const std::size_t ka_len = sizeof(ka) - 1;
+                std::size_t n = std::min(ka_len, len);
+                std::memcpy(buf, ka, n);
+                return n;
+            }
+            std::string msg = std::move(ctx->msgs.front());
+            ctx->msgs.pop();
+            lk.unlock();
+            std::size_t n = std::min(msg.size(), len);
+            std::memcpy(buf, msg.data(), n);
+            return n;
+        },
+        /*attachmentFileName=*/"",
+        drogon::CT_CUSTOM,
+        "text/event-stream");
     resp->addHeader("Cache-Control", "no-cache");
     resp->addHeader("X-Acadia-Run-Id", id);
-    resp->setBody(body);
     cb(resp);
 }
 

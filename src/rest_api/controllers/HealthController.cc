@@ -1,13 +1,15 @@
 #include "rest_api/controllers/HealthController.h"
 #include <drogon/HttpResponse.h>
 #include <json/json.h>
+#include "version.hpp"
 
 namespace acadia::rest {
 
 void HealthController::get(const drogon::HttpRequestPtr& /*req*/,
                             std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
     Json::Value resp;
-    resp["status"] = "ok";
+    resp["status"]  = "ok";
+    resp["version"] = ACADIA_SERVER_VERSION;
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 

@@ -116,6 +116,14 @@ int main() {
     acadia::orchestration::OtaOrchestrator ota_orch{ota_svc};
     acadia::RetentionScheduler             retention{run_svc};
 
+    // Reconcile any runs that were left in 'running'/'queued' state from a previous crash.
+    {
+        int stale = run_svc.reconcile_stale_runs();
+        if (stale > 0) {
+            spdlog::warn("Reconciled {} stale run(s) to 'failed' on startup", stale);
+        }
+    }
+
     scheduler.start();
     heartbeat.start();
     ota_orch.start();

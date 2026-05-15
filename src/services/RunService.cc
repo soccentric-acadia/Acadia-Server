@@ -215,4 +215,19 @@ void RunService::delete_run(const std::string& run_id,
     audit_repo_.log(actor_user_id, "run.deleted", "run", run_id, "{}");
 }
 
+int RunService::reconcile_stale_runs() {
+    int count = 0;
+    for (const char* stale_status : {"running", "queued"}) {
+        RunFilter f;
+        f.status = stale_status;
+        auto stale = run_repo_.list(f);
+        for (const auto& r : stale) {
+            run_repo_.update_status(r.id, "failed",
+                                    "Server restarted — run was interrupted");
+            ++count;
+        }
+    }
+    return count;
+}
+
 }  // namespace acadia

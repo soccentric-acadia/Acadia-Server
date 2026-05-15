@@ -1,6 +1,11 @@
 #include "rest_api/controllers/LogsController.h"
 #include <drogon/HttpResponse.h>
 #include <json/json.h>
+#include <condition_variable>
+#include <cstring>
+#include <memory>
+#include <mutex>
+#include <queue>
 
 namespace acadia::rest {
 
@@ -32,20 +37,6 @@ void LogsController::list(const drogon::HttpRequestPtr& req,
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
-void LogsController::tail(const drogon::HttpRequestPtr& /*req*/,
-                           std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                           std::string run_id) {
-    // SSE response: streaming text/event-stream
-    // For simplicity, we return a 200 with an SSE header and close immediately.
-    // Real SSE would use Drogon's async streaming response.
-    auto resp = drogon::HttpResponse::newHttpResponse();
-    resp->setContentTypeString("text/event-stream");
-    resp->addHeader("Cache-Control", "no-cache");
-    resp->addHeader("X-Acadia-Run-Id", run_id);
-    resp->setBody("data: {\"status\":\"connected\"}\n\n");
-    cb(resp);
-}
-
 static Json::Value log_entry_to_json(const LogEntry& e) {
     Json::Value v;
     v["id"]        = e.id;
@@ -56,6 +47,78 @@ static Json::Value log_entry_to_json(const LogEntry& e) {
     v["message"]   = e.message;
     v["timestamp"] = e.timestamp;
     return v;
+}
+
+// SSE context for log tail streaming.
+namespace {
+struct LogSseCtx {
+    std::mutex              mtx;
+    std::condition_variable cv;
+    std::queue<std::string> msgs;
+    bool                    done{false};
+};
+}  // namespace
+
+void LogsController::tail(const drogon::HttpRequestPtr& req,
+                           std::function<void(const drogon::HttpResponsePtr&)>&& cb,
+                           std::string run_id) {
+    // Filter context for this tail subscription (run_id may be empty = all logs).
+    auto ctx = std::make_shared<LogSseCtx>();
+
+    // Push a connected event immediately.
+    {
+        std::lock_guard lk(ctx->mtx);
+        std::string connected = "event: connected\ndata: {\"status\":\"connected\"}\n\n";
+        ctx->msgs.push(std::move(connected));
+    }
+    ctx->cv.notify_one();
+
+    // Subscribe to broadcast log entries.
+    Json::StreamWriterBuilder fwb;
+    fwb["indentation"] = "";
+    uint64_t sub_id = svc_.subscribe([ctx, run_id, fwb](const LogEntry& e) {
+        // If a run_id filter is set, skip entries not matching it.
+        if (!run_id.empty() && e.run_id != run_id) return;
+        std::ostringstream ss;
+        std::unique_ptr<Json::StreamWriter>(fwb.newStreamWriter())->write(log_entry_to_json(e), &ss);
+        std::string line = "event: log\ndata: " + ss.str() + "\n\n";
+        {
+            std::lock_guard lk(ctx->mtx);
+            ctx->msgs.push(std::move(line));
+        }
+        ctx->cv.notify_one();
+    });
+
+    auto resp = drogon::HttpResponse::newStreamResponse(
+        [ctx, sub_id_captured = sub_id, &svc = svc_](char* buf, std::size_t len) mutable -> std::size_t {
+            std::unique_lock lk(ctx->mtx);
+            ctx->cv.wait_for(lk, std::chrono::seconds(20), [&]{
+                return !ctx->msgs.empty() || ctx->done;
+            });
+            if (ctx->msgs.empty()) {
+                if (ctx->done) {
+                    svc.unsubscribe(sub_id_captured);
+                    return 0;
+                }
+                static const char ka[] = ": keepalive\n\n";
+                static const std::size_t ka_len = sizeof(ka) - 1;
+                std::size_t n = std::min(ka_len, len);
+                std::memcpy(buf, ka, n);
+                return n;
+            }
+            std::string msg = std::move(ctx->msgs.front());
+            ctx->msgs.pop();
+            lk.unlock();
+            std::size_t n = std::min(msg.size(), len);
+            std::memcpy(buf, msg.data(), n);
+            return n;
+        },
+        /*attachmentFileName=*/"",
+        drogon::CT_CUSTOM,
+        "text/event-stream");
+    resp->addHeader("Cache-Control", "no-cache");
+    if (!run_id.empty()) resp->addHeader("X-Acadia-Run-Id", run_id);
+    cb(resp);
 }
 
 void LogsController::global_list(const drogon::HttpRequestPtr& req,

@@ -108,6 +108,11 @@ public:
 
     void delete_run(const std::string& run_id, const std::string& actor_user_id);
 
+    // On-startup reconciliation: mark any runs still in 'running' or 'queued'
+    // state as 'failed' (the server crashed before completing them).
+    // Returns the number of runs reconciled.
+    int reconcile_stale_runs();
+
 private:
     RunRepository        run_repo_;
     ResultRepository     result_repo_;
