@@ -57,7 +57,7 @@ TEST(SeverityConvertTest, FromStringRoundTrip) {
 TEST(TypedMapTest, DoubleValue) {
     google::protobuf::Map<std::string, hal::common::TypedValue> m;
     hal::common::TypedValue tv;
-    tv.set_double_val(42.5);
+    tv.set_double_value(42.5);
     m["throughput"] = tv;
 
     Json::Value j = typed_map_to_json(m);
@@ -69,7 +69,7 @@ TEST(TypedMapTest, DoubleValue) {
 TEST(TypedMapTest, IntValue) {
     google::protobuf::Map<std::string, hal::common::TypedValue> m;
     hal::common::TypedValue tv;
-    tv.set_int_val(1234);
+    tv.set_int_value(1234);
     m["count"] = tv;
 
     Json::Value j = typed_map_to_json(m);
@@ -81,7 +81,7 @@ TEST(TypedMapTest, IntValue) {
 TEST(TypedMapTest, StringValue) {
     google::protobuf::Map<std::string, hal::common::TypedValue> m;
     hal::common::TypedValue tv;
-    tv.set_str_val("hello");
+    tv.set_string_value("hello");
     m["label"] = tv;
 
     Json::Value j = typed_map_to_json(m);
@@ -93,7 +93,7 @@ TEST(TypedMapTest, StringValue) {
 TEST(TypedMapTest, BoolValue) {
     google::protobuf::Map<std::string, hal::common::TypedValue> m;
     hal::common::TypedValue tv;
-    tv.set_bool_val(true);
+    tv.set_bool_value(true);
     m["ok"] = tv;
 
     Json::Value j = typed_map_to_json(m);
