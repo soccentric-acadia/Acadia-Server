@@ -50,9 +50,10 @@ TEST(AnomalyServiceTest, NormalData_NoAnomalies) {
 }
 
 TEST(AnomalyServiceTest, SpikeDetected) {
-    std::vector<double> vals = {10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 100.0};
+    // 20 normal values then a clear spike: z ≈ 4.36 which exceeds threshold 3.0.
+    std::vector<double> vals(20, 10.0);
+    vals.push_back(100.0);
     auto pts = compute_anomalies(vals, 3.0);
-    // Last point (100.0) must be flagged as an anomaly.
     ASSERT_FALSE(pts.empty());
     EXPECT_TRUE(pts.back().is_anomaly);
 }

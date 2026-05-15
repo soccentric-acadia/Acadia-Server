@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     # Drogon runtime dependencies
     libjsoncpp-dev uuid-dev zlib1g-dev libbrotli-dev \
-    libpq-dev libcares-dev \
+    libpq-dev libc-ares-dev \
     # Logging / testing / auth
     libspdlog-dev libgtest-dev libargon2-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -54,6 +54,25 @@ RUN git clone --depth=1 --branch v1.9.3 \
     && cmake --build build --parallel \
     && cmake --install build \
     && rm -rf /tmp/drogon
+
+# ─── gRPC cmake config + grpc_cpp_plugin ─────────────────────────────────────
+# Ubuntu 22.04's libgrpc++-dev ships shared libraries but no cmake config files
+# and no grpc_cpp_plugin binary.  We (a) install a hand-written cmake stub that
+# wraps the system libraries and (b) compile the plugin from the 1.30.2 source.
+COPY gRPCConfig.cmake        /usr/lib/x86_64-linux-gnu/cmake/grpc/gRPCConfig.cmake
+COPY gRPCConfigVersion.cmake /usr/lib/x86_64-linux-gnu/cmake/grpc/gRPCConfigVersion.cmake
+RUN git clone --depth=1 --branch v1.30.2 \
+        --filter=blob:none --sparse \
+        https://github.com/grpc/grpc.git /tmp/grpc \
+    && cd /tmp/grpc \
+    && git sparse-checkout set src/compiler \
+    && g++ -std=c++14 -O2 \
+           -o /usr/local/bin/grpc_cpp_plugin \
+           src/compiler/cpp_generator.cc \
+           src/compiler/cpp_plugin.cc \
+           -I . \
+           $(pkg-config --cflags protobuf) -lprotoc -lprotobuf \
+    && rm -rf /tmp/grpc
 
 # ─── Non-root user (mirrors host UID/GID for bind-mount ownership) ───────────
 RUN groupadd -g ${GID} acadia \

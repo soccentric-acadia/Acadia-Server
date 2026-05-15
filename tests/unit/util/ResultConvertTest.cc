@@ -60,7 +60,7 @@ TEST(TypedMapTest, DoubleValue) {
     tv.set_double_value(42.5);
     m["throughput"] = tv;
 
-    Json::Value j = typed_map_to_json(m);
+    Json::Value j = parse_typed_map_json(typed_map_to_json(m));
     ASSERT_TRUE(j.isMember("throughput"));
     EXPECT_EQ(j["throughput"]["type"].asString(), "double");
     EXPECT_DOUBLE_EQ(j["throughput"]["value"].asDouble(), 42.5);
@@ -72,7 +72,7 @@ TEST(TypedMapTest, IntValue) {
     tv.set_int_value(1234);
     m["count"] = tv;
 
-    Json::Value j = typed_map_to_json(m);
+    Json::Value j = parse_typed_map_json(typed_map_to_json(m));
     ASSERT_TRUE(j.isMember("count"));
     EXPECT_EQ(j["count"]["type"].asString(), "int");
     EXPECT_EQ(j["count"]["value"].asInt64(), 1234);
@@ -84,7 +84,7 @@ TEST(TypedMapTest, StringValue) {
     tv.set_string_value("hello");
     m["label"] = tv;
 
-    Json::Value j = typed_map_to_json(m);
+    Json::Value j = parse_typed_map_json(typed_map_to_json(m));
     ASSERT_TRUE(j.isMember("label"));
     EXPECT_EQ(j["label"]["type"].asString(), "string");
     EXPECT_EQ(j["label"]["value"].asString(), "hello");
@@ -96,7 +96,7 @@ TEST(TypedMapTest, BoolValue) {
     tv.set_bool_value(true);
     m["ok"] = tv;
 
-    Json::Value j = typed_map_to_json(m);
+    Json::Value j = parse_typed_map_json(typed_map_to_json(m));
     ASSERT_TRUE(j.isMember("ok"));
     EXPECT_EQ(j["ok"]["type"].asString(), "bool");
     EXPECT_TRUE(j["ok"]["value"].asBool());
