@@ -1,2 +1,0 @@
-/usr/bin/ar qc libacadia-internal.a "CMakeFiles/acadia-internal.dir/internal/config/config.cpp.o" "CMakeFiles/acadia-internal.dir/internal/logging/logger.cpp.o"
-/usr/bin/ranlib libacadia-internal.a

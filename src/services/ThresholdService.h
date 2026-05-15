@@ -7,7 +7,6 @@
 
 #include "repositories/ResultRepository.h"
 #include "repositories/NotificationRepository.h"
-#include "db/DbClient.h"
 
 #include <json/json.h>
 #include <optional>

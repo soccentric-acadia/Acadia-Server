@@ -1,5 +1,6 @@
 #include "services/ThresholdService.h"
 #include "util/ResultConvert.h"
+#include "db/DbClient.h"
 
 #include <spdlog/spdlog.h>
 #include <json/json.h>
@@ -108,7 +109,6 @@ int ThresholdService::evaluate(const Result& result) {
                     << R"("op":")"         << rule.op          << "\","
                     << R"("result_id":")"  << result.id        << "\"}";
             notif_repo_.create("result.threshold_crossed", payload.str());
-            audit_repo_impl_log_if_available_placeholder:;  // NOLINT
             spdlog::info("threshold: crossed — run_id={} module_id={} test_id={} key={} op={}",
                          result.run_id, result.module_id, result.test_id,
                          rule.metric_key, rule.op);

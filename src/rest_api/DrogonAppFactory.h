@@ -12,6 +12,7 @@
 #include "services/ScheduleService.h"
 #include "services/OtaService.h"
 #include "services/NotificationService.h"
+#include "services/CompareService.h"
 
 #include <drogon/drogon.h>
 
@@ -29,6 +30,7 @@ void configure_drogon_app(const Settings&          settings,
                            TemplateService&         template_svc,
                            ScheduleService&         schedule_svc,
                            OtaService&              ota_svc,
-                           NotificationService&     notif_svc);
+                           NotificationService&     notif_svc,
+                           CompareService&          cmp_svc);
 
 }  // namespace acadia::rest
