@@ -6,14 +6,19 @@
 
 namespace acadia::grpc {
 
-GrpcServerRunner::GrpcServerRunner(HalServiceImpl& service, const NetworkSettings& net)
-    : service_(service), net_(net) {}
+GrpcServerRunner::GrpcServerRunner(HalServiceImpl&    hal_service,
+                                    ClientServiceImpl& client_service,
+                                    const NetworkSettings& net)
+    : hal_service_(hal_service),
+      client_service_(client_service),
+      net_(net) {}
 
 void GrpcServerRunner::start() {
     ::grpc::ServerBuilder builder;
     builder.AddListeningPort(net_.grpc_listen,
                              ::grpc::InsecureServerCredentials());
-    builder.RegisterService(&service_);
+    builder.RegisterService(&hal_service_);
+    builder.RegisterService(&client_service_);
 
     // Reuse port, keepalive tuning.
     builder.SetMaxReceiveMessageSize(32 * 1024 * 1024);  // 32 MiB
@@ -23,7 +28,7 @@ void GrpcServerRunner::start() {
     if (!server_) {
         throw std::runtime_error("Failed to start gRPC server on " + net_.grpc_listen);
     }
-    spdlog::info("gRPC server listening on {}", net_.grpc_listen);
+    spdlog::info("gRPC server listening on {} (HalService + ClientService)", net_.grpc_listen);
     server_->Wait();
 }
 
