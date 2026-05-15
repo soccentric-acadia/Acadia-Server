@@ -72,7 +72,12 @@ void ClientServiceImpl::handle_result_batch(
 
 void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) {
     for (const auto& line : batch.lines()) {
-        log_svc_.store_client_log(batch.run_id(), line.source(), line.level(), line.text());
+        LogEntry e;
+        e.run_id   = line.run_id().empty() ? batch.run_id() : line.run_id();
+        e.source   = line.source();
+        e.severity = line.level();
+        e.message  = line.text();
+        log_svc_.ingest(e);
     }
 }
 
