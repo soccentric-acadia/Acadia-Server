@@ -14,6 +14,24 @@
 # EXTERNAL cache entries
 ########################
 
+//Path to a file.
+ARGON2_INCLUDE:PATH=/usr/include
+
+//Path to a library.
+ARGON2_LIB:FILEPATH=/usr/lib/x86_64-linux-gnu/libargon2.so
+
+//Path to a library.
+BROTLICOMMON_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libbrotlicommon.so
+
+//Path to a library.
+BROTLIDEC_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libbrotlidec.so
+
+//Path to a library.
+BROTLIENC_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libbrotlienc.so
+
+//Path to a file.
+BROTLI_INCLUDE_DIR:PATH=/usr/include
+
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
 
@@ -202,11 +220,58 @@ CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
+//TRUE if we have the C++ filesystem headers
+CXX_FILESYSTEM_HAVE_FS:BOOL=TRUE
+
+//The header that should be included to obtain the filesystem APIs
+CXX_FILESYSTEM_HEADER:STRING=filesystem
+
+//TRUE if the C++ filesystem library is the experimental version
+CXX_FILESYSTEM_IS_EXPERIMENTAL:BOOL=FALSE
+
+//The C++ namespace that contains the filesystem APIs
+CXX_FILESYSTEM_NAMESPACE:STRING=std::filesystem
+
 //The directory containing a CMake configuration file for Drogon.
 Drogon_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Drogon
 
 //Enable gcov coverage instrumentation
 ENABLE_COVERAGE:BOOL=OFF
+
+//Directory under which to collect all populated content
+FETCHCONTENT_BASE_DIR:PATH=/home/sandesh/work/Acadia/Acadia-Server/build/_deps
+
+//Disables all attempts to download or update content and assumes
+// source dirs already exist
+FETCHCONTENT_FULLY_DISCONNECTED:BOOL=OFF
+
+//Enables QUIET option for all content population
+FETCHCONTENT_QUIET:BOOL=ON
+
+//When not empty, overrides where to find pre-populated content
+// for tomlplusplus
+FETCHCONTENT_SOURCE_DIR_TOMLPLUSPLUS:PATH=
+
+//Enables UPDATE_DISCONNECTED behavior just for population of tomlplusplus
+FETCHCONTENT_UPDATES_DISCONNECTED_TOMLPLUSPLUS:BOOL=OFF
+
+//TRUE if we can run a program using std::filesystem
+Filesystem_FOUND:BOOL=TRUE
+
+//Git command line client
+GIT_EXECUTABLE:FILEPATH=/usr/bin/git
+
+//Path to a program.
+GRPC_CPP_PLUGIN:FILEPATH=/usr/bin/grpc_cpp_plugin
+
+//The directory containing a CMake configuration file for GTest.
+GTest_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/GTest
+
+//Path to a file.
+HIREDIS_INCLUDE_DIR:PATH=/usr/include
+
+//Path to a library.
+HIREDIS_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libhiredis.so
 
 //jsoncpp include dir
 JSONCPP_INCLUDE_DIRS:PATH=/usr/include/jsoncpp
@@ -218,7 +283,13 @@ JSONCPP_LIBRARIES:FILEPATH=/usr/lib/x86_64-linux-gnu/libjsoncpp.so
 MYSQL_INCLUDE_DIRS:PATH=/usr/include/mysql
 
 //Path to a library.
-MYSQL_LIBRARIES:FILEPATH=MYSQL_LIBRARIES-NOTFOUND
+MYSQL_LIBRARIES:FILEPATH=/usr/lib/x86_64-linux-gnu/libmysqlclient.so
+
+//No help, variable specified on the command line.
+MySQL_INCLUDE_DIR:UNINITIALIZED=/usr/include/mysql
+
+//No help, variable specified on the command line.
+MySQL_LIBRARY:UNINITIALIZED=/usr/lib/x86_64-linux-gnu/libmysqlclient.so
 
 //Path to a library.
 OPENSSL_CRYPTO_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libcrypto.so
@@ -234,6 +305,9 @@ PKG_CONFIG_ARGN:STRING=
 
 //pkg-config executable
 PKG_CONFIG_EXECUTABLE:FILEPATH=/usr/bin/pkg-config
+
+//Path to a program.
+PROTOC_EXE:FILEPATH=/usr/bin/protoc
 
 //The Set the PostgreSQL_INCLUDE_DIR cmake cache entry to the top-level
 // directory containing the PostgreSQL include directories. E.g
@@ -319,6 +393,9 @@ acadia-server_SOURCE_DIR:STATIC=/home/sandesh/work/Acadia/Acadia-Server
 //The directory containing a CMake configuration file for c-ares.
 c-ares_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/c-ares
 
+//The directory containing a CMake configuration file for fmt.
+fmt_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/fmt
+
 //The directory containing a CMake configuration file for gRPC.
 gRPC_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/grpc
 
@@ -331,8 +408,29 @@ pkgcfg_lib__OPENSSL_crypto:FILEPATH=/usr/lib/x86_64-linux-gnu/libcrypto.so
 //Path to a library.
 pkgcfg_lib__OPENSSL_ssl:FILEPATH=/usr/lib/x86_64-linux-gnu/libssl.so
 
+//The directory containing a CMake configuration file for prometheus-cpp.
+prometheus-cpp_DIR:PATH=prometheus-cpp_DIR-NOTFOUND
+
 //The directory containing a CMake configuration file for re2.
 re2_DIR:PATH=re2_DIR-NOTFOUND
+
+//The directory containing a CMake configuration file for spdlog.
+spdlog_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/spdlog
+
+//Value Computed by CMake
+tomlplusplus_BINARY_DIR:STATIC=/home/sandesh/work/Acadia/Acadia-Server/build/_deps/tomlplusplus-build
+
+//Use SYSTEM modifier for tomlplusplus's includes, disabling warnings
+tomlplusplus_INCLUDES_WITH_SYSTEM:BOOL=ON
+
+//Value Computed by CMake
+tomlplusplus_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+tomlplusplus_SOURCE_DIR:STATIC=/home/sandesh/work/Acadia/Acadia-Server/build/_deps/tomlplusplus-src
+
+//The directory containing a CMake configuration file for yaml-cpp.
+yaml-cpp_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/yaml-cpp
 
 
 ########################
@@ -425,7 +523,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=1
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=2
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -470,8 +568,22 @@ CMAKE_TAPI-ADVANCED:INTERNAL=1
 CMAKE_UNAME:INTERNAL=/usr/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+//Test CXX_FILESYSTEM_NO_LINK_NEEDED
+CXX_FILESYSTEM_NO_LINK_NEEDED:INTERNAL=1
+//Result of TRY_COMPILE
+CXX_FILESYSTEM_NO_LINK_NEEDED_COMPILED:INTERNAL=TRUE
+//Result of try_run()
+CXX_FILESYSTEM_NO_LINK_NEEDED_EXITCODE:INTERNAL=0
+//Details about finding Brotli
+FIND_PACKAGE_MESSAGE_DETAILS_Brotli:INTERNAL=[/usr/lib/x86_64-linux-gnu/libbrotlidec.so][/usr/lib/x86_64-linux-gnu/libbrotlienc.so][/usr/lib/x86_64-linux-gnu/libbrotlicommon.so][/usr/include][v()]
+//Details about finding GTest
+FIND_PACKAGE_MESSAGE_DETAILS_GTest:INTERNAL=[/usr/lib/x86_64-linux-gnu/cmake/GTest/GTestConfig.cmake][c ][v1.14.0()]
+//Details about finding Hiredis
+FIND_PACKAGE_MESSAGE_DETAILS_Hiredis:INTERNAL=[/usr/lib/x86_64-linux-gnu/libhiredis.so][/usr/include][v()]
 //Details about finding Jsoncpp
 FIND_PACKAGE_MESSAGE_DETAILS_Jsoncpp:INTERNAL=[/usr/include/jsoncpp][/usr/lib/x86_64-linux-gnu/libjsoncpp.so][v()]
+//Details about finding MySQL
+FIND_PACKAGE_MESSAGE_DETAILS_MySQL:INTERNAL=[/usr/lib/x86_64-linux-gnu/libmysqlclient.so][/usr/include/mysql][v()]
 //Details about finding OpenSSL
 FIND_PACKAGE_MESSAGE_DETAILS_OpenSSL:INTERNAL=[/usr/lib/x86_64-linux-gnu/libcrypto.so][/usr/include][c ][v3.0.13()]
 //Details about finding PkgConfig
@@ -490,10 +602,20 @@ FIND_PACKAGE_MESSAGE_DETAILS_ZLIB:INTERNAL=[/usr/lib/x86_64-linux-gnu/libz.so][/
 FIND_PACKAGE_MESSAGE_DETAILS_c-ares:INTERNAL=[/usr/lib/x86_64-linux-gnu/cmake/c-ares/c-ares-config.cmake][v1.27.0()]
 //Details about finding pg
 FIND_PACKAGE_MESSAGE_DETAILS_pg:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpq.so][/usr/include/postgresql][v()]
+//ADVANCED property for variable: GIT_EXECUTABLE
+GIT_EXECUTABLE-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: HIREDIS_INCLUDE_DIR
+HIREDIS_INCLUDE_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: HIREDIS_LIBRARY
+HIREDIS_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: JSONCPP_INCLUDE_DIRS
 JSONCPP_INCLUDE_DIRS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: JSONCPP_LIBRARIES
 JSONCPP_LIBRARIES-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: MYSQL_INCLUDE_DIRS
+MYSQL_INCLUDE_DIRS-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: MYSQL_LIBRARIES
+MYSQL_LIBRARIES-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OPENSSL_CRYPTO_LIBRARY
 OPENSSL_CRYPTO_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OPENSSL_INCLUDE_DIR
@@ -575,6 +697,10 @@ ZLIB_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
 ZLIB_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
 //linker supports push/pop state
 _CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
+//ADVANCED property for variable: _CXX_FILESYSTEM_HAVE_HEADER
+_CXX_FILESYSTEM_HAVE_HEADER-ADVANCED:INTERNAL=1
+//Have include filesystem
+_CXX_FILESYSTEM_HAVE_HEADER:INTERNAL=1
 _OPENSSL_CFLAGS:INTERNAL=-I/usr/include
 _OPENSSL_CFLAGS_I:INTERNAL=
 _OPENSSL_CFLAGS_OTHER:INTERNAL=
@@ -621,4 +747,6 @@ pkgcfg_lib__OPENSSL_crypto-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib__OPENSSL_ssl
 pkgcfg_lib__OPENSSL_ssl-ADVANCED:INTERNAL=1
 prefix_result:INTERNAL=/usr/lib/x86_64-linux-gnu
+//ADVANCED property for variable: tomlplusplus_INCLUDES_WITH_SYSTEM
+tomlplusplus_INCLUDES_WITH_SYSTEM-ADVANCED:INTERNAL=1
 

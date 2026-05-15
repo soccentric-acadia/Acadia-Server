@@ -216,37 +216,3 @@ void RunService::delete_run(const std::string& run_id,
 }
 
 }  // namespace acadia
-        if (sit != subs_.end()) {
-            try { sit->second(r); } catch (...) {}
-        }
-    }
-}
-
-std::vector<Result> RunService::get_results(const ResultFilter& f) {
-    return result_repo_.list(f);
-}
-
-std::optional<Result> RunService::get_result(const std::string& id) {
-    return result_repo_.find_by_id(id);
-}
-
-Run RunService::rerun(const std::string& run_id, const std::string& actor_user_id) {
-    auto orig = get_run(run_id);
-    return start_run(orig.test_config_snapshot_json, orig.mode,
-                     "Rerun of " + orig.name, actor_user_id);
-}
-
-void RunService::set_baseline(const std::string& run_id,
-                               const std::string& actor_user_id) {
-    auto run = get_run(run_id);
-    run_repo_.set_baseline(run_id, run.mode);
-    audit_repo_.log(actor_user_id, "run.baseline_set", "run", run_id, "{}");
-}
-
-void RunService::delete_run(const std::string& run_id,
-                             const std::string& actor_user_id) {
-    run_repo_.remove(run_id);
-    audit_repo_.log(actor_user_id, "run.deleted", "run", run_id, "{}");
-}
-
-}  // namespace acadia
