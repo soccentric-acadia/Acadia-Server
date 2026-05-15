@@ -3,6 +3,7 @@
 
 .PHONY: all build configure clean test format cppcheck doc help
 .PHONY: docker-build docker-configure docker-clean docker-shell docker-install docker-image docker-test
+.PHONY: docker-image-server docker-build-server docker-test-server docker-clean-server docker-shell-server
 .PHONY: deploy deploy-a deploy-b run run-a run-b list setup-completion
 
 # Build directories (separate to avoid CMake cache conflicts)
@@ -16,11 +17,16 @@ JOBS := $(shell nproc)
 DOCKER_JOBS := $(shell echo $$(( $(shell nproc) < 4 ? $(shell nproc) : 4 )))
 DOCKER_IMAGE := acadia
 
-# Mount the *parent* Acadia/ directory so both Acadia-Client and Acadia-HAL
-# are visible inside the container (CMakeLists.txt references ../Acadia-HAL/...).
+# Mount the *parent* Acadia/ directory so both Acadia-Client, Acadia-Server, and
+# Acadia-HAL are visible inside the container.
 ACADIA_ROOT := $(shell dirname $(realpath $(CURDIR)))
 DOCKER_SRC_DIR         := /workspace/Acadia-Client
 DOCKER_CROSS_BUILD_DIR := $(DOCKER_SRC_DIR)/build/cross
+
+# Server (x86 Ubuntu) Docker settings
+DOCKER_SERVER_IMAGE     := acadia-server
+DOCKER_SERVER_SRC_DIR   := /workspace/Acadia-Server
+DOCKER_SERVER_BUILD_DIR := $(DOCKER_SERVER_SRC_DIR)/build/docker
 
 # Host architecture as shown by file(1) (e.g. x86-64, aarch64)
 HOST_ARCH := $(shell uname -m | sed 's/x86_64/x86-64/')
@@ -124,6 +130,9 @@ list:
 # ACADIA_ROOT is mounted so ../Acadia-HAL/protos and ../Acadia-HAL/src resolve inside the container.
 DOCKER_RUN := docker run --rm -t --init --platform linux/arm64 -v $(ACADIA_ROOT):/workspace -v ccache-acadia-client:/home/rpi/.ccache $(DOCKER_IMAGE) bash -c
 
+# Run command for the server x86 container
+DOCKER_SERVER_RUN := docker run --rm -t --init --platform linux/amd64 -v $(ACADIA_ROOT):/workspace -v ccache-acadia-server:/home/acadia/.ccache $(DOCKER_SERVER_IMAGE) bash -c
+
 docker-install:
 	@if ! command -v docker > /dev/null 2>&1; then \
 		echo "Docker not found. Installing Docker..."; \
@@ -159,6 +168,38 @@ docker-clean: docker-image
 docker-shell: docker-image
 	@echo "Starting Docker shell for development..."
 	docker run -it --rm --platform linux/arm64 -v $(ACADIA_ROOT):/workspace -v ccache-acadia-client:/home/rpi/.ccache $(DOCKER_IMAGE) bash
+
+# =============================================================================
+# Server builds (x86 Ubuntu 22.04 via Docker)
+# =============================================================================
+
+docker-image-server:
+	@if ! docker image inspect $(DOCKER_SERVER_IMAGE) >/dev/null 2>&1; then \
+		echo "Building Docker image $(DOCKER_SERVER_IMAGE) for x86 Ubuntu..."; \
+		make -C docker build-server; \
+	else \
+		echo "Docker image $(DOCKER_SERVER_IMAGE) already exists."; \
+	fi
+
+docker-build-server: docker-image-server
+	@echo "Building Acadia Server in Docker (x86 Ubuntu 22.04)..."
+	$(DOCKER_SERVER_RUN) "if [ ! -f $(DOCKER_SERVER_BUILD_DIR)/build.ninja ]; then \
+		mkdir -p $(DOCKER_SERVER_BUILD_DIR) && \
+		cd $(DOCKER_SERVER_BUILD_DIR) && \
+		cmake -GNinja -DBUILD_TESTS=ON $(DOCKER_SERVER_SRC_DIR); \
+	fi && cd $(DOCKER_SERVER_BUILD_DIR) && ninja -j$(DOCKER_JOBS)"
+
+docker-test-server: docker-build-server
+	@echo "Running Acadia Server unit tests in Docker (x86)..."
+	$(DOCKER_SERVER_RUN) "cd $(DOCKER_SERVER_BUILD_DIR) && ctest --output-on-failure"
+
+docker-clean-server: docker-image-server
+	@echo "Cleaning Acadia Server Docker build directory..."
+	$(DOCKER_SERVER_RUN) "rm -rf $(DOCKER_SERVER_BUILD_DIR)"
+
+docker-shell-server: docker-image-server
+	@echo "Starting Acadia Server Docker shell (x86 Ubuntu)..."
+	docker run -it --rm --platform linux/amd64 -v $(ACADIA_ROOT):/workspace -v ccache-acadia-server:/home/acadia/.ccache $(DOCKER_SERVER_IMAGE) bash
 
 # =============================================================================
 # Deploy & Run (on target device)
@@ -225,14 +266,21 @@ help:
 	@echo "    clean        - Remove build directory"
 	@echo "    list         - List available test applications"
 	@echo ""
-	@echo "  Cross builds (Docker):"
+	@echo "  Cross builds — ARM64 (Docker, Raspberry Pi):"
 	@echo "    all                  - Alias for docker-build (default)"
 	@echo "    docker-install       - Install Docker if not present"
-	@echo "    docker-image         - Build Docker image if not exists"
+	@echo "    docker-image         - Build Docker image (ARM64) if not exists"
 	@echo "    docker-configure     - Configure project with Docker/Ninja"
 	@echo "    docker-build         - Build project with Docker/Ninja"
 	@echo "    docker-clean         - Clean Docker build artifacts"
 	@echo "    docker-shell         - Start Docker shell for development"
+	@echo ""
+	@echo "  Server builds — x86 Ubuntu 22.04 (Docker):"
+	@echo "    docker-image-server  - Build server Docker image (x86) if not exists"
+	@echo "    docker-build-server  - Build Acadia Server (x86) with Docker/Ninja"
+	@echo "    docker-test-server   - Run server unit tests in Docker (x86)"
+	@echo "    docker-clean-server  - Clean server Docker build artifacts"
+	@echo "    docker-shell-server  - Start server Docker shell (x86)"
 	@echo ""
 	@echo "  Deploy & Run (on target device):"
 	@echo "    deploy       - Deploy to all devices (deploy-a + deploy-b)"
