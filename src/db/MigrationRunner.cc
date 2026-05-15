@@ -77,8 +77,52 @@ void MigrationRunner::run() {
 
         spdlog::info("MigrationRunner: applying {}", version);
         try {
-            auto res = db->execSqlSync(sql);
-            (void)res;
+            // Split SQL by semicolons and execute each statement individually.
+            // Drogon's execSqlSync uses prepared statements which cannot contain
+            // multiple commands. Naive split is sufficient for standard migrations.
+            std::istringstream stmt_stream{sql};
+            std::string stmt;
+            std::string line;
+            while (std::getline(stmt_stream, line)) {
+                stmt += line + "\n";
+                // Remove trailing whitespace to test for semicolons.
+                auto trimmed = line;
+                trimmed.erase(trimmed.find_last_not_of(" \t\r\n") + 1);
+                if (!trimmed.empty() && trimmed.back() == ';') {
+                    // Strip the trailing semicolon — execSqlSync doesn't need it.
+                    auto s = stmt;
+                    auto semi = s.rfind(';');
+                    if (semi != std::string::npos) s.erase(semi);
+                    // Skip empty / comment-only statements.
+                    auto non_ws = s.find_first_not_of(" \t\r\n");
+                    if (non_ws == std::string::npos) { stmt.clear(); continue; }
+                    auto trimmed_s = s.substr(non_ws);
+                    if (trimmed_s.substr(0, 2) == "--") { stmt.clear(); continue; }
+                    try {
+                        auto res = db->execSqlSync(s);
+                        (void)res;
+                    } catch (const drogon::orm::DrogonDbException& e) {
+                        throw std::runtime_error(
+                            "MigrationRunner: migration " + version + " failed: " + e.base().what());
+                    }
+                    stmt.clear();
+                }
+            }
+            // Execute any trailing statement without a trailing semicolon.
+            if (!stmt.empty()) {
+                auto non_ws = stmt.find_first_not_of(" \t\r\n");
+                if (non_ws != std::string::npos) {
+                    try {
+                        auto res = db->execSqlSync(stmt);
+                        (void)res;
+                    } catch (const drogon::orm::DrogonDbException& e) {
+                        throw std::runtime_error(
+                            "MigrationRunner: migration " + version + " failed: " + e.base().what());
+                    }
+                }
+            }
+        } catch (const std::runtime_error&) {
+            throw;
         } catch (const drogon::orm::DrogonDbException& e) {
             throw std::runtime_error(
                 "MigrationRunner: migration " + version + " failed: " + e.base().what());
