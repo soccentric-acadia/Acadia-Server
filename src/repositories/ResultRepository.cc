@@ -187,9 +187,8 @@ std::vector<Result> ResultRepository::list(const ResultFilter& f) {
     // Build a variadic call dynamically based on param count.
     // Drogon's execSqlSync is variadic; we support up to 8 bind params.
     const std::string query = sql.str();
-    drogon::orm::Result db_rows;
 
-    auto call = [&]() {
+    auto call = [&]() -> drogon::orm::Result {
         switch (params.size()) {
         case 1: return db->execSqlSync(query, params[0].c_str());
         case 2: return db->execSqlSync(query, params[0].c_str(), params[1].c_str());
@@ -200,7 +199,7 @@ std::vector<Result> ResultRepository::list(const ResultFilter& f) {
         default: return db->execSqlSync(query, params[0].c_str(), params[1].c_str());
         }
     };
-    db_rows = call();
+    auto db_rows = call();
 
     std::vector<Result> out;
     out.reserve(db_rows.size());
@@ -334,12 +333,13 @@ std::vector<CompareEntry> ResultRepository::find_for_compare(
         const std::string& run_b) {
     auto db = db::get_db_client();
     // Use run_summaries for last-status per (module_id, test_id).
+    // Keep NULLs to distinguish "not present in run_a/run_b".
     auto rows = db->execSqlSync(
         "SELECT"
         "    COALESCE(a.module_id, b.module_id) AS module_id,"
         "    COALESCE(a.test_id,   b.test_id)   AS test_id,"
-        "    COALESCE(a.last_status,   0::SMALLINT) AS run_a_status,"
-        "    COALESCE(b.last_status,   0::SMALLINT) AS run_b_status,"
+        "    a.last_status   AS run_a_status,"
+        "    b.last_status   AS run_b_status,"
         "    COALESCE(a.last_severity, 0::SMALLINT) AS run_a_severity,"
         "    COALESCE(b.last_severity, 0::SMALLINT) AS run_b_severity"
         " FROM"
@@ -358,8 +358,11 @@ std::vector<CompareEntry> ResultRepository::find_for_compare(
         CompareEntry e;
         e.module_id      = r["module_id"].as<std::string>();
         e.test_id        = r["test_id"].as<std::string>();
-        e.run_a_status   = r["run_a_status"].as<int16_t>();
-        e.run_b_status   = r["run_b_status"].as<int16_t>();
+        // NULL means the test did not appear in that run.
+        if (!r["run_a_status"].isNull())
+            e.run_a_status = r["run_a_status"].as<int16_t>();
+        if (!r["run_b_status"].isNull())
+            e.run_b_status = r["run_b_status"].as<int16_t>();
         e.run_a_severity = r["run_a_severity"].as<int16_t>();
         e.run_b_severity = r["run_b_severity"].as<int16_t>();
         out.push_back(e);

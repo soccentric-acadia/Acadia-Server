@@ -88,10 +88,13 @@ struct TrendPoint {
 struct CompareEntry {
     std::string module_id;
     std::string test_id;
-    int16_t     run_a_status   = 0;
-    int16_t     run_b_status   = 0;
+    std::string classification;          // set by CompareService::classify()
+    std::optional<int16_t> run_a_status;
+    std::optional<int16_t> run_b_status;
     int16_t     run_a_severity = 0;
     int16_t     run_b_severity = 0;
+    std::string run_a_metrics_json;
+    std::string run_b_metrics_json;
 };
 
 // ── ResultRepository ─────────────────────────────────────────────────────────
