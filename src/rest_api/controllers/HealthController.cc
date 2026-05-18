@@ -1,3 +1,4 @@
+#include <fmt/format.h>
 #include "rest_api/controllers/HealthController.h"
 #include <drogon/HttpResponse.h>
 #include <json/json.h>
@@ -18,11 +19,11 @@ void HealthController::openapi(const drogon::HttpRequestPtr& /*req*/,
                                 std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
     // Static OpenAPI 3.1 document describing all Acadia REST endpoints.
     // This is a trimmed-but-comprehensive spec; extend as new controllers are added.
-    static const std::string kSpec = R"openapi({
+    static const std::string kSpecTpl = R"openapi({
   "openapi": "3.1.0",
   "info": {
     "title": "Acadia IV&V Server API",
-    "version": "1.0.0",
+    "version": "{}",
     "description": "REST API for the Acadia Independent Validation & Verification server."
   },
   "servers": [{ "url": "/api/v1" }],
@@ -99,7 +100,7 @@ void HealthController::openapi(const drogon::HttpRequestPtr& /*req*/,
 
     auto resp = drogon::HttpResponse::newHttpResponse();
     resp->setContentTypeString("application/json");
-    resp->setBody(kSpec);
+    resp->setBody(fmt::format(fmt::runtime(kSpecTpl), ACADIA_SERVER_VERSION));
     cb(resp);
 }
 
