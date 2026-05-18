@@ -183,6 +183,29 @@ void HalServiceImpl::persist_result(const std::string& run_id,
     return ::grpc::Status::OK;
 }
 
+::grpc::Status HalServiceImpl::Pause(
+    ::grpc::ServerContext*   /*ctx*/,
+    const hal::PauseRequest*  req,
+    hal::PauseResponse*       resp) {
+
+    spdlog::info("grpc: Pause session_id={}", req->session_id());
+    run_svc_.pause_run(req->session_id(), "");
+    resp->set_accepted(true);
+    return ::grpc::Status::OK;
+}
+
+::grpc::Status HalServiceImpl::Resume(
+    ::grpc::ServerContext*   /*ctx*/,
+    const hal::ResumeRequest*  req,
+    hal::ResumeResponse*       resp) {
+
+    spdlog::info("grpc: Resume session_id={}", req->session_id());
+    run_svc_.resume_run(req->session_id(), "");
+    resp->set_accepted(true);
+    return ::grpc::Status::OK;
+}
+
+
 ::grpc::Status HalServiceImpl::Stop(
     ::grpc::ServerContext*   /*ctx*/,
     const hal::StopRequest*  req,

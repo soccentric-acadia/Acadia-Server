@@ -51,6 +51,16 @@ public:
         ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer) override;
 
     // Stop an active run/stream.
+    ::grpc::Status Pause(
+        ::grpc::ServerContext*   ctx,
+        const hal::PauseRequest* req,
+        hal::PauseResponse*      resp) override;
+
+    ::grpc::Status Resume(
+        ::grpc::ServerContext*    ctx,
+        const hal::ResumeRequest* req,
+        hal::ResumeResponse*      resp) override;
+
     ::grpc::Status Stop(
         ::grpc::ServerContext*  ctx,
         const hal::StopRequest* req,
