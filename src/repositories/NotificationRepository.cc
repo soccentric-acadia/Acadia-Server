@@ -1,5 +1,6 @@
 #include "repositories/NotificationRepository.h"
 #include "db/DbClient.h"
+#include "util/Uuid.h"
 
 #include <drogon/orm/DbClient.h>
 
@@ -20,22 +21,25 @@ Notification row_to_notif(const drogon::orm::Row& r) {
 Notification NotificationRepository::create(const std::string& kind,
                                               const std::string& payload_json) {
     auto db = db::get_db_client();
+    auto new_id = util::generate_uuid();
     auto rows = db->execSqlSync(
-        "INSERT INTO notifications (kind, payload)"
-        " VALUES ($1, $2::JSONB)"
-        " RETURNING id,  kind,  payload::TEXT,  read_at::TEXT,  created_at::TEXT", 
-        kind.c_str(),  payload_json.empty() ? "{}" : payload_json.c_str());
+        "INSERT INTO notifications (id, kind, payload)"
+        " VALUES (?, ?, ?)"
+        " RETURNING id, kind, payload, read_at, created_at",
+        new_id.c_str(),
+        kind.c_str(), payload_json.empty() ? "{}" : payload_json.c_str());
     return row_to_notif(rows[0]);
 }
 
 std::vector<Notification> NotificationRepository::list(const NotificationFilter& f) {
     auto db = db::get_db_client();
     std::string sql =
-        "SELECT id, kind, payload::TEXT, read_at::TEXT, created_at::TEXT"
+        "SELECT id, kind, payload, read_at, created_at"
         " FROM notifications";
     if (f.unread_only) sql += " WHERE read_at IS NULL";
-    sql += " ORDER BY created_at DESC LIMIT $1 OFFSET $2";
-    auto rows = db->execSqlSync(sql,  f.limit,  f.offset);
+    sql += " ORDER BY created_at DESC LIMIT " + std::to_string(f.limit)
+         + " OFFSET " + std::to_string(f.offset);
+    auto rows = db->execSqlSync(sql);
     std::vector<Notification> out;
     for (const auto& r : rows) out.push_back(row_to_notif(r));
     return out;
@@ -44,13 +48,13 @@ std::vector<Notification> NotificationRepository::list(const NotificationFilter&
 void NotificationRepository::mark_read(const std::string& id) {
     auto db = db::get_db_client();
     db->execSqlSync(
-        "UPDATE notifications SET read_at=NOW() WHERE id=$1::UUID",  id.c_str());
+        "UPDATE notifications SET read_at=datetime('now') WHERE id=?", id.c_str());
 }
 
 void NotificationRepository::mark_all_read() {
     auto db = db::get_db_client();
     db->execSqlSync(
-        "UPDATE notifications SET read_at=NOW() WHERE read_at IS NULL");
+        "UPDATE notifications SET read_at=datetime('now') WHERE read_at IS NULL");
 }
 
 int64_t NotificationRepository::unread_count() {
