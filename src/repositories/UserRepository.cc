@@ -12,11 +12,13 @@ User UserRepository::create(const std::string& username,
                             const std::string& password_hash) {
     auto db = db::get_db_client();
     try {
+        auto new_id = util::generate_uuid();
         auto rows = db->execSqlSync(
             "INSERT INTO users (id, username, password_hash)"
-            " VALUES (gen_random_uuid(), $1, $2)"
-            " RETURNING id,  username,  password_hash,  created_at,  updated_at", 
-            username.c_str(),  password_hash.c_str());
+            " VALUES (?, ?, ?)"
+            " RETURNING id, username, password_hash, created_at, updated_at",
+            new_id.c_str(),
+            username.c_str(), password_hash.c_str());
         if (rows.empty()) throw std::runtime_error("UserRepository::create: no rows returned");
         const auto& r = rows[0];
         return User{
@@ -39,8 +41,8 @@ User UserRepository::create(const std::string& username,
 std::optional<User> UserRepository::find_by_username(const std::string& username) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id,  username,  password_hash,  created_at,  updated_at"
-        " FROM users WHERE username = $1", 
+        "SELECT id, username, password_hash, created_at, updated_at"
+        " FROM users WHERE username = ?",
         username.c_str());
     if (rows.empty()) return std::nullopt;
     const auto& r = rows[0];
@@ -56,8 +58,8 @@ std::optional<User> UserRepository::find_by_username(const std::string& username
 std::optional<User> UserRepository::find_by_id(const std::string& id) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id,  username,  password_hash,  created_at,  updated_at"
-        " FROM users WHERE id = $1::UUID", 
+        "SELECT id, username, password_hash, created_at, updated_at"
+        " FROM users WHERE id = ?",
         id.c_str());
     if (rows.empty()) return std::nullopt;
     const auto& r = rows[0];
@@ -74,9 +76,9 @@ void UserRepository::update_password(const std::string& id,
                                      const std::string& new_hash) {
     auto db = db::get_db_client();
     db->execSqlSync(
-        "UPDATE users SET password_hash = $1,  updated_at = NOW()"
-        " WHERE id = $2::UUID", 
-        new_hash.c_str(),  id.c_str());
+        "UPDATE users SET password_hash = ?, updated_at = datetime('now')"
+        " WHERE id = ?",
+        new_hash.c_str(), id.c_str());
 }
 
 }  // namespace acadia
