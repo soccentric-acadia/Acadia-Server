@@ -1,19 +1,19 @@
 #include "rest_api/controllers/SettingsController.h"
+#include "db/DbClient.h"
 #include <drogon/HttpResponse.h>
-#include <drogon/orm/DbClient.h>
 #include <json/json.h>
 #include <stdexcept>
 #include <string>
 
 namespace acadia::rest {
 
-// Helper: read a value from app_settings synchronously via Drogon's default
-// DbClient.  Returns the value string, or the provided default if not found.
+// Helper: read a value from app_settings synchronously.
+// Returns the value string, or the provided default if not found.
 static std::string read_setting(const std::string& key, const std::string& def = "") {
-    auto db = drogon::app().getDbClient();
-    if (!db) return def;
     try {
-        auto result = db->execSqlSync("SELECT value FROM app_settings WHERE key=$1", key);
+        auto db = db::get_db_client();
+        auto result = db->execSqlSync(
+            "SELECT value FROM app_settings WHERE key=?", key);
         if (result.empty()) return def;
         return result[0]["value"].as<std::string>();
     } catch (...) {
@@ -22,11 +22,10 @@ static std::string read_setting(const std::string& key, const std::string& def =
 }
 
 static void write_setting(const std::string& key, const std::string& value) {
-    auto db = drogon::app().getDbClient();
-    if (!db) return;
+    auto db = db::get_db_client();
     db->execSqlSync(
-        "INSERT INTO app_settings (key, value, updated_at) VALUES ($1,$2,NOW()) "
-        "ON CONFLICT (key) DO UPDATE SET value=$2, updated_at=NOW()",
+        "INSERT INTO app_settings (key, value, updated_at) VALUES (?,?,datetime('now'))"
+        " ON CONFLICT (key) DO UPDATE SET value=excluded.value, updated_at=datetime('now')",
         key, value);
 }
 

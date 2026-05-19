@@ -3,16 +3,31 @@
 #include <json/json.h>
 #include <cstdlib>
 #include <ctime>
+#include <fstream>
 #include <sstream>
 
 namespace acadia::rest {
 
 void BackupController::backup(const drogon::HttpRequestPtr& req,
                                std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-    // Retrieve connection string from environment (set at server startup).
-    const char* db_url = std::getenv("ACADIA_DB_URL");
-    if (!db_url) {
-        Json::Value err; err["error"] = "ACADIA_DB_URL not set";
+    const char* db_path_env = std::getenv("ACADIA_DB_PATH");
+    const char* db_path = db_path_env ? db_path_env : "acadia.db";
+
+    // Read the SQLite database file as a binary stream.
+    std::ifstream db_file(db_path, std::ios::binary | std::ios::ate);
+    if (!db_file.is_open()) {
+        Json::Value err; err["error"] = "could not open database file";
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(err);
+        resp->setStatusCode(drogon::k500InternalServerError);
+        cb(resp);
+        return;
+    }
+
+    std::streamsize size = db_file.tellg();
+    db_file.seekg(0, std::ios::beg);
+    std::string dump(static_cast<std::size_t>(size), '\0');
+    if (!db_file.read(&dump[0], size)) {
+        Json::Value err; err["error"] = "failed to read database file";
         auto resp = drogon::HttpResponse::newHttpJsonResponse(err);
         resp->setStatusCode(drogon::k500InternalServerError);
         cb(resp);
@@ -23,34 +38,7 @@ void BackupController::backup(const drogon::HttpRequestPtr& req,
     std::time_t now = std::time(nullptr);
     char ts_buf[32];
     std::strftime(ts_buf, sizeof(ts_buf), "%Y%m%dT%H%M%SZ", std::gmtime(&now));
-    std::string filename = std::string("acadia-backup-") + ts_buf + ".dump";
-
-    // Build pg_dump command writing to stdout, captured via popen.
-    std::ostringstream cmd;
-    cmd << "pg_dump --format=plain " << db_url << " 2>/dev/null";
-    FILE* pipe = popen(cmd.str().c_str(), "r");
-    if (!pipe) {
-        Json::Value err; err["error"] = "pg_dump failed to start";
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(err);
-        resp->setStatusCode(drogon::k500InternalServerError);
-        cb(resp);
-        return;
-    }
-
-    std::string dump;
-    dump.reserve(1024 * 1024);  // 1 MB initial reserve
-    char buf[4096];
-    while (fgets(buf, sizeof(buf), pipe)) {
-        dump += buf;
-    }
-    int rc = pclose(pipe);
-    if (rc != 0) {
-        Json::Value err; err["error"] = "pg_dump exited with error";
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(err);
-        resp->setStatusCode(drogon::k500InternalServerError);
-        cb(resp);
-        return;
-    }
+    std::string filename = std::string("acadia-backup-") + ts_buf + ".db";
 
     auto resp = drogon::HttpResponse::newHttpResponse();
     resp->setContentTypeString("application/octet-stream");

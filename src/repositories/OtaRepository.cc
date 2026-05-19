@@ -1,5 +1,6 @@
 #include "repositories/OtaRepository.h"
 #include "db/DbClient.h"
+#include "util/Uuid.h"
 
 #include <drogon/orm/DbClient.h>
 
@@ -28,17 +29,19 @@ OtaUpgrade row_to_ota(const drogon::orm::Row& r) {
 
 OtaUpgrade OtaRepository::create(const OtaUpgrade& u) {
     auto db = db::get_db_client();
+    auto new_id = util::generate_uuid();
     auto rows = db->execSqlSync(
-        "INSERT INTO ota_upgrades (artifact_path, artifact_hash, artifact_size,"
+        "INSERT INTO ota_upgrades (id, artifact_path, artifact_hash, artifact_size,"
         "  from_version, to_version, status, created_by)"
-        " VALUES ($1, $2, $3, $4, $5, $6, $7::UUID)"
-        " RETURNING id,  artifact_path,  artifact_hash,  artifact_size, "
-        "  from_version,  to_version,  status,  progress, "
-        "  started_at::TEXT,  ended_at::TEXT,  error_message, "
-        "  rolled_back_from::TEXT,  created_at::TEXT,  created_by::TEXT", 
-        u.artifact_path.c_str(),  u.artifact_hash.c_str(),  u.artifact_size, 
-        u.from_version.c_str(),  u.to_version.c_str(), 
-        u.status.empty() ? "uploaded" : u.status.c_str(), 
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        " RETURNING id, artifact_path, artifact_hash, artifact_size,"
+        "  from_version, to_version, status, progress,"
+        "  started_at, ended_at, error_message,"
+        "  rolled_back_from, created_at, created_by",
+        new_id.c_str(),
+        u.artifact_path.c_str(), u.artifact_hash.c_str(), u.artifact_size,
+        u.from_version.c_str(), u.to_version.c_str(),
+        u.status.empty() ? "uploaded" : u.status.c_str(),
         u.created_by.empty() ? nullptr : u.created_by.c_str());
     return row_to_ota(rows[0]);
 }
@@ -46,11 +49,11 @@ OtaUpgrade OtaRepository::create(const OtaUpgrade& u) {
 std::optional<OtaUpgrade> OtaRepository::find_by_id(const std::string& id) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id,  artifact_path,  artifact_hash,  artifact_size, "
-        "  from_version,  to_version,  status,  progress, "
-        "  started_at::TEXT,  ended_at::TEXT,  error_message, "
-        "  rolled_back_from::TEXT,  created_at::TEXT,  created_by::TEXT"
-        " FROM ota_upgrades WHERE id=$1::UUID", 
+        "SELECT id, artifact_path, artifact_hash, artifact_size,"
+        "  from_version, to_version, status, progress,"
+        "  started_at, ended_at, error_message,"
+        "  rolled_back_from, created_at, created_by"
+        " FROM ota_upgrades WHERE id=?",
         id.c_str());
     if (rows.empty()) return std::nullopt;
     return row_to_ota(rows[0]);
@@ -59,10 +62,10 @@ std::optional<OtaUpgrade> OtaRepository::find_by_id(const std::string& id) {
 std::vector<OtaUpgrade> OtaRepository::list() {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id,  artifact_path,  artifact_hash,  artifact_size, "
-        "  from_version,  to_version,  status,  progress, "
-        "  started_at::TEXT,  ended_at::TEXT,  error_message, "
-        "  rolled_back_from::TEXT,  created_at::TEXT,  created_by::TEXT"
+        "SELECT id, artifact_path, artifact_hash, artifact_size,"
+        "  from_version, to_version, status, progress,"
+        "  started_at, ended_at, error_message,"
+        "  rolled_back_from, created_at, created_by"
         " FROM ota_upgrades ORDER BY created_at DESC");
     std::vector<OtaUpgrade> out;
     for (const auto& r : rows) out.push_back(row_to_ota(r));
@@ -74,15 +77,13 @@ void OtaRepository::update_status(const std::string& id, const std::string& stat
     auto db = db::get_db_client();
     if (progress >= 0) {
         db->execSqlSync(
-            "UPDATE ota_upgrades SET status=$1,  progress=$2, "
-            "  error_message=NULLIF($3,'')"
-            " WHERE id=$4::UUID", 
-            status.c_str(),  progress,  error.c_str(),  id.c_str());
+            "UPDATE ota_upgrades SET status=?, progress=?, error_message=NULLIF(?,'')"
+            " WHERE id=?",
+            status.c_str(), progress, error.c_str(), id.c_str());
     } else {
         db->execSqlSync(
-            "UPDATE ota_upgrades SET status=$1,  error_message=NULLIF($2,'')"
-            " WHERE id=$3::UUID", 
-            status.c_str(),  error.c_str(),  id.c_str());
+            "UPDATE ota_upgrades SET status=?, error_message=NULLIF(?,'') WHERE id=?",
+            status.c_str(), error.c_str(), id.c_str());
     }
 }
 
@@ -90,9 +91,9 @@ void OtaRepository::set_ended(const std::string& id, const std::string& status,
                                const std::string& error) {
     auto db = db::get_db_client();
     db->execSqlSync(
-        "UPDATE ota_upgrades SET status=$1,  ended_at=NOW(), "
-        "  error_message=NULLIF($2,'') WHERE id=$3::UUID", 
-        status.c_str(),  error.c_str(),  id.c_str());
+        "UPDATE ota_upgrades SET status=?, ended_at=datetime('now'),"
+        "  error_message=NULLIF(?,'') WHERE id=?",
+        status.c_str(), error.c_str(), id.c_str());
 }
 
 }  // namespace acadia

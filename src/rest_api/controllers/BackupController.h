@@ -12,7 +12,7 @@ public:
     ADD_METHOD_TO(BackupController::backup, "/api/v1/backup", drogon::Post);
     METHOD_LIST_END
 
-    // POST /api/v1/backup — triggers pg_dump and returns the dump as a download
+    // POST /api/v1/backup — streams the SQLite database file as a download
     void backup(const drogon::HttpRequestPtr&,
                 std::function<void(const drogon::HttpResponsePtr&)>&&);
 };

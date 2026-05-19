@@ -94,7 +94,7 @@ void HealthController::openapi(const drogon::HttpRequestPtr& /*req*/,
     "/ota/status":         { "get": { "summary": "OTA status", "operationId": "otaStatus", "responses": { "200": { "description": "OTA state" } } } },
     "/ota/upload":         { "post": { "summary": "Upload OTA image", "operationId": "otaUpload", "responses": { "200": { "description": "Upload initiated" } } } },
     "/ota/apply":          { "post": { "summary": "Apply OTA update", "operationId": "otaApply", "responses": { "200": { "description": "Applied" } } } },
-    "/backup":             { "post": { "summary": "Database backup (admin)", "operationId": "backup", "responses": { "200": { "description": "pg_dump stream" } } } }
+    "/backup":             { "post": { "summary": "Database backup (admin)", "operationId": "backup", "responses": { "200": { "description": "SQLite database file" } } } }
   }
 })openapi";
 

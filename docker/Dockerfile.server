@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     # Drogon runtime dependencies
     libjsoncpp-dev uuid-dev zlib1g-dev libbrotli-dev \
-    libpq-dev libc-ares-dev \
+    libsqlite3-dev libc-ares-dev \
     # Logging / testing / auth
     libspdlog-dev libgtest-dev libargon2-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -38,7 +38,7 @@ RUN git clone --depth=1 --branch 0.8.0 \
 
 # ─── Drogon v1.9.3 ────────────────────────────────────────────────────────────
 # Not packaged for Ubuntu 22.04; must build from source.
-# PostgreSQL support ON; MySQL and SQLite disabled to keep the image lean.
+# SQLite3 support ON; PostgreSQL and MySQL disabled.
 RUN git clone --depth=1 --branch v1.9.3 \
         https://github.com/drogonframework/drogon.git /tmp/drogon \
     && cd /tmp/drogon && git submodule update --init --recursive \
@@ -48,9 +48,9 @@ RUN git clone --depth=1 --branch v1.9.3 \
         -DBUILD_CTL=OFF \
         -DBUILD_EXAMPLES=OFF \
         -DBUILD_TESTING=OFF \
-        -DUSE_POSTGRESQL=ON \
+        -DUSE_POSTGRESQL=OFF \
         -DUSE_MYSQL=OFF \
-        -DUSE_SQLITE3=OFF \
+        -DUSE_SQLITE3=ON \
     && cmake --build build --parallel \
     && cmake --install build \
     && rm -rf /tmp/drogon

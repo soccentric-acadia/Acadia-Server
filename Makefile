@@ -7,12 +7,11 @@ DOCKER_JOBS := $(shell echo $$(( $(shell nproc) < 4 ? $(shell nproc) : 4 )))
 ACADIA_ROOT := $(shell dirname $(realpath $(CURDIR)))
 IMAGE       := acadia-server
 BUILD_DIR   := /workspace/Acadia-Server/build
-COMPOSE     := docker compose -f docker/docker-compose.yml -p acadia
 
 DOCKER_RUN := docker run --rm -t --init --platform linux/amd64 \
-	-v $(ACADIA_ROOT):/workspace \
-	-v ccache-acadia-server:/home/acadia/.ccache \
-	$(IMAGE) bash -c
+        -v $(ACADIA_ROOT):/workspace \
+        -v ccache-acadia-server:/home/acadia/.ccache \
+        $(IMAGE) bash -c
 
 all: build
 
@@ -28,18 +27,14 @@ build: image
 		cmake -GNinja -S /workspace/Acadia-Server -B $(BUILD_DIR) && \
 		ninja -C $(BUILD_DIR) -j$(DOCKER_JOBS)"
 
-# Start postgres, then run the server container on the same network
+# Run the server container with the SQLite database on the host volume
 run: build
-	$(COMPOSE) up -d
 	docker run --rm -it --init --platform linux/amd64 \
-		--network acadia_default \
 		-v $(ACADIA_ROOT):/workspace \
-		-e ACADIA_DB_HOST=acadia-postgres \
-		-e ACADIA_DB_PASSWORD=acadia_dev \
+		-e ACADIA_DB_PATH=/workspace/Acadia-Server/acadia.db \
 		-p 8080:8080 \
 		-p 50051:50051 \
 		$(IMAGE) $(BUILD_DIR)/acadia-server
 
 clean:
-	$(COMPOSE) down
 	rm -rf build

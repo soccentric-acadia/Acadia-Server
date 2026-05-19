@@ -1,5 +1,6 @@
 #include "services/ThresholdService.h"
 #include "util/ResultConvert.h"
+#include "util/Uuid.h"
 #include "db/DbClient.h"
 
 #include <spdlog/spdlog.h>
@@ -24,29 +25,26 @@ bool ThresholdService::compare(const Json::Value& lhs, const std::string& op,
     if (lhs.isNull() || rhs.isNull())
         return false;
 
-    // Extract the typed value objects.
     const std::string ltype = lhs.get("type", "").asString();
     const std::string rtype = rhs.get("type", "").asString();
 
     if (op == "EQ" || op == "NE") {
-        // EQ/NE: both sides must be the same type.
         if (ltype != rtype)
-            throw ThresholdTypeError("EQ/NE requires matching types: " + ltype + " vs " + rtype);
-
+            throw ThresholdTypeError("EQ/NE requires matching types: " + ltype +
+                                     " vs " + rtype);
         bool equal;
-        if (ltype == "bool")   equal = (lhs["value"].asBool()   == rhs["value"].asBool());
+        if (ltype == "bool")        equal = (lhs["value"].asBool()   == rhs["value"].asBool());
         else if (ltype == "int")    equal = (lhs["value"].asInt64()  == rhs["value"].asInt64());
         else if (ltype == "double") equal = (lhs["value"].asDouble() == rhs["value"].asDouble());
         else                        equal = (lhs["value"].asString() == rhs["value"].asString());
-
         return (op == "EQ") ? equal : !equal;
     }
 
-    // Numeric ops: both sides must be numeric.
     bool lnum = (ltype == "double" || ltype == "int");
     bool rnum = (rtype == "double" || rtype == "int");
     if (!lnum || !rnum)
-        throw ThresholdTypeError("Numeric op " + op + " requires numeric types, got " + ltype + "/" + rtype);
+        throw ThresholdTypeError("Numeric op " + op + " requires numeric types, got " +
+                                 ltype + "/" + rtype);
 
     double lv = lhs["value"].asDouble();
     double rv = rhs["value"].asDouble();
@@ -60,16 +58,14 @@ bool ThresholdService::compare(const Json::Value& lhs, const std::string& op,
 }
 
 int ThresholdService::evaluate(const Result& result) {
-    // Load thresholds for this module/test from the DB.
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id, module_id, test_id, metric_key, op, value_json::TEXT"
-        " FROM thresholds WHERE module_id = $1 AND test_id = $2",
+        "SELECT id, module_id, test_id, metric_key, op, value_json"
+        " FROM thresholds WHERE module_id = ? AND test_id = ?",
         result.module_id.c_str(), result.test_id.c_str());
 
     if (rows.empty()) return 0;
 
-    // Parse the result's metrics.
     Json::Value metrics_root = util::parse_typed_map_json(result.metrics_json);
 
     int crossings = 0;
@@ -129,10 +125,12 @@ ThresholdRule ThresholdService::create_rule(const std::string& module_id,
     if (!vj.empty() && vj.back() == '\n') vj.pop_back();
 
     auto db = db::get_db_client();
+    auto new_id = util::generate_uuid();
     auto rows = db->execSqlSync(
-        "INSERT INTO thresholds (module_id, test_id, metric_key, op, value_json)"
-        " VALUES ($1, $2, $3, $4, $5::JSONB)"
-        " RETURNING id, module_id, test_id, metric_key, op, value_json::TEXT",
+        "INSERT INTO thresholds (id, module_id, test_id, metric_key, op, value_json)"
+        " VALUES (?, ?, ?, ?, ?, ?)"
+        " RETURNING id, module_id, test_id, metric_key, op, value_json",
+        new_id.c_str(),
         module_id.c_str(), test_id.c_str(), metric_key.c_str(),
         op.c_str(), vj.c_str());
 
@@ -154,8 +152,8 @@ std::vector<ThresholdRule> ThresholdService::list_rules(const std::string& modul
                                                           const std::string& test_id) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id, module_id, test_id, metric_key, op, value_json::TEXT"
-        " FROM thresholds WHERE module_id = $1 AND test_id = $2"
+        "SELECT id, module_id, test_id, metric_key, op, value_json"
+        " FROM thresholds WHERE module_id = ? AND test_id = ?"
         " ORDER BY metric_key, op",
         module_id.c_str(), test_id.c_str());
 
@@ -179,7 +177,7 @@ std::vector<ThresholdRule> ThresholdService::list_rules(const std::string& modul
 
 void ThresholdService::delete_rule(const std::string& id) {
     auto db = db::get_db_client();
-    db->execSqlSync("DELETE FROM thresholds WHERE id = $1::UUID", id.c_str());
+    db->execSqlSync("DELETE FROM thresholds WHERE id = ?", id.c_str());
 }
 
 }  // namespace acadia
