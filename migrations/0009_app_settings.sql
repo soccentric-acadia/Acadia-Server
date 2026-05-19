@@ -1,16 +1,20 @@
--- Migration 0009: app_settings key-value store
--- Used by SettingsController to persist runtime-mutable settings such as
--- data retention policy without requiring a server restart.
+-- Migration 0009: app_settings key-value store.
+
+BEGIN;
 
 CREATE TABLE IF NOT EXISTS app_settings (
-    key         TEXT        PRIMARY KEY,
-    value       TEXT        NOT NULL,
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    key        TEXT NOT NULL PRIMARY KEY,
+    value      TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- Seed defaults
 INSERT INTO app_settings (key, value)
 VALUES
-    ('retention_days',      '90'),
-    ('max_run_results',     '0')   -- 0 = unlimited
+    ('retention_days',  '90'),
+    ('max_run_results', '0')
 ON CONFLICT (key) DO NOTHING;
+
+INSERT INTO schema_migrations (version) VALUES ('0009_app_settings')
+    ON CONFLICT (version) DO NOTHING;
+
+COMMIT;

@@ -1,18 +1,24 @@
--- Migration 0008: alert_rules table for threshold-based alerting
--- Each rule monitors a specific module field and fires when the threshold is crossed.
+-- Migration 0008: alert_rules table for threshold-based alerting.
+
+BEGIN;
 
 CREATE TABLE IF NOT EXISTS alert_rules (
-    id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    module_id    TEXT        NOT NULL,
-    field_path   TEXT        NOT NULL,
-    operator     TEXT        NOT NULL CHECK (operator IN ('>', '<', '>=', '<=', '==')),
-    threshold    FLOAT       NOT NULL,
-    severity     TEXT        NOT NULL DEFAULT 'warning' CHECK (severity IN ('info', 'warning', 'critical')),
-    enabled      BOOLEAN     NOT NULL DEFAULT TRUE,
-    created_by   UUID        REFERENCES users(id) ON DELETE SET NULL,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id           TEXT    NOT NULL PRIMARY KEY,
+    module_id    TEXT    NOT NULL,
+    field_path   TEXT    NOT NULL,
+    operator     TEXT    NOT NULL CHECK (operator IN ('>', '<', '>=', '<=', '==')),
+    threshold    REAL    NOT NULL,
+    severity     TEXT    NOT NULL DEFAULT 'warning' CHECK (severity IN ('info', 'warning', 'critical')),
+    enabled      INTEGER NOT NULL DEFAULT 1,
+    created_by   TEXT    REFERENCES users(id) ON DELETE SET NULL,
+    created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at   TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX IF NOT EXISTS alert_rules_module_idx ON alert_rules (module_id);
-CREATE INDEX IF NOT EXISTS alert_rules_enabled_idx ON alert_rules (enabled) WHERE enabled = TRUE;
+CREATE INDEX IF NOT EXISTS alert_rules_module_idx  ON alert_rules (module_id);
+CREATE INDEX IF NOT EXISTS alert_rules_enabled_idx ON alert_rules (enabled) WHERE enabled = 1;
+
+INSERT INTO schema_migrations (version) VALUES ('0008_alerts')
+    ON CONFLICT (version) DO NOTHING;
+
+COMMIT;

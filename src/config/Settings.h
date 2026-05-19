@@ -9,13 +9,7 @@
 namespace acadia {
 
 struct DbSettings {
-    std::string host             = "localhost";
-    uint16_t    port             = 5432;
-    std::string name             = "acadia";
-    std::string user             = "acadia";
-    std::string password;
-    uint32_t    pool_size        = 10;
-    uint32_t    connect_timeout  = 10;  // seconds
+    std::string path = "acadia.db";  // SQLite database file path
 };
 
 struct NetworkSettings {

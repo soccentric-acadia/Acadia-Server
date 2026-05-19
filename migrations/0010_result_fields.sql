@@ -1,6 +1,111 @@
 -- Migration: 0010_result_fields
 -- Adds new columns to `results` for the refactored HAL TestResult / TestOutput shape.
--- Adds `run_summaries` table for efficient per-module last-status lookups.
+-- Adds `run_summaries` and `thresholds` tables.
+--
+-- Proto integer mappings:
+--   TestStatus:  0=UNSPECIFIED 1=PASS 2=FAIL 3=ERROR 4=TIMEOUT 5=ABORTED 7=SKIPPED
+--   TestSeverity: 0=UNSPECIFIED 1=INFO 2=WARNING 3=ERROR 4=CRITICAL
+
+BEGIN;
+
+-- Step 1: rename old TEXT status column
+ALTER TABLE results RENAME COLUMN status TO status_legacy;
+
+-- Step 2: add new structured columns (SQLite requires one ADD COLUMN per statement)
+ALTER TABLE results ADD COLUMN status      INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE results ADD COLUMN severity    INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE results ADD COLUMN test_id     TEXT    NOT NULL DEFAULT '';
+ALTER TABLE results ADD COLUMN test_name   TEXT    NOT NULL DEFAULT '';
+ALTER TABLE results ADD COLUMN sequence    INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE results ADD COLUMN duration_ns INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE results ADD COLUMN reason      TEXT    NOT NULL DEFAULT '{}';
+ALTER TABLE results ADD COLUMN metrics     TEXT    NOT NULL DEFAULT '{}';
+ALTER TABLE results ADD COLUMN monitoring  TEXT    NOT NULL DEFAULT '{}';
+ALTER TABLE results ADD COLUMN event       TEXT    NOT NULL DEFAULT '{}';
+ALTER TABLE results ADD COLUMN parent_id   TEXT    REFERENCES results(id) ON DELETE CASCADE;
+
+-- Step 3: backfill status from status_legacy
+UPDATE results
+SET status = CASE status_legacy
+    WHEN 'pass'    THEN 1
+    WHEN 'fail'    THEN 2
+    WHEN 'error'   THEN 3
+    WHEN 'unknown' THEN 2
+    ELSE                2
+END;
+
+-- Step 4: drop old index and add new ones
+DROP INDEX IF EXISTS results_status_idx;
+
+CREATE INDEX IF NOT EXISTS results_status_ts_idx
+    ON results (status, timestamp DESC);
+
+CREATE INDEX IF NOT EXISTS results_module_test_ts_idx
+    ON results (module_id, test_id, timestamp DESC);
+
+CREATE INDEX IF NOT EXISTS results_run_sequence_idx
+    ON results (run_id, module_id, sequence);
+
+CREATE INDEX IF NOT EXISTS results_parent_idx
+    ON results (parent_id) WHERE parent_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS results_metrics_idx
+    ON results (module_id, test_id);
+
+-- Step 5: run_summaries table
+CREATE TABLE IF NOT EXISTS run_summaries (
+    run_id          TEXT    NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    module_id       TEXT    NOT NULL,
+    test_id         TEXT    NOT NULL DEFAULT '',
+    last_status     INTEGER NOT NULL DEFAULT 0,
+    last_severity   INTEGER NOT NULL DEFAULT 0,
+    last_timestamp  TEXT    NOT NULL DEFAULT (datetime('now')),
+    result_count    INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (run_id, module_id, test_id)
+);
+
+CREATE INDEX IF NOT EXISTS run_summaries_run_idx ON run_summaries (run_id);
+
+-- Step 6: backfill run_summaries from existing results
+INSERT INTO run_summaries (run_id, module_id, test_id, last_status, last_severity, last_timestamp, result_count)
+SELECT
+    run_id,
+    module_id,
+    '' AS test_id,
+    (SELECT status FROM results r2
+     WHERE r2.run_id = r.run_id AND r2.module_id = r.module_id AND r2.parent_id IS NULL
+     ORDER BY timestamp DESC LIMIT 1) AS last_status,
+    0 AS last_severity,
+    MAX(timestamp) AS last_timestamp,
+    COUNT(*) AS result_count
+FROM results r
+WHERE parent_id IS NULL
+GROUP BY run_id, module_id
+ON CONFLICT (run_id, module_id, test_id) DO UPDATE
+    SET last_status    = EXCLUDED.last_status,
+        last_severity  = EXCLUDED.last_severity,
+        last_timestamp = EXCLUDED.last_timestamp,
+        result_count   = EXCLUDED.result_count;
+
+-- Step 7: thresholds table
+CREATE TABLE IF NOT EXISTS thresholds (
+    id           TEXT NOT NULL PRIMARY KEY,
+    module_id    TEXT NOT NULL,
+    test_id      TEXT NOT NULL DEFAULT '',
+    metric_key   TEXT NOT NULL,
+    op           TEXT NOT NULL CHECK (op IN ('GT','LT','GE','LE','EQ','NE')),
+    value_json   TEXT NOT NULL,
+    created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (module_id, test_id, metric_key, op)
+);
+
+CREATE INDEX IF NOT EXISTS thresholds_module_test_idx ON thresholds (module_id, test_id);
+
+INSERT INTO schema_migrations (version) VALUES ('0010_result_fields')
+    ON CONFLICT (version) DO NOTHING;
+
+COMMIT;
 --
 -- Proto integer mappings consulted from Acadia-HAL/protos/common.proto (HEAD, 2026-05-14):
 --

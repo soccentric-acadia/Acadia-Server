@@ -27,8 +27,8 @@ void MigrationRunner::run() {
     {
         auto result = db->execSqlSync(
             "CREATE TABLE IF NOT EXISTS schema_migrations ("
-            "  version    TEXT        NOT NULL PRIMARY KEY,"
-            "  applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            "  version    TEXT NOT NULL PRIMARY KEY,"
+            "  applied_at TEXT NOT NULL DEFAULT (datetime('now'))"
             ")");
         (void)result;
     }
@@ -132,7 +132,7 @@ void MigrationRunner::run() {
         // here for migrations that don't self-register).
         try {
             db->execSqlSync(
-                "INSERT INTO schema_migrations (version) VALUES ($1) "
+                "INSERT INTO schema_migrations (version) VALUES (?) "
                 "ON CONFLICT (version) DO NOTHING",
                 version);
         } catch (...) {

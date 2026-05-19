@@ -58,13 +58,7 @@ Settings load_settings() {
     Settings s;
 
     // Database
-    s.db.host            = env_str("ACADIA_DB_HOST",     "localhost");
-    s.db.port            = env_u16("ACADIA_DB_PORT",     5432);
-    s.db.name            = env_str("ACADIA_DB_NAME",     "acadia");
-    s.db.user            = env_str("ACADIA_DB_USER",     "acadia");
-    s.db.password        = env_str("ACADIA_DB_PASSWORD", "");
-    s.db.pool_size       = env_u32("ACADIA_DB_POOL_SIZE", 10);
-    s.db.connect_timeout = env_u32("ACADIA_DB_CONNECT_TIMEOUT_SEC", 10);
+    s.db.path = env_str("ACADIA_DB_PATH", "acadia.db");
 
     // Network
     s.network.grpc_listen    = env_str("ACADIA_GRPC_LISTEN",    "0.0.0.0:50051");
