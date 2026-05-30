@@ -91,9 +91,9 @@ private:
     ModuleService&  mod_svc_;
     const Settings& settings_;
 
-    // Active runs: run_id → cancellation flag
+    // Active runs: run_id → cancellation flag (unique_ptr prevents leak)
     std::mutex cancel_mutex_;
-    std::unordered_map<std::string, std::atomic<bool>*> cancel_flags_;
+    std::unordered_map<std::string, std::unique_ptr<std::atomic<bool>>> cancel_flags_;
 };
 
 }  // namespace acadia::grpc

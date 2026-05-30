@@ -94,8 +94,9 @@ void setup_logging(std::string_view level) {
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     stdout_sink->set_formatter(std::make_unique<JsonFormatter>());
 
+    const char* slug = std::getenv("PLATFORM_SLUG");
     auto logger = std::make_shared<spdlog::async_logger>(
-        "acadia",
+        slug != nullptr ? slug : "acadia",
         stdout_sink,
         spdlog::thread_pool(),
         spdlog::async_overflow_policy::block);

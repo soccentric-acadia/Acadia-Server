@@ -15,6 +15,18 @@
 
 namespace acadia::rest {
 
+// Canonical mode mapping (REST wire string u2192 canonical form)
+// Dashboard sends: "single_shot", "long_run", "monitoring", "event"
+// Mapping to proto ExecutionMode: single_shot=1, long_run=2, monitoring=3, event=4
+static std::string normalize_mode(const std::string& raw) {
+    if (raw == "single_shot" || raw == "1") return "single_shot";
+    if (raw == "long_run"    || raw == "2") return "long_run";
+    if (raw == "monitoring"  || raw == "3") return "monitoring";
+    if (raw == "event"       || raw == "4") return "event";
+    return raw.empty() ? "single_shot" : raw;
+}
+
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 static Json::Value run_to_json(const Run& r) {
@@ -154,7 +166,7 @@ void RunsController::create(const drogon::HttpRequestPtr& req,
                               std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
     auto body = req->getJsonObject();
     std::string config_id = body ? (*body)["config_id"].asString() : "";
-    std::string mode      = body ? (*body)["mode"].asString()      : "single_shot";
+    std::string mode      = normalize_mode(body ? (*body)["mode"].asString() : "single_shot");
     std::string user_id   = req->getAttributes()->get<std::string>("user_id");
     auto run = svc_.start_run(config_id, mode, mode, user_id);
     cb(drogon::HttpResponse::newHttpJsonResponse(run_to_json(run)));
