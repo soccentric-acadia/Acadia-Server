@@ -10,6 +10,41 @@ The **Acadia Server** is the central orchestration and data-collection backend f
 
 ---
 
+## 🚀 Quick Start (Docker — Recommended)
+
+**The easiest and most reliable way** to get started on any machine:
+
+```bash
+cd docker
+./setup.sh
+```
+
+This will:
+1. Check Docker prerequisites
+2. Create `.env` from `.env.example`
+3. Build the Docker image for your platform (auto-detected)
+4. Start PostgreSQL and dev environment
+5. You're ready to build!
+
+Then enter the container and build:
+```bash
+docker exec -it acadia-dev bash
+cmake --preset debug && cmake --build build/debug
+```
+
+### Alternative: VS Code Dev Container
+
+Open this project in VS Code and:
+1. Install the "Dev Containers" extension
+2. Press `F1` → "Dev Containers: Reopen in Container"
+3. Wait for build (first time takes ~10 min)
+
+Everything is configured automatically!
+
+See [docker/README.md](docker/README.md) for detailed Docker documentation.
+
+---
+
 ## Architecture Overview
 
 ```
@@ -35,7 +70,11 @@ Web UI / REST clients  ──HTTP (port 8080)──►  Drogon REST API
 
 ---
 
-## Prerequisites
+## Prerequisites (Native Build)
+
+**Note:** Using Docker (see Quick Start above) avoids all manual dependency installation.
+
+For native builds without Docker:
 
 | Tool | Version |
 |------|---------|
