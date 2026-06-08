@@ -1,5 +1,8 @@
 # Master Makefile for ACU Full Test Project
 # Supports both native and Docker-based builds with Ninja
+# 
+# RECOMMENDED: Use Docker builds (make docker-build, make docker-build-server)
+# Native builds require manual dependency management and may have version conflicts.
 
 .PHONY: all build configure clean test format cppcheck doc help
 .PHONY: docker-build docker-configure docker-clean docker-shell docker-install docker-image docker-test
@@ -88,9 +91,16 @@ endef
 
 # =============================================================================
 # Native builds (host architecture)
+# 
+# NOTE: Native builds may have dependency version conflicts.
+# For reliable builds, use Docker targets instead:
+#   make docker-build       - Build Acadia-Client in Docker (ARM64)
+#   make docker-build-server - Build Acadia-Server in Docker (x86)
 # =============================================================================
 
 configure:
+	@echo "WARNING: Native builds may have dependency version conflicts."
+	@echo "Consider using Docker builds instead (make docker-build)."
 	@echo "Configuring project with Ninja..."
 	mkdir -p $(NATIVE_BUILD_DIR)
 	cd $(NATIVE_BUILD_DIR) && cmake -GNinja -DBUILD_TESTS=ON $(CURDIR)
@@ -128,7 +138,9 @@ list:
 # --init: use tini as PID 1 to properly propagate signals to child processes (e.g. ninja)
 # ccache volume: persist compilation cache across docker runs
 # ACADIA_ROOT is mounted so ../Acadia-HAL/protos and ../Acadia-HAL/src resolve inside the container.
-DOCKER_RUN := docker run --rm -t --init --platform linux/arm64 -v $(ACADIA_ROOT):/workspace -v ccache-acadia-client:/home/rpi/.ccache $(DOCKER_IMAGE) bash -c
+# Detect host architecture and use appropriate platform
+DOCKER_HOST_ARCH := $(shell uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+DOCKER_RUN := docker run --rm -t --init --platform linux/$(DOCKER_HOST_ARCH) -v $(ACADIA_ROOT):/workspace -v ccache-acadia-client:/home/rpi/.ccache $(DOCKER_IMAGE) bash -c
 
 # Run command for the server x86 container
 DOCKER_SERVER_RUN := docker run --rm -t --init --platform linux/amd64 -v $(ACADIA_ROOT):/workspace -v ccache-acadia-server:/home/acadia/.ccache $(DOCKER_SERVER_IMAGE) bash -c
@@ -144,7 +156,7 @@ docker-install:
 docker-image: docker-install
 	@if ! docker image inspect $(DOCKER_IMAGE) >/dev/null 2>&1; then \
 		echo "Building Docker image $(DOCKER_IMAGE)..."; \
-		make -C docker build; \
+		make -C docker build-$(DOCKER_HOST_ARCH); \
 	else \
 		echo "Docker image $(DOCKER_IMAGE) already exists."; \
 	fi

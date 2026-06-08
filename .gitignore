@@ -63,3 +63,5 @@ _deps/
 *.env
 .env.*
 !.env.example
+
+.local_build_temp
