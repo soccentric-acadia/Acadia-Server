@@ -23,8 +23,9 @@ ACADIA_ROOT := $(shell dirname $(realpath $(CURDIR)))
 DOCKER_SRC_DIR         := /workspace/Acadia-Client
 DOCKER_CROSS_BUILD_DIR := $(DOCKER_SRC_DIR)/build/cross
 
-# Server (x86 Ubuntu) Docker settings - use the unified image we just built
-DOCKER_SERVER_IMAGE     := acadia-dev
+# Server (x86 Ubuntu) Docker settings — must match the tag docker/Makefile's
+# build-server target actually produces: $(IMAGE_NAME)-server, IMAGE_NAME=acadia.
+DOCKER_SERVER_IMAGE     := acadia-server
 DOCKER_SERVER_SRC_DIR   := /workspace/Acadia-Server
 DOCKER_SERVER_BUILD_DIR := $(DOCKER_SERVER_SRC_DIR)/build/docker
 

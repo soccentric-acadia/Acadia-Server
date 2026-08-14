@@ -69,7 +69,7 @@ build-server:
 	@echo "Building Docker image $(IMAGE_NAME)-server for x86 Ubuntu 22.04..."
 	docker buildx build --platform linux/amd64 --load \
 	    --build-arg UID=$$(id -u) --build-arg GID=$$(id -g) \
-	    -f Dockerfile.server -t $(IMAGE_NAME)-server ..
+	    -f Dockerfile.server -t $(IMAGE_NAME)-server .
 
 run:
 	# No --gpus flag: Pi 5 has VideoCore VII (not CUDA)
