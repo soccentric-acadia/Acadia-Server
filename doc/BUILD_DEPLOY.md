@@ -81,10 +81,12 @@ make run APP_NAME arg1
 ```
 
 `deploy-a`/`deploy-b` cross-build, remove `/tmp/acu-test` on the target, and copy
-`build/cross/lib` and `build/cross/bin` there. Defaults are `192.168.1.3` and `192.168.1.13`,
-user `nvidia`, password `nvidia`. These are conditional credential-bearing operations: override
-`IP_A`, `IP_B`, `USER`, and `PASS`, and verify the target before execution. `run` executes
-native binaries with `LD_LIBRARY_PATH`; remote targets execute from `/tmp/acu-test`.
+`build/cross/lib` and `build/cross/bin` there. Addresses and SSH credentials are **not
+hardcoded** — they come from the environment at run time (`ACADIA_TARGET_ADDRESS`,
+`ACADIA_TARGET_USER`, and `ACADIA_TARGET_SSH_KEY` or `ACADIA_TARGET_PASS`). See
+`loop/tools/README.md`; the single source of truth for bench targets is
+`loop/tools/targets.yaml`. `run` executes native binaries with `LD_LIBRARY_PATH`; remote
+targets execute from `/tmp/acu-test`.
 
 For local service development, use the existing Docker instructions and scripts rather than
 inventing a Make target. The documented configuration and database/TLS environment values are
@@ -108,5 +110,6 @@ not a production service installer. Docker/QEMU and CTest do not prove PostgreSQ
 authentication, TLS, API behavior, client/HAL interoperability, device discovery, or target ABI.
 Manually validate service startup with the intended config and `.env` values, database
 connectivity, health/API endpoints, authenticated client handshake, and any target-device run on
-real hardware. The SSH recipes disable strict host-key checking and use plaintext `sshpass`;
-restrict them to controlled development networks.
+real hardware. Deploy is fail-closed on credentials (see the environment contract in
+`loop/tools/README.md`); restrict any legacy relaxed SSH mode to controlled development
+networks.

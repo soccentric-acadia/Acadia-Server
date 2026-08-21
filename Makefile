@@ -32,22 +32,32 @@ DOCKER_SERVER_BUILD_DIR := $(DOCKER_SERVER_SRC_DIR)/build/docker
 # Host architecture as shown by file(1) (e.g. x86-64, aarch64)
 HOST_ARCH := $(shell uname -m | sed 's/x86_64/x86-64/')
 
-# IP addresses for NVIDIA devices
-IP_A := 192.168.1.3
-IP_B := 192.168.1.13
+# IP addresses for bench target devices.
+# Single source of truth: loop/tools/targets.yaml. Do not duplicate a second
+# copy here; provide the address at call time (make deploy-a IP_A=... or
+# ACADIA_TARGET_ADDRESS=...). Empty default so a stale/wrong target can never
+# be silently deployed to.
+IP_A ?= $(ACADIA_TARGET_ADDRESS)
+IP_B ?=
 
-# User/Password for SSH/SCP
-USER := nvidia
-PASS := nvidia
-SSHPASS := sshpass -p $(PASS)
+# SSH credentials are NEVER committed. Injected from the environment / secret
+# manager at run time. Key-based auth is preferred (ACADIA_TARGET_SSH_KEY); a
+# password may be supplied via ACADIA_TARGET_PASS. Deploy targets fail if
+# neither is configured.
+USER := $(or $(ACADIA_TARGET_USER),$(ACADIA_SSH_USER))
+PASS := $(ACADIA_TARGET_PASS)
+SSHPASS := $(if $(PASS),sshpass -p $(PASS))
 SSH := $(SSHPASS) ssh -o StrictHostKeyChecking=no
 SCP := $(SSHPASS) scp -o StrictHostKeyChecking=no
 
 # Default target
 all: docker-build
 
+_require_deploy_env = $(if $(strip $(1)),,$(error deploy requires an IP (set IP_A/IP_B or ACADIA_TARGET_ADDRESS)))
 # Deploy to remote target: $(1)=IP address
 define deploy_remote
+	$(call _require_deploy_env,$(1))
+	$(if $(and $(PASS),$(SSHPASS)),,$(if $(ACADIA_TARGET_SSH_KEY),,$(error deploy: no SSH credentials configured; set ACADIA_TARGET_SSH_KEY or ACADIA_TARGET_USER/ACADIA_TARGET_PASS)))
 	@echo "Deploying to $(1)..."
 	$(SSH) $(USER)@$(1) "rm -rf /tmp/acu-test && mkdir -p /tmp/acu-test"
 	$(SCP) -r $(CROSS_BUILD_DIR)/lib $(USER)@$(1):/tmp/acu-test/
@@ -56,6 +66,7 @@ endef
 
 # Run apps on remote target: $(1)=IP address
 define run_remote
+	$(call _require_deploy_env,$(1))
 	@APP="$(word 2, $(MAKECMDGOALS))"; \
 	ARGS="$(wordlist 3, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS))"; \
 	if [ -z "$$APP" ]; then \
