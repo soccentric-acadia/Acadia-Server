@@ -1,8 +1,10 @@
 # Acadia Server
 
-The **Acadia Server** is the central orchestration and data-collection backend for the Acadia IV&V (Independent Validation & Verification) tool suite. It exposes:
+The **Acadia Server** is the central orchestration and data-collection backend for the Acadia
+IV&V (Independent Validation & Verification) tool suite. It exposes:
 
-- A **gRPC service** (`HalService`) for the embedded HAL Client App to submit test results and receive streaming commands.
+- A **gRPC service** (`HalService`) for the embedded HAL Client App to submit test results and
+receive streaming commands.
 - A **REST/HTTP API** (`/api/v1`) for the Web UI and external tooling.
 - A **PostgreSQL** backend with versioned migrations.
 - **OTA firmware upgrade** orchestration.
@@ -170,7 +172,9 @@ modules:
 
 ## Database Migrations
 
-SQL migration files live in `migrations/`. They are applied automatically at startup in alphabetical order. Migrations are idempotent (tracked in `schema_migrations`). To add a new migration, create `migrations/NNNN_description.sql`.
+SQL migration files live in `migrations/`. They are applied automatically at startup in
+alphabetical order. Migrations are idempotent (tracked in `schema_migrations`). To add a new
+migration, create `migrations/NNNN_description.sql`.
 
 ---
 
@@ -249,13 +253,29 @@ CLI flags override file values:
 
 ## Project Description
 
-Acadia-Server is the central C++ backend for Acadia IV&V execution, result collection, operator APIs, and board lifecycle operations. The repository combines a Drogon HTTP service, a gRPC `HalService` boundary for embedded clients, service and repository layers, PostgreSQL migrations, configuration files, Docker/dev-container support, and optional metrics. Documented responsibilities include authentication and API tokens, module registry access, run creation and inspection, result/log ingestion, live log tails over SSE, target heartbeat, OTA artifact upload and triggering, and database-backed persistence.
+Acadia-Server is the central C++ backend for Acadia IV&V execution, result collection, operator
+APIs, and board lifecycle operations. The repository combines a Drogon HTTP service, a gRPC
+`HalService` boundary for embedded clients, service and repository layers, PostgreSQL
+migrations, configuration files, Docker/dev-container support, and optional metrics. Documented
+responsibilities include authentication and API tokens, module registry access, run creation and
+inspection, result/log ingestion, live log tails over SSE, target heartbeat, OTA artifact upload
+and triggering, and database-backed persistence.
 
-The implementation is organized under `src/`, with protocol/configuration and migration surfaces alongside unit, integration, and configuration tests. Service names in the architecture include run, log, auth, and OTA concerns; the repository also contains registry, result conversion, hashing, time, UUID, anomaly, threshold, badge, and stream-backpressure test areas. The API uses session cookies or bearer tokens for protected endpoints and environment/config-file values for listener, database, registry, storage, and logging behavior. PostgreSQL schema migrations are applied at startup according to the existing documentation.
+The implementation is organized under `src/`, with protocol/configuration and migration surfaces
+alongside unit, integration, and configuration tests. Service names in the architecture include
+run, log, auth, and OTA concerns; the repository also contains registry, result conversion,
+hashing, time, UUID, anomaly, threshold, badge, and stream-backpressure test areas. The API uses
+session cookies or bearer tokens for protected endpoints and environment/config-file values for
+listener, database, registry, storage, and logging behavior. PostgreSQL schema migrations are
+applied at startup according to the existing documentation.
 
-Build presets include debug, release, test, and ASan workflows; focused checks are `ctest --test-dir build --output-on-failure` and the configuration test target. Presence of endpoints and tests is not a claim that a live board, database, OTA artifact, or browser client has been exercised. Deployment credentials, session secrets, database connectivity, gRPC streaming, migration upgrades, and destructive operations require manual verification.
+Build presets include debug, release, test, and ASan workflows; focused checks are `ctest
+--test-dir build --output-on-failure` and the configuration test target. Presence of endpoints
+and tests is not a claim that a live board, database, OTA artifact, or browser client has been
+exercised. Deployment credentials, session secrets, database connectivity, gRPC streaming,
+migration upgrades, and destructive operations require manual verification.
 
-## Feature Matrix
+## Feature Status
 
 | # | Name / Description | Implemented? | Test Coverage? | Manual Test |
 |---:|---|---|---|---|
@@ -278,7 +298,8 @@ Build presets include debug, release, test, and ASan workflows; focused checks a
 - `test/config_test.cpp`.
 - `tests/unit/` covers gRPC backpressure, registry, services, and utilities.
 - `tests/integration/MigrationRunnerTest.cc` covers migration behavior.
-- Typical commands: `cmake --preset test`, `cmake --build build/test`, and `ctest --test-dir build/test --output-on-failure`.
+- Typical commands: `cmake --preset test`, `cmake --build build/test`, and `ctest --test-dir
+build/test --output-on-failure`.
 
 ## Implementation Status
 
