@@ -247,6 +247,39 @@ CLI flags override file values:
 | `--config PATH` | `/etc/acadia/server.toml` |
 | `--log-level LEVEL` | `info` |
 
+## Project Description
+
+Acadia-Server is the central C++ backend for Acadia IV&V execution, result collection, operator APIs, and board lifecycle operations. The repository combines a Drogon HTTP service, a gRPC `HalService` boundary for embedded clients, service and repository layers, PostgreSQL migrations, configuration files, Docker/dev-container support, and optional metrics. Documented responsibilities include authentication and API tokens, module registry access, run creation and inspection, result/log ingestion, live log tails over SSE, target heartbeat, OTA artifact upload and triggering, and database-backed persistence.
+
+The implementation is organized under `src/`, with protocol/configuration and migration surfaces alongside unit, integration, and configuration tests. Service names in the architecture include run, log, auth, and OTA concerns; the repository also contains registry, result conversion, hashing, time, UUID, anomaly, threshold, badge, and stream-backpressure test areas. The API uses session cookies or bearer tokens for protected endpoints and environment/config-file values for listener, database, registry, storage, and logging behavior. PostgreSQL schema migrations are applied at startup according to the existing documentation.
+
+Build presets include debug, release, test, and ASan workflows; focused checks are `ctest --test-dir build --output-on-failure` and the configuration test target. Presence of endpoints and tests is not a claim that a live board, database, OTA artifact, or browser client has been exercised. Deployment credentials, session secrets, database connectivity, gRPC streaming, migration upgrades, and destructive operations require manual verification.
+
+## Feature Matrix
+
+| # | Name / Description | Implemented? | Test Coverage? | Manual Test |
+|---:|---|---|---|---|
+| 1 | CMake build, config loading, and logging | Implemented | `config_test.cpp` | [ ] Manual verification required |
+| 2 | PostgreSQL repository layer and startup migrations | Partial: code/migrations present; production execution unverified | Migration integration tests | [ ] Manual verification required |
+| 3 | gRPC `HalService` boundary and streaming | Partial: service surface present; live interoperability unverified | Stream backpressure test | [ ] Manual verification required |
+| 4 | REST API and health endpoint | Implemented | Endpoint coverage varies | [ ] Manual verification required |
+| 5 | Session authentication and bearer API tokens | Implemented | Focused coverage not fully mapped | [ ] Manual verification required |
+| 6 | Module registry and typed result conversion | Implemented | `ModuleRegistryTest`, `ResultConvertTest` | [ ] Manual verification required |
+| 7 | Run state and badges | Partial: service surface present | Run/badge tests present | [ ] Manual verification required |
+| 8 | Logs and SSE live tail | Implemented | Stream tests; deployment unknown | [ ] Manual verification required |
+| 9 | Target information and heartbeat | Implemented | Unknown | [ ] Manual verification required |
+| 10 | OTA upload and trigger orchestration | Partial: API/service surface documented | Unknown | [ ] Manual verification required |
+| 11 | Anomaly and threshold services | Implemented | Focused service tests present | [ ] Manual verification required |
+| 12 | Hash, time, UUID, and configuration utilities | Implemented | Focused unit tests present | [ ] Manual verification required |
+| 13 | Docker, presets, ASan, and deployment docs | Implemented | Build execution not claimed | [ ] Manual verification required |
+
+## Test Evidence
+
+- `test/config_test.cpp`.
+- `tests/unit/` covers gRPC backpressure, registry, services, and utilities.
+- `tests/integration/MigrationRunnerTest.cc` covers migration behavior.
+- Typical commands: `cmake --preset test`, `cmake --build build/test`, and `ctest --test-dir build/test --output-on-failure`.
+
 ## Implementation Status
 
 | Step | Status |
