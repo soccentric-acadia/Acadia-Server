@@ -54,7 +54,7 @@ jobs:
       - name: Checkout Acadia-HAL (for protos)
         uses: actions/checkout@v4
         with:
-          repository: SiliconCentric/Acadia-HAL
+          repository: soccentric-acadia/Acadia-HAL
           path: ../Acadia-HAL
           token: ${{ secrets.GITHUB_TOKEN }}
 

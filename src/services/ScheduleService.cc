@@ -56,14 +56,16 @@ void ScheduleService::record_fired(const std::string& id,
     repo_.record_run(id, next_run_at);
 }
 
-// Minimal cron next-run computation: advances by 1 minute for simple intervals.
-// A full cron parser would be a separate library (e.g. croncpp).
-// Decision: We use a 1-minute minimum resolution; advanced expressions use
-// a best-effort computation.  Document in README.
-std::string ScheduleService::compute_next_run(const std::string& /*cron_expr*/) {
-    using namespace std::chrono;
-    auto next = system_clock::now() + minutes{1};
-    return util::to_iso8601(next);
+// Real cron next-run computation (5-field cron, UTC) via util/Cron.
+std::string ScheduleService::compute_next_run(const std::string& cron_expr) {
+    auto next = util::cron_next_occurrence(cron_expr, util::utc_now_iso8601());
+    if (next.empty()) {
+        // Invalid/unmatched cron: fall back to +1 minute so the schedule
+        // remains observable rather than silently never firing.
+        using namespace std::chrono;
+        next = util::to_iso8601(system_clock::now() + minutes{1});
+    }
+    return next;
 }
 
 }  // namespace acadia

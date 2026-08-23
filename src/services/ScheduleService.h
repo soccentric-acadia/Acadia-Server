@@ -23,12 +23,12 @@ public:
     // Record that a schedule was triggered; advance next_run_at.
     void record_fired(const std::string& id, const std::string& next_run_at);
 
+    // Compute the next run timestamp for a cron expression.
+    static std::string compute_next_run(const std::string& cron_expr);
+
 private:
     ScheduleRepository repo_;
     AuditRepository    audit_repo_;
-
-    // Compute the next run timestamp for a cron expression.
-    static std::string compute_next_run(const std::string& cron_expr);
 };
 
 }  // namespace acadia

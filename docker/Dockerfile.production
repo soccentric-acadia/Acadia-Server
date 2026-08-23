@@ -1,0 +1,75 @@
+# syntax=docker/dockerfile:1
+# ──────────────────────────────────────────────────────────────────────────────
+# Acadia Server — production runtime image.
+#
+# Multi-stage: stage "builder" compiles the acadia-server binary using the same
+# toolchain as Dockerfile.unified; stage "runtime" ships only the binary and
+# the shared libs it needs, so the final image is small and secure.
+#
+# Build:  docker build -f docker/Dockerfile.production -t acadia-server .
+# ──────────────────────────────────────────────────────────────────────────────
+FROM ubuntu:22.04 AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Build tools + apt libs (mirrors Dockerfile.unified).
+RUN apt-get update && apt-get install -y \
+    build-essential cmake ninja-build git pkg-config ccache wget \
+    protobuf-compiler libprotobuf-dev libprotoc-dev \
+    libgrpc++-dev libgrpc-dev libssl-dev \
+    libjsoncpp-dev uuid-dev zlib1g-dev libbrotli-dev \
+    libpq-dev libc-ares-dev libsqlite3-dev libspdlog-dev libgtest-dev \
+    libargon2-dev libboost-system-dev libboost-date-time-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# yaml-cpp 0.8.0 (Ubuntu 22.04 ships 0.7 without the imported target).
+RUN git clone --depth=1 --branch 0.8.0 https://github.com/jbeder/yaml-cpp.git /tmp/yaml-cpp \
+ && cmake -S /tmp/yaml-cpp -B /tmp/yaml-cpp/build -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib -DYAML_CPP_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release \
+ && cmake --build /tmp/yaml-cpp/build --parallel \
+ && cmake --install /tmp/yaml-cpp/build && rm -rf /tmp/yaml-cpp
+
+# toml++ (header-only).
+RUN git clone --depth=1 --branch v3.4.0 https://github.com/marzer/tomlplusplus.git /tmp/tomlplusplus \
+ && cmake -S /tmp/tomlplusplus -B /tmp/tomlplusplus/build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib \
+ && cmake --install /tmp/tomlplusplus/build && rm -rf /tmp/tomlplusplus
+
+# Drogon v1.9.3 with Postgres.
+RUN git clone --depth=1 --branch v1.9.3 https://github.com/drogonframework/drogon.git /tmp/drogon \
+ && cd /tmp/drogon && git submodule update --init --recursive \
+ && cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_CTL=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF \
+    -DUSE_POSTGRESQL=ON -DUSE_MYSQL=OFF -DUSE_SQLITE3=OFF \
+ && cmake --build build --parallel && cmake --install build && rm -rf /tmp/drogon
+
+# gRPC CMake config + plugin (Ubuntu's libgrpc++ ships neither).
+COPY docker/gRPCConfig.cmake        /usr/lib/x86_64-linux-gnu/cmake/grpc/gRPCConfig.cmake
+COPY docker/gRPCConfigVersion.cmake /usr/lib/x86_64-linux-gnu/cmake/grpc/gRPCConfigVersion.cmake
+RUN git clone --depth=1 --branch v1.30.2 --filter=blob:none --sparse https://github.com/grpc/grpc.git /tmp/grpc \
+ && cd /tmp/grpc && git sparse-checkout set src/compiler \
+ && g++ -std=c++14 -O2 -o /usr/local/bin/grpc_cpp_plugin src/compiler/cpp_generator.cc src/compiler/cpp_plugin.cc \
+    -I . $(pkg-config --cflags protobuf) -lprotoc -lprotobuf && rm -rf /tmp/grpc
+
+WORKDIR /build
+COPY . .
+RUN cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF \
+    -DCMAKE_INSTALL_PREFIX=/usr && \
+    ninja -C build acadia-server
+
+# ── Runtime ───────────────────────────────────────────────────────────────────
+FROM ubuntu:22.04 AS runtime
+ENV DEBIAN_FRONTEND=noninteractive
+# Runtime shared libs for the binary (Drogon, gRPC, protobuf, postgres client).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgrpc++1 libprotobuf23 libjsoncpp25 uuid-runtime libbrotli1 \
+    libpq5 libc-ares2 libspdlog1 libsqlite3-0 libargon2-1 \
+    libboost-system1.74.0 libboost-date-time1.74.0 ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /build/build/acadia-server /usr/local/bin/acadia-server
+
+RUN useradd --system --no-create-home --uid 10001 acadia
+USER acadia
+
+EXPOSE 50051 8080 9100
+ENTRYPOINT ["/usr/local/bin/acadia-server"]
