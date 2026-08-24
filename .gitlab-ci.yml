@@ -1,0 +1,44 @@
+# Acadia-Server — GitLab CI (Docker executor).
+stages: [build, test]
+
+services:
+  - name: postgres:16-alpine
+    alias: postgres
+    variables:
+      POSTGRES_DB: acadia_test
+      POSTGRES_USER: acadia
+      POSTGRES_PASSWORD: acadia_test
+
+variables:
+  ACADIA_TEST_DB: postgres://acadia:acadia_test@postgres/acadia_test
+  ACADIA_TEST_DSN: postgres://acadia:acadia_test@postgres/acadia_test
+
+build-and-test:
+  stage: test
+  image: ubuntu:22.04
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y --no-install-recommends build-essential cmake ninja-build git pkg-config
+      protobuf-compiler libprotobuf-dev libprotoc-dev libgrpc++-dev libgrpc-dev libssl-dev
+      libjsoncpp-dev uuid-dev zlib1g-dev libbrotli-dev libpq-dev libc-ares-dev
+      libspdlog-dev libgtest-dev libargon2-dev
+    # yaml-cpp 0.8.0
+    - git clone --depth=1 --branch 0.8.0 https://github.com/jbeder/yaml-cpp.git /tmp/yaml-cpp
+    - cmake -S /tmp/yaml-cpp -B /tmp/yaml-cpp/build -DCMAKE_INSTALL_PREFIX=/usr -DYAML_CPP_BUILD_TESTS=OFF -GNinja
+    - ninja -C /tmp/yaml-cpp/build install
+    # Drogon v1.9.3 (Postgres only)
+    - git clone --depth=1 --branch v1.9.3 https://github.com/drogonframework/drogon.git /tmp/drogon
+    - cd /tmp/drogon && git submodule update --init --recursive
+    - cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DBUILD_CTL=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DUSE_POSTGRESQL=ON -DUSE_MYSQL=OFF -DUSE_SQLITE3=OFF -GNinja
+    - ninja -C build install
+  script:
+    # Acadia-HAL provides the canonical protos.
+    - git clone --depth=1 ${ACADIA_GIT_READ_URL:-https://github.com/soccentric-acadia/Acadia-HAL.git} ../Acadia-HAL
+    - cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+    - ninja -C build -j$(nproc)
+    - ctest --test-dir build -j$(nproc) --output-on-failure -L unit
+    - ctest --test-dir build -j$(nproc) --output-on-failure -L integration
+  artifacts:
+    when: on_failure
+    paths: [build/Testing/]
+    expire_in: 1 week

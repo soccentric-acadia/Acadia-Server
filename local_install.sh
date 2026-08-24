@@ -3,12 +3,13 @@
 # Acadia Server — Local Development Environment Setup
 #
 # This script installs all build dependencies and development tools needed to
-# build the Acadia Server project from source on a local machine (Ubuntu 22.04+).
+# build the Acadia Server project from source on a local machine.
 #
 # Supports: x86_64 and ARM64 architectures
-# Tested on: Ubuntu 22.04 LTS, Ubuntu 24.04 LTS
+# Distributions: Ubuntu 22.04+, Debian (apt), Arch Linux / Arch-based (pacman)
+# Tested on: Ubuntu 22.04 LTS, Ubuntu 24.04 LTS, Arch Linux
 #
-# Usage: ./local_install.sh [--help] [--skip-apt] [--skip-postgres]
+# Usage: ./local_install.sh [--help] [--skip-packages] [--skip-postgres]
 ################################################################################
 
 set -euo pipefail
@@ -30,6 +31,11 @@ PROJECT_ROOT="${SCRIPT_DIR}"
 
 # Build directories
 BUILD_TEMP_DIR="${PROJECT_ROOT}/.local_build_temp"
+
+# Package manager / distribution detection (set during pre-flight)
+PKG_MANAGER=""       # apt-get | pacman
+PKG_INSTALL=()       # install command
+PKG_QUERY=()         # 'is installed' command
 
 ################################################################################
 # Helper Functions
@@ -80,7 +86,8 @@ USAGE:
     ./local_install.sh [OPTIONS]
 
 OPTIONS:
-    --skip-apt              Skip system package installation via apt
+    --skip-packages         Skip system package installation (apt / pacman)
+    --skip-apt              Alias for --skip-packages (kept for backward compatibility)
     --skip-postgres         Skip PostgreSQL client library installation
     --skip-build-from-src   Skip building dependencies from source (yaml-cpp, drogon, grpc_cpp_plugin)
     --help                  Show this help message
@@ -92,12 +99,13 @@ EXAMPLES:
     # Skip PostgreSQL (if you only need build tools)
     ./local_install.sh --skip-postgres
 
-    # Skip apt installation (dependencies already installed)
-    ./local_install.sh --skip-apt
+    # Skip package installation (dependencies already installed)
+    ./local_install.sh --skip-packages
 
 REQUIREMENTS:
-    • Ubuntu 22.04 LTS or later
-    • sudo access (for apt and make install)
+    • Ubuntu/Debian 22.04 LTS or later  (uses apt-get)
+    • Arch Linux or an Arch-based distro (uses pacman)
+    • sudo access (for apt-get/pacman and make install)
     • Internet connection
     • ~2-3 GB free disk space (for source builds)
 
@@ -141,15 +149,31 @@ verify_prerequisites() {
         exit 1
     fi
 
-    # Check if running on Ubuntu/Debian
-    if ! check_command apt-get; then
-        print_error "apt-get not found. This script requires Debian/Ubuntu"
+    # Detect package manager (apt for Debian/Ubuntu, pacman for Arch)
+    if check_command apt-get; then
+        PKG_MANAGER="apt-get"
+    elif check_command pacman; then
+        PKG_MANAGER="pacman"
+    else
+        print_error "No supported package manager found (need apt-get or pacman)"
+        print_error "Supported: Ubuntu/Debian (apt) and Arch-based (pacman)"
         exit 1
     fi
+    print_success "Package manager: $PKG_MANAGER"
 
-    # Check Ubuntu version (22.04+)
-    if ! grep -q "jammy\|noble" /etc/os-release 2>/dev/null; then
-        print_warning "This script is optimized for Ubuntu 22.04 or 24.04"
+    # Check OS distribution
+    if [ "$PKG_MANAGER" = "apt-get" ]; then
+        if ! grep -qiE "debian|ubuntu" /etc/os-release 2>/dev/null; then
+            print_warning "This script is optimized for Debian/Ubuntu (using apt-get)"
+        elif ! grep -q "jammy\|noble" /etc/os-release 2>/dev/null; then
+            print_warning "This script is optimized for Ubuntu 22.04 or 24.04"
+        fi
+    else
+        if grep -qiE "arch" /etc/os-release 2>/dev/null; then
+            print_success "Distribution: Arch-based"
+        else
+            print_warning "pacman detected but OS is not identified as Arch-based"
+        fi
     fi
 
     # Check for sudo access
@@ -167,63 +191,118 @@ verify_prerequisites() {
 }
 
 ################################################################################
-# APT Package Installation
+# System Package Installation (apt-get / pacman)
 ################################################################################
 
-install_apt_packages() {
-    print_step "Installing system packages via apt"
+# Returns 0 if a package is installed, 1 otherwise
+package_installed() {
+    local pkg="$1"
+    if [ "$PKG_MANAGER" = "apt-get" ]; then
+        dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"
+    else
+        pacman -Q "$pkg" &>/dev/null
+    fi
+}
 
-    # Update package lists
-    print_info "Updating package lists..."
-    sudo apt-get update -qq
+install_system_packages() {
+    print_step "Installing system packages via $PKG_MANAGER"
 
-    # Core build tools
-    local BUILD_TOOLS=(
-        "build-essential"           # GCC, g++, make
-        "cmake"                     # CMake build system
-        "ninja-build"               # Ninja build backend
-        "git"                       # Version control
-        "pkg-config"                # Library metadata
-        "wget"                      # Download utility
-        "curl"                      # HTTP client
-        "ccache"                    # Compiler cache
-        "sudo"                      # Privilege escalation
-    )
+    if [ "$PKG_MANAGER" = "apt-get" ]; then
+        # Core build tools
+        local BUILD_TOOLS=(
+            "build-essential"           # GCC, g++, make
+            "cmake"                     # CMake build system
+            "ninja-build"               # Ninja build backend
+            "git"                       # Version control
+            "pkg-config"                # Library metadata
+            "wget"                      # Download utility
+            "curl"                      # HTTP client
+            "ccache"                    # Compiler cache
+            "sudo"                      # Privilege escalation
+        )
 
-    # Protobuf & gRPC
-    local GRPC_TOOLS=(
-        "protobuf-compiler"         # protoc
-        "libprotobuf-dev"           # protobuf headers & lib
-        "libprotoc-dev"             # protoc development library
-        "libgrpc++-dev"             # gRPC C++ library
-        "libgrpc-dev"               # gRPC core library
-    )
+        # Protobuf & gRPC
+        local GRPC_TOOLS=(
+            "protobuf-compiler"         # protoc
+            "libprotobuf-dev"           # protobuf headers & lib
+            "libprotoc-dev"             # protoc development library
+            "libgrpc++-dev"             # gRPC C++ library
+            "libgrpc-dev"               # gRPC core library
+        )
 
-    # TLS/SSL
-    local SECURITY_LIBS=(
-        "libssl-dev"                # OpenSSL development
-    )
+        # TLS/SSL
+        local SECURITY_LIBS=(
+            "libssl-dev"                # OpenSSL development
+        )
 
-    # Drogon dependencies
-    local DROGON_DEPS=(
-        "libjsoncpp-dev"            # JSON parsing
-        "uuid-dev"                  # UUID generation
-        "zlib1g-dev"                # Compression
-        "libbrotli-dev"             # Brotli compression
-        "libc-ares-dev"             # C-Ares DNS resolution
-    )
+        # Drogon dependencies
+        local DROGON_DEPS=(
+            "libjsoncpp-dev"            # JSON parsing
+            "uuid-dev"                  # UUID generation
+            "zlib1g-dev"                # Compression
+            "libbrotli-dev"             # Brotli compression
+            "libc-ares-dev"             # C-Ares DNS resolution
+        )
 
-    # PostgreSQL
-    local POSTGRES_DEPS=(
-        "libpq-dev"                 # PostgreSQL client library
-    )
+        # PostgreSQL
+        local POSTGRES_DEPS=(
+            "libpq-dev"                 # PostgreSQL client library
+        )
 
-    # Testing & utilities
-    local TEST_TOOLS=(
-        "libgtest-dev"              # Google Test framework
-        "libspdlog-dev"             # spdlog logging library
-        "libargon2-dev"             # Argon2 password hashing
-    )
+        # Testing & utilities
+        local TEST_TOOLS=(
+            "libgtest-dev"              # Google Test framework
+            "libspdlog-dev"             # spdlog logging library
+            "libargon2-dev"             # Argon2 password hashing
+        )
+    else
+        # Arch Linux / Arch-based (pacman)
+
+        # Core build tools
+        local BUILD_TOOLS=(
+            "base-devel"                # GCC, g++, make
+            "cmake"                     # CMake build system
+            "ninja"                     # Ninja build backend
+            "git"                       # Version control
+            "pkgconf"                   # Library metadata (pkg-config)
+            "wget"                      # Download utility
+            "curl"                      # HTTP client
+            "ccache"                    # Compiler cache
+            "sudo"                      # Privilege escalation
+        )
+
+        # Protobuf & gRPC
+        local GRPC_TOOLS=(
+            "protobuf"                  # protoc + protobuf headers & libs
+            "grpc"                      # gRPC C++ library + grpc_cpp_plugin
+        )
+
+        # TLS/SSL
+        local SECURITY_LIBS=(
+            "openssl"                   # OpenSSL development
+        )
+
+        # Drogon dependencies
+        local DROGON_DEPS=(
+            "jsoncpp"                    # JSON parsing
+            "util-linux"                 # UUID generation (libuuid)
+            "zlib"                       # Compression
+            "brotli"                     # Brotli compression
+            "c-ares"                     # C-Ares DNS resolution
+        )
+
+        # PostgreSQL
+        local POSTGRES_DEPS=(
+            "postgresql-libs"            # PostgreSQL client library (libpq)
+        )
+
+        # Testing & utilities
+        local TEST_TOOLS=(
+            "gtest"                      # Google Test framework
+            "spdlog"                     # spdlog logging library
+            "argon2"                     # Argon2 password hashing
+        )
+    fi
 
     # Combine all packages
     local ALL_PACKAGES=(
@@ -235,13 +314,38 @@ install_apt_packages() {
         "${TEST_TOOLS[@]}"
     )
 
-    print_info "Installing ${#ALL_PACKAGES[@]} packages..."
-    sudo apt-get install -y "${ALL_PACKAGES[@]}" 2>&1 | grep -E "^(Setting up|Processing|Reading)" || true
+    # Filter PostgreSQL packages if skipped
+    if [ "$SKIP_POSTGRES" = true ]; then
+        local FILTERED=()
+        for pkg in "${ALL_PACKAGES[@]}"; do
+            if [[ " ${POSTGRES_DEPS[*]} " != *" $pkg "* ]]; then
+                FILTERED+=("$pkg")
+            fi
+        done
+        ALL_PACKAGES=("${FILTERED[@]}")
+        print_info "Skipping PostgreSQL packages"
+    fi
+
+    print_info "Installing ${#ALL_PACKAGES[@]} packages via $PKG_MANAGER..."
+
+    if [ "$PKG_MANAGER" = "apt-get" ]; then
+        print_info "Updating package lists..."
+        sudo apt-get update -qq
+        sudo apt-get install -y "${ALL_PACKAGES[@]}" 2>&1 | grep -E "^(Setting up|Processing|Reading)" || true
+    else
+        # Arch: update database, then install (assume yes)
+        sudo pacman -Sy --noconfirm "${ALL_PACKAGES[@]}" 2>&1 | grep -E "^(resolving dependencies|looking for conflicting packages|Packages \(|\([:0-9]/[:0-9]\)|::)" || true
+    fi
 
     # Verify key packages
-    local CRITICAL_PACKAGES=("cmake" "protobuf-compiler" "libgrpc++-dev" "libssl-dev")
+    local CRITICAL_PACKAGES
+    if [ "$PKG_MANAGER" = "apt-get" ]; then
+        CRITICAL_PACKAGES=("cmake" "protobuf-compiler" "libgrpc++-dev" "libssl-dev")
+    else
+        CRITICAL_PACKAGES=("cmake" "protobuf" "grpc" "openssl")
+    fi
     for pkg in "${CRITICAL_PACKAGES[@]}"; do
-        if dpkg -l | grep -q "^ii.*$pkg"; then
+        if package_installed "$pkg"; then
             print_success "Package installed: $pkg"
         else
             print_error "Failed to install critical package: $pkg"
@@ -384,18 +488,27 @@ build_grpc_cpp_plugin() {
 configure_cmake() {
     print_step "Setting up CMake paths"
 
-    # Create /usr/local/lib/cmake directories if they don't exist
-    sudo mkdir -p /usr/local/lib/cmake/grpc
+    # Check known gRPC CMake config locations
+    local GRPC_CONFIG=""
+    for candidate in \
+        "/usr/lib/x86_64-linux-gnu/cmake/grpc/gRPCConfig.cmake" \
+        "/usr/lib/x86_64-linux-gnu/cmake/grpc/gRPCConfig.cmake" \
+        "/usr/lib/cmake/grpc/gRPCConfig.cmake" \
+        "/usr/local/lib/cmake/grpc/gRPCConfig.cmake"; do
+        if [ -f "$candidate" ]; then
+            GRPC_CONFIG="$candidate"
+            break
+        fi
+    done
 
-    # Check if gRPC cmake configs exist in system location
-    if [ ! -f "/usr/lib/x86_64-linux-gnu/cmake/grpc/gRPCConfig.cmake" ] && \
-       [ ! -f "/usr/local/lib/cmake/grpc/gRPCConfig.cmake" ]; then
+    if [ -z "$GRPC_CONFIG" ]; then
         print_warning "gRPC CMake config not found, may need manual setup"
-        print_info "If you encounter 'find_package(gRPC)' errors, ensure grpc CMake files are in:"
-        print_info "  /usr/lib/x86_64-linux-gnu/cmake/grpc/"
-        print_info "  or /usr/local/lib/cmake/grpc/"
+        print_info "Ensure grpc CMake files are discoverable via CMAKE_PREFIX_PATH:"
+        print_info "  /usr/lib/cmake/grpc/  (Arch)"
+        print_info "  /usr/lib/x86_64-linux-gnu/cmake/grpc/  (Debian/Ubuntu)"
+        print_info "  /usr/local/lib/cmake/grpc/  (built from source)"
     else
-        print_success "gRPC CMake config found"
+        print_success "gRPC CMake config found: $GRPC_CONFIG"
     fi
 
     print_success "CMake paths configured"
@@ -492,8 +605,11 @@ verify_installation() {
     )
 
     for lib in "${CRITICAL_LIBS[@]}"; do
+        # Try variations: "libspdlog", "spdlog" (strip leading lib), and lib+name
+        local base="${lib#lib}"
         if pkg-config --exists "$lib" 2>/dev/null || \
-           pkg-config --exists "lib${lib}" 2>/dev/null; then
+           pkg-config --exists "${base}" 2>/dev/null || \
+           pkg-config --exists "lib${base}" 2>/dev/null; then
             print_success "Library found: $lib"
         else
             print_warning "Library not found via pkg-config: $lib"
@@ -526,7 +642,7 @@ cleanup_build_temp() {
 
 main() {
     # Parse command line arguments
-    SKIP_APT=false
+    SKIP_PACKAGES=false
     SKIP_POSTGRES=false
     SKIP_BUILD_FROM_SRC=false
 
@@ -536,8 +652,8 @@ main() {
                 show_help
                 exit 0
                 ;;
-            --skip-apt)
-                SKIP_APT=true
+            --skip-packages|--skip-apt)
+                SKIP_PACKAGES=true
                 shift
                 ;;
             --skip-postgres)
@@ -559,7 +675,7 @@ main() {
     # Calculate total steps
     TOTAL_STEPS=6  # Default steps
 
-    if [ "$SKIP_APT" = false ]; then
+    if [ "$SKIP_PACKAGES" = false ]; then
         TOTAL_STEPS=$((TOTAL_STEPS + 1))
     fi
 
@@ -575,11 +691,11 @@ main() {
     # Pre-flight checks
     verify_prerequisites
 
-    # Install APT packages
-    if [ "$SKIP_APT" = false ]; then
-        install_apt_packages
+    # Install system packages
+    if [ "$SKIP_PACKAGES" = false ]; then
+        install_system_packages
     else
-        print_info "Skipping apt package installation"
+        print_info "Skipping system package installation"
     fi
 
     # Build from source
