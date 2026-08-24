@@ -220,7 +220,16 @@ void AlertsController::update(const drogon::HttpRequestPtr& req,
                "enabled, created_at";
 
         params.push_back(id);
-        auto result = db->execSqlSync(sql, params);
+        // Bind each parameter individually (Drogon does not accept a
+        // std::vector<std::string> as a single SQL parameter).
+        auto binder = *db << sql;
+        for (const auto& p : params) {
+            binder << p;
+        }
+        binder << drogon::orm::Mode::Blocking;
+        drogon::orm::Result result(nullptr);
+        binder >> [&result](const drogon::orm::Result& r) { result = r; };
+        binder.exec();
         if (result.empty()) {
             Json::Value err; err["error"] = "not found";
             auto resp = drogon::HttpResponse::newHttpJsonResponse(err);

@@ -146,7 +146,7 @@ configure_file(
 set(MIGRATIONS_DIR "${CMAKE_SOURCE_DIR}/migrations")
 
 # ── Collect source files ───────────────────────────────────────────────────────
-file(GLOB_RECURSE ACADIA_CORE_SRCS
+file(GLOB_RECURSE ACADIA_CORE_SRCS CONFIGURE_DEPENDS
   "${CMAKE_SOURCE_DIR}/src/config/*.cc"
   "${CMAKE_SOURCE_DIR}/src/logging/*.cc"
   "${CMAKE_SOURCE_DIR}/src/registry/*.cc"
@@ -206,7 +206,7 @@ install(TARGETS acadia-server DESTINATION bin)
 # ── Unit tests ────────────────────────────────────────────────────────────────
 enable_testing()
 
-file(GLOB_RECURSE UNIT_TEST_SRCS "${CMAKE_SOURCE_DIR}/tests/unit/*.cc")
+file(GLOB_RECURSE UNIT_TEST_SRCS CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/tests/unit/*.cc")
 if(UNIT_TEST_SRCS)
   add_executable(acadia-unit-tests ${UNIT_TEST_SRCS})
   target_include_directories(acadia-unit-tests PRIVATE
@@ -225,7 +225,7 @@ if(UNIT_TEST_SRCS)
 endif()
 
 # ── Integration tests ─────────────────────────────────────────────────────────
-file(GLOB_RECURSE INTEG_TEST_SRCS "${CMAKE_SOURCE_DIR}/tests/integration/*.cc")
+file(GLOB_RECURSE INTEG_TEST_SRCS CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/tests/integration/*.cc")
 if(INTEG_TEST_SRCS)
   add_executable(acadia-integration-tests ${INTEG_TEST_SRCS})
   target_include_directories(acadia-integration-tests PRIVATE
