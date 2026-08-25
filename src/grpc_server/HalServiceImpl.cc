@@ -88,8 +88,17 @@ void HalServiceImpl::persist_result(const std::string& run_id,
 
     spdlog::info("grpc: RunSingleShot module_id={}", req->module_id());
 
-    // Create a run to record this single-shot request.
-    auto run = run_svc_.start_run("{}", "single_shot", "single_shot", "");
+    // Task 83: carry the real request into the run snapshot (module_config +
+    // common config), not a synthetic empty "{}". The client dispatches the
+    // actual execution; the run is created with the request it represents.
+    std::string cfg_json = "{}";
+    if (req->has_module_config()) {
+        std::string any_bytes;
+        req->module_config().SerializeToString(&any_bytes);
+        cfg_json = "{\"module_config\":\"" + any_bytes + "\","
+                   "\"common\":\"" + req->common().SerializeAsString() + "\"}";
+    }
+    auto run = run_svc_.start_run(cfg_json, "single_shot", "single_shot", "");
     run_svc_.mark_running(run.id);
 
     // The actual execution happens on the client (HAL); we just record the result.
