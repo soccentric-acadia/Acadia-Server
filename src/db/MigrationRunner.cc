@@ -23,6 +23,21 @@ MigrationRunner::MigrationRunner(std::string migrations_dir)
 void MigrationRunner::run() {
     auto db = get_db_client();
 
+    // Task 95: advisory lock so concurrent Server startups do not race on
+    // applying the same migration twice.
+    db->execSqlSync("SELECT pg_advisory_lock(87391)");
+    try {
+        run_locked();
+    } catch (...) {
+        try { db->execSqlSync("SELECT pg_advisory_unlock(87391)"); } catch (...) {}
+        throw;
+    }
+    try { db->execSqlSync("SELECT pg_advisory_unlock(87391)"); } catch (...) {}
+}
+
+void MigrationRunner::run_locked() {
+    auto db = get_db_client();
+
     // Ensure the migrations tracking table exists.
     {
         auto result = db->execSqlSync(
@@ -59,13 +74,8 @@ void MigrationRunner::run() {
     int applied_count = 0;
     for (const auto& file : files) {
         std::string version = file.stem().string();
+        if (applied.count(version)) continue;
 
-        if (applied.count(version)) {
-            spdlog::debug("MigrationRunner: skip {} (already applied)", version);
-            continue;
-        }
-
-        // Read the SQL file.
         std::ifstream f{file};
         if (!f.is_open()) {
             throw std::runtime_error(
@@ -76,75 +86,85 @@ void MigrationRunner::run() {
         std::string sql = ss.str();
 
         spdlog::info("MigrationRunner: applying {}", version);
+        // Task 95: run each migration inside ONE transaction so the version is
+        // recorded atomically with its DDL — a partial migration never leaves
+        // the row unrecorded (and never falsely marks it applied).
+        db->execSqlSync("BEGIN");
         try {
-            // Split SQL by semicolons and execute each statement individually.
-            // Drogon's execSqlSync uses prepared statements which cannot contain
-            // multiple commands. Naive split is sufficient for standard migrations.
-            std::istringstream stmt_stream{sql};
-            std::string stmt;
-            std::string line;
-            while (std::getline(stmt_stream, line)) {
-                stmt += line + "\n";
-                // Remove trailing whitespace to test for semicolons.
-                auto trimmed = line;
-                trimmed.erase(trimmed.find_last_not_of(" \t\r\n") + 1);
-                if (!trimmed.empty() && trimmed.back() == ';') {
-                    // Strip the trailing semicolon — execSqlSync doesn't need it.
-                    auto s = stmt;
-                    auto semi = s.rfind(';');
-                    if (semi != std::string::npos) s.erase(semi);
-                    // Skip empty / comment-only statements.
-                    auto non_ws = s.find_first_not_of(" \t\r\n");
-                    if (non_ws == std::string::npos) { stmt.clear(); continue; }
-                    auto trimmed_s = s.substr(non_ws);
-                    if (trimmed_s.substr(0, 2) == "--") { stmt.clear(); continue; }
-                    try {
-                        auto res = db->execSqlSync(s);
-                        (void)res;
-                    } catch (const drogon::orm::DrogonDbException& e) {
-                        throw std::runtime_error(
-                            "MigrationRunner: migration " + version + " failed: " + e.base().what());
-                    }
-                    stmt.clear();
-                }
+            for (const std::string& s : split_statements(sql)) {
+                if (s.empty()) continue;
+                auto res = db->execSqlSync(s);
+                (void)res;
             }
-            // Execute any trailing statement without a trailing semicolon.
-            if (!stmt.empty()) {
-                auto non_ws = stmt.find_first_not_of(" \t\r\n");
-                if (non_ws != std::string::npos) {
-                    try {
-                        auto res = db->execSqlSync(stmt);
-                        (void)res;
-                    } catch (const drogon::orm::DrogonDbException& e) {
-                        throw std::runtime_error(
-                            "MigrationRunner: migration " + version + " failed: " + e.base().what());
-                    }
-                }
-            }
-        } catch (const std::runtime_error&) {
-            throw;
-        } catch (const drogon::orm::DrogonDbException& e) {
-            throw std::runtime_error(
-                "MigrationRunner: migration " + version + " failed: " + e.base().what());
-        }
-
-        // Record the migration (already done inside the SQL, but also record
-        // here for migrations that don't self-register).
-        try {
             db->execSqlSync(
                 "INSERT INTO schema_migrations (version) VALUES ($1) "
                 "ON CONFLICT (version) DO NOTHING",
                 version);
-        } catch (...) {
-            // Not fatal — the SQL file itself may have already inserted the row.
+            db->execSqlSync("COMMIT");
+        } catch (const std::exception& e) {
+            try { db->execSqlSync("ROLLBACK"); } catch (...) {}
+            throw std::runtime_error(
+                "MigrationRunner: migration " + version + " failed: " + e.what());
         }
-
         ++applied_count;
         spdlog::info("MigrationRunner: applied {}", version);
     }
 
     spdlog::info("MigrationRunner: {} migration(s) applied, {} already up to date",
                  applied_count, static_cast<int>(applied.size()));
+}
+
+// Split SQL into statements at top-level semicolons, respecting single-quote
+// strings and dollar-quoted bodies (so CREATE FUNCTION $$ ... ; ... $$; is NOT
+// split in the middle). Returns statements WITHOUT their trailing semicolon.
+static std::string trim_statement(std::string s);
+std::vector<std::string> MigrationRunner::split_statements(const std::string& sql) {
+    std::vector<std::string> out;
+    std::string cur;
+    bool in_squote = false;
+    bool in_dquote = false;
+    size_t i = 0;
+    while (i < sql.size()) {
+        char c = sql[i];
+        // Dollar-quoted block (e.g. $$ ... $$, $func$ ... $func$).
+        if (c == '$' && !in_squote && !in_dquote) {
+            size_t j = i + 1;
+            while (j < sql.size() && (isalnum((unsigned char)sql[j]) || sql[j] == '_')) ++j;
+            if (j < sql.size() && sql[j] == '$') {
+                std::string tag = sql.substr(i, j - i + 1);  // e.g. $$ or $func$
+                // Find the closing tag.
+                size_t close = sql.find(tag, j + 1);
+                if (close != std::string::npos) {
+                    cur += sql.substr(i, close + tag.size() - i);
+                    i = close + tag.size();
+                    continue;
+                }
+            }
+        }
+        if (c == '\'' && !in_dquote) { in_squote = !in_squote; cur += c; ++i; continue; }
+        if (c == '"' && !in_squote) { in_dquote = !in_dquote; cur += c; ++i; continue; }
+        if (c == ';' && !in_squote && !in_dquote) {
+            out.push_back(trim_statement(cur));
+            cur.clear();
+            ++i; continue;
+        }
+        cur += c;
+        ++i;
+    }
+    if (!trim_statement(cur).empty()) out.push_back(trim_statement(cur));
+    return out;
+}
+
+static std::string trim_statement(std::string s) {
+    // Strip leading/trailing whitespace and a trailing semicolon.
+    size_t b = s.find_first_not_of(" \t\r\n");
+    if (b == std::string::npos) return "";
+    size_t e = s.find_last_not_of(" \t\r\n");
+    std::string t = s.substr(b, e - b + 1);
+    if (!t.empty() && t.back() == ';') t.pop_back();
+    // Skip comment-only statements.
+    if (t.rfind("--", 0) == 0) return "";
+    return t;
 }
 
 }  // namespace acadia::db

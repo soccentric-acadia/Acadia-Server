@@ -5,6 +5,7 @@
 // Aborts startup with std::runtime_error on any failure.
 
 #include <string>
+#include <vector>
 
 namespace acadia::db {
 
@@ -17,7 +18,15 @@ public:
     // Throws std::runtime_error if any migration fails.
     void run();
 
+    // Split SQL into top-level statements, respecting quotes and dollar-quoted
+    // bodies. Statements are returned WITHOUT trailing semicolons (task 95).
+    static std::vector<std::string> split_statements(const std::string& sql);
+
 private:
+    // Task 95: apply under an advisory lock (concurrency-safe), then each
+    // migration runs atomically.
+    void run_locked();
+
     std::string migrations_dir_;
 };
 
