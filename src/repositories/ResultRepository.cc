@@ -55,6 +55,22 @@ static const char* SELECT_COLS =
 Result ResultRepository::insert(const Result& r) {
     auto db = db::get_db_client();
 
+    // Task 92: the complete result tree (parent + all recursive children) must
+    // commit or roll back as ONE transaction, so a child insert failure cannot
+    // leave an orphaned parent.
+    db->execSqlSync("BEGIN");
+    try {
+        Result saved = insert_in_txn(db, r);
+        db->execSqlSync("COMMIT");
+        return saved;
+    } catch (const std::exception&) {
+        try { db->execSqlSync("ROLLBACK"); } catch (...) {}
+        throw;
+    }
+}
+
+// Insert parent + recursive children inside an already-open transaction (task 92).
+Result ResultRepository::insert_in_txn(drogon::orm::DbClientPtr db, const Result& r) {
     std::string payload_hex;
     if (!r.payload_bytes.empty())
         payload_hex = std::string(r.payload_bytes.begin(), r.payload_bytes.end());
@@ -98,15 +114,13 @@ Result ResultRepository::insert(const Result& r) {
     for (const auto& sub : r.subtests) {
         Result child = sub;
         child.parent_id = saved.id;
-        // Propagate run-level fields if the subtest doesn't carry them.
         if (child.run_id.empty())         child.run_id         = saved.run_id;
         if (child.module_id.empty())      child.module_id      = saved.module_id;
         if (child.module_version.empty()) child.module_version = saved.module_version;
         if (child.mode.empty())           child.mode           = saved.mode;
-        insert(child);   // recursive
+        insert_in_txn(db, child);   // recursive, same transaction
     }
 
-    // Keep the in-memory subtests populated so callers can inspect them.
     saved.subtests = r.subtests;
 
     upsert_run_summary(saved.run_id, saved.module_id, saved.test_id,

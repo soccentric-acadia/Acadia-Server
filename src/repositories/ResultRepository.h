@@ -1,5 +1,6 @@
 #pragma once
 // repositories/ResultRepository.h
+#include <drogon/orm/DbClient.h>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -103,6 +104,9 @@ public:
     // Insert a single result row.  Recursive subtests are inserted with
     // parent_id = inserted_id in the same transaction.
     Result insert(const Result& r);
+
+    // Task 92: insert parent + recursive children inside one transaction.
+    Result insert_in_txn(drogon::orm::DbClientPtr db, const Result& r);
 
     std::optional<Result> find_by_id(const std::string& id);
     std::vector<Result>   list(const ResultFilter& f);
