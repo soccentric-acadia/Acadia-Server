@@ -47,6 +47,25 @@ std::optional<ApiToken> ApiTokenRepository::find_by_hash(const std::string& toke
     };
 }
 
+std::optional<ApiToken> ApiTokenRepository::find_by_id(const std::string& id) {
+    auto db = db::get_db_client();
+    auto rows = db->execSqlSync(
+        "SELECT id,  user_id,  name,  token_hash, "
+        "  last_used_at::TEXT,  created_at::TEXT,  revoked_at::TEXT"
+        " FROM api_tokens WHERE id = $1::UUID", id.c_str());
+    if (rows.empty()) return std::nullopt;
+    const auto& r = rows[0];
+    return ApiToken{
+        r["id"].as<std::string>(),
+        r["user_id"].as<std::string>(),
+        r["name"].as<std::string>(),
+        r["token_hash"].as<std::string>(),
+        r["last_used_at"].isNull() ? "" : r["last_used_at"].as<std::string>(),
+        r["created_at"].as<std::string>(),
+        r["revoked_at"].isNull() ? "" : r["revoked_at"].as<std::string>()
+    };
+}
+
 std::vector<ApiToken> ApiTokenRepository::list_for_user(const std::string& user_id) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(

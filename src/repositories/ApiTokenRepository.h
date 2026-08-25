@@ -25,6 +25,8 @@ public:
 
     // Find by token_hash (used during authentication).
     std::optional<ApiToken> find_by_hash(const std::string& token_hash);
+    // Task 96: look up a token by id to enforce owner-constrained revocation.
+    std::optional<ApiToken> find_by_id(const std::string& id);
 
     // List all non-revoked tokens for a user.
     std::vector<ApiToken> list_for_user(const std::string& user_id);

@@ -97,6 +97,15 @@ std::vector<ApiToken> AuthService::list_tokens(const std::string& user_id) {
 
 void AuthService::revoke_token(const std::string& token_id,
                                 const std::string& actor_user_id) {
+    // Task 96: owner-constrained revocation — a user may only revoke their OWN
+    // token; revoking another user's token is rejected.
+    auto tok = token_repo_.find_by_id(token_id);
+    if (!tok) {
+        throw AuthError("token not found");
+    }
+    if (tok->user_id != actor_user_id) {
+        throw AuthError("cannot revoke a token you do not own");
+    }
     token_repo_.revoke(token_id);
     audit_repo_.log(actor_user_id, "token.revoked", "api_token", token_id, "{}");
 }
