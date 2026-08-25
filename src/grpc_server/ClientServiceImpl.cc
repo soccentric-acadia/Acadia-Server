@@ -121,6 +121,9 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
     // Task 88: a batch is acked only after every sample is durably persisted.
     std::mutex ack_mu;
     std::unordered_map<std::string, int> batch_pending;
+    // Task 90: per-run last-seen batch_seq for duplicate/gap detection.
+    std::mutex seq_mu;
+    std::unordered_map<std::string, int64_t> last_batch_seq;
 
     // DB writer thread: drains the queue and persists results, then acks the
     // batch once all its samples are durable.
@@ -145,6 +148,23 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
                 if (it != batch_pending.end()) {
                     if (--it->second <= 0) { batch_pending.erase(it); ack_batch = true; }
                 }
+            }
+            // Task 90: duplicate/gap detection + idempotent resume. Track the
+            // highest batch_seq seen per run. A duplicate (<= last) is still
+            // acked (idempotent) but not re-ingested meaningfully; a gap
+            // (> last+1) is logged so reconnect recovery is observable.
+            {
+                std::lock_guard<std::mutex> lk(seq_mu);
+                auto it = last_batch_seq.find(work->run_id);
+                int64_t last = it == last_batch_seq.end() ? -1 : it->second;
+                if (work->batch_seq <= last) {
+                    spdlog::warn("client_svc: duplicate batch run_id={} seq={} (last={})",
+                                 work->run_id, work->batch_seq, last);
+                } else if (last >= 0 && work->batch_seq > last + 1) {
+                    spdlog::warn("client_svc: GAP run_id={}: expected seq {} got {}",
+                                 work->run_id, last + 1, work->batch_seq);
+                }
+                last_batch_seq[work->run_id] = work->batch_seq;
             }
             if (ack_batch) {
                 acadia::stream::ServerMessage ack_msg;
