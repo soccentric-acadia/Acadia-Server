@@ -312,12 +312,15 @@ std::vector<double> ResultRepository::find_distribution(
     if (run_ids.empty()) return {};
     auto db = db::get_db_client();
 
-    // Build IN clause for run_ids.
-    std::ostringstream in_clause;
+    // Task 94: use checked parameter binding for run_ids (ANY($4::TEXT[]))
+    // instead of string interpolation, preventing SQL injection.
+    std::ostringstream arr;
+    arr << "{";
     for (std::size_t i = 0; i < run_ids.size(); ++i) {
-        if (i) in_clause << ",";
-        in_clause << "'" << run_ids[i] << "'";
+        if (i) arr << ",";
+        arr << run_ids[i];
     }
+    arr << "}";
 
     std::string sql =
         "SELECT (metrics -> $3 ->> 'value')::DOUBLE PRECISION AS val"
@@ -325,13 +328,13 @@ std::vector<double> ResultRepository::find_distribution(
         " WHERE module_id = $1"
         "   AND test_id   = $2"
         "   AND parent_id IS NULL"
-        "   AND run_id IN (" + in_clause.str() + ")"
+        "   AND run_id = ANY($4::TEXT[])"
         "   AND metrics ? $3"
         "   AND metrics -> $3 ->> 'type' IN ('double','int')"
         " ORDER BY timestamp ASC";
 
     auto rows = db->execSqlSync(sql,
-        module_id.c_str(), test_id.c_str(), field.c_str());
+        module_id.c_str(), test_id.c_str(), field.c_str(), arr.str().c_str());
 
     std::vector<double> out;
     out.reserve(rows.size());

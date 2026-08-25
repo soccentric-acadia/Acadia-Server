@@ -48,4 +48,9 @@ check "gRPC codegen clean (no grpc_impl)" "protoc grpc_cpp_plugin" \
 assert "canonical TestResult payload type used in wire handling" \
   'grep -q "type.googleapis.com/hal.common.TestResult" src/grpc_server/ClientServiceImpl.cc src/grpc_server/HalServiceImpl.cc'
 
+# Task 94: no raw SQL interpolation of run ids / params in result queries.
+assert "result queries use checked bindings (no run_id string interpolation)" \
+  '! grep -nE "run_id IN \(" src/repositories/ResultRepository.cc || exit 0
+   ! grep -nE "\[run_ids\]|in_clause" src/repositories/ResultRepository.cc'
+
 report "$TIER"
