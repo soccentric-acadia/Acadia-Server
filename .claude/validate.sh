@@ -43,4 +43,9 @@ check "gRPC codegen clean (no grpc_impl)" "protoc grpc_cpp_plugin" \
    ninja -C build/_gencheck acadia-server >/dev/null 2>&1 && \
    ! grep -rn "grpc_impl" build/_gencheck/ 2>/dev/null && rm -rf build/_gencheck'
 
+# Task 86: standardized result payload — both the ClientService ingest and the
+# HalService persist must expect the canonical hal.common.TestResult Any type.
+assert "canonical TestResult payload type used in wire handling" \
+  'grep -q "type.googleapis.com/hal.common.TestResult" src/grpc_server/ClientServiceImpl.cc src/grpc_server/HalServiceImpl.cc'
+
 report "$TIER"
