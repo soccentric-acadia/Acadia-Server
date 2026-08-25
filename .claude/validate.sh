@@ -37,4 +37,10 @@ check "build" "cmake ninja g++" 'make build'
 check "tests (ctest)" "cmake" 'make test'
 check "lint" "cppcheck clang-format" 'make lint'
 
+# Task 82: gRPC codegen compatibility from a clean checkout — no grpc_impl.
+check "gRPC codegen clean (no grpc_impl)" "protoc grpc_cpp_plugin" \
+  'rm -rf build/_gencheck && cmake -S . -B build/_gencheck -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF >/dev/null 2>&1 && \
+   ninja -C build/_gencheck acadia-server >/dev/null 2>&1 && \
+   ! grep -rn "grpc_impl" build/_gencheck/ 2>/dev/null && rm -rf build/_gencheck'
+
 report "$TIER"
