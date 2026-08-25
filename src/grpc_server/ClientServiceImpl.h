@@ -14,6 +14,7 @@
 #include "services/RunService.h"
 #include "services/LogService.h"
 #include "grpc_server/StreamBackpressure.h"
+#include "grpc_server/ClientRegistry.h"
 
 #include "client_service.grpc.pb.h"
 #include "client_service.pb.h"
@@ -31,7 +32,8 @@ namespace acadia::grpc {
 class ClientServiceImpl final
     : public acadia::stream::ClientService::Service {
 public:
-    ClientServiceImpl(RunService& run_svc, LogService& log_svc);
+    ClientServiceImpl(RunService& run_svc, LogService& log_svc,
+                      std::shared_ptr<ClientRegistry> registry);
 
     ::grpc::Status Connect(
         ::grpc::ServerContext*                                                    ctx,
@@ -49,6 +51,7 @@ private:
 
     RunService& run_svc_;
     LogService& log_svc_;
+    std::shared_ptr<ClientRegistry> registry_;  // Task 85: control dispatch
 
     // Process a single TestResultBatch, enqueue each sample for DB write.
     void handle_result_batch(

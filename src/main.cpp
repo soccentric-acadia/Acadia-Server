@@ -130,8 +130,9 @@ int main() {
     retention.start();
 
     // --- gRPC Server (in background thread) ---
+    auto client_registry = std::make_shared<acadia::grpc::ClientRegistry>();  // Task 85
     acadia::grpc::HalServiceImpl    hal_service{run_svc, log_svc, mod_svc, settings};
-    acadia::grpc::ClientServiceImpl client_service{run_svc, log_svc};
+    acadia::grpc::ClientServiceImpl client_service{run_svc, log_svc, client_registry};
     acadia::grpc::GrpcServerRunner  grpc_runner{hal_service, client_service, settings.network};
 
     std::thread grpc_thread([&] {

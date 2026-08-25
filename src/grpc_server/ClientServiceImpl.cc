@@ -13,8 +13,9 @@ namespace acadia::grpc {
 // Queue capacity: 1024 work items.  Each item holds a single TestResult.
 static constexpr std::size_t kQueueCapacity = 1024;
 
-ClientServiceImpl::ClientServiceImpl(RunService& run_svc, LogService& log_svc)
-    : run_svc_(run_svc), log_svc_(log_svc) {}
+ClientServiceImpl::ClientServiceImpl(RunService& run_svc, LogService& log_svc,
+                                     std::shared_ptr<ClientRegistry> registry)
+    : run_svc_(run_svc), log_svc_(log_svc), registry_(std::move(registry)) {}
 
 // ── Handle a TestResultBatch ──────────────────────────────────────────────────
 
@@ -108,10 +109,13 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
     }};
 
     acadia::stream::ClientMessage msg;
+    std::string board_id;  // Task 85: known once Hello arrives; used to register for control dispatch.
     while (!ctx->IsCancelled() && stream->Read(&msg)) {
         switch (msg.payload_case()) {
         case acadia::stream::ClientMessage::kHello: {
             const auto& hello = msg.hello();
+            board_id = hello.board_id();
+            if (registry_) registry_->Register(board_id, stream);
             spdlog::info("client_svc: HelloReport board_id={} client_ver={}",
                          hello.board_id(), hello.client_version());
             break;
@@ -179,6 +183,8 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
     // Close the queue and wait for writer thread to flush.
     queue.close();
     if (writer_thread.joinable()) writer_thread.join();
+
+    if (registry_ && !board_id.empty()) registry_->Unregister(board_id);
 
     spdlog::info("client_svc: stream ended (cancelled={})", ctx->IsCancelled());
     return ::grpc::Status::OK;
