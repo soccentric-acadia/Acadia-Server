@@ -408,14 +408,20 @@ void ResultRepository::upsert_run_summary(const std::string& run_id,
                                             int16_t severity,
                                             const std::string& timestamp) {
     auto db = db::get_db_client();
+    // Task 93: ordering-safe — only overwrite last_* when the incoming result is
+    // NEWER (>= existing timestamp). Out-of-order/replayed results cannot
+    // regress the summary; result_count still increments (idempotent-ish count).
     db->execSqlSync(
         "INSERT INTO run_summaries"
         " (run_id, module_id, test_id, last_status, last_severity, last_timestamp, result_count)"
         " VALUES ($1::UUID, $2, $3, $4::SMALLINT, $5::SMALLINT, $6::TIMESTAMPTZ, 1)"
         " ON CONFLICT (run_id, module_id, test_id) DO UPDATE SET"
-        "   last_status    = EXCLUDED.last_status,"
-        "   last_severity  = EXCLUDED.last_severity,"
-        "   last_timestamp = EXCLUDED.last_timestamp,"
+        "   last_status    = CASE WHEN EXCLUDED.last_timestamp >= run_summaries.last_timestamp"
+        "                        THEN EXCLUDED.last_status ELSE run_summaries.last_status END,"
+        "   last_severity  = CASE WHEN EXCLUDED.last_timestamp >= run_summaries.last_timestamp"
+        "                        THEN EXCLUDED.last_severity ELSE run_summaries.last_severity END,"
+        "   last_timestamp = CASE WHEN EXCLUDED.last_timestamp >= run_summaries.last_timestamp"
+        "                        THEN EXCLUDED.last_timestamp ELSE run_summaries.last_timestamp END,"
         "   result_count   = run_summaries.result_count + 1",
         run_id.c_str(),
         module_id.c_str(),
