@@ -14,8 +14,10 @@ namespace acadia::grpc {
 static constexpr std::size_t kQueueCapacity = 1024;
 
 ClientServiceImpl::ClientServiceImpl(RunService& run_svc, LogService& log_svc,
-                                     std::shared_ptr<ClientRegistry> registry)
-    : run_svc_(run_svc), log_svc_(log_svc), registry_(std::move(registry)) {}
+                                     std::shared_ptr<ClientRegistry> registry,
+                                     BoardRepository* board_repo)
+    : run_svc_(run_svc), log_svc_(log_svc), registry_(std::move(registry)),
+      board_repo_(board_repo) {}
 
 // ── Handle a TestResultBatch ──────────────────────────────────────────────────
 
@@ -187,6 +189,11 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
             const auto& hello = msg.hello();
             board_id = hello.board_id();
             if (registry_) registry_->Register(board_id, stream);
+            // Task 91: persist board registration (durable lifecycle).
+            if (board_repo_ && !board_id.empty()) {
+                board_repo_->upsert_board(board_id, hello.client_version(),
+                                          util::utc_now_iso8601());
+            }
             spdlog::info("client_svc: HelloReport board_id={} client_ver={}",
                          hello.board_id(), hello.client_version());
             break;
@@ -222,9 +229,21 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
         }
 
         case acadia::stream::ClientMessage::kStateReport: {
-            // Log heartbeat; no response required.
-            spdlog::debug("client_svc: StateReport board_id={}",
-                          msg.state_report().board_id());
+            const auto& sr = msg.state_report();
+            spdlog::debug("client_svc: StateReport board_id={}", sr.board_id());
+            // Task 91: persist board heartbeat + active-run state.
+            if (board_repo_ && !sr.board_id().empty()) {
+                board_repo_->update_state(sr.board_id(),
+                    static_cast<int>(sr.overall_state()),
+                    static_cast<int64_t>(sr.spool_bytes()),
+                    static_cast<int64_t>(sr.spool_cap_bytes()),
+                    sr.spool_pressure(), util::utc_now_iso8601());
+                if (sr.active_runs_size() > 0) {
+                    const auto& ai = sr.active_runs(0);
+                    board_repo_->set_active_run(sr.board_id(), ai.run_id(),
+                        static_cast<int>(ai.state()), ai.last_batch_seq());
+                }
+            }
             break;
         }
 

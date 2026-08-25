@@ -24,6 +24,7 @@
 #include "grpc_server/HalServiceImpl.h"
 #include "grpc_server/ClientServiceImpl.h"
 #include "grpc_server/GrpcServerRunner.h"
+#include "repositories/BoardRepository.h"
 
 #include "rest_api/DrogonAppFactory.h"
 
@@ -131,8 +132,9 @@ int main() {
 
     // --- gRPC Server (in background thread) ---
     auto client_registry = std::make_shared<acadia::grpc::ClientRegistry>();  // Task 85
+    acadia::BoardRepository board_repo;  // Task 91: durable board lifecycle
     acadia::grpc::HalServiceImpl    hal_service{run_svc, log_svc, mod_svc, settings};
-    acadia::grpc::ClientServiceImpl client_service{run_svc, log_svc, client_registry};
+    acadia::grpc::ClientServiceImpl client_service{run_svc, log_svc, client_registry, &board_repo};
     acadia::grpc::GrpcServerRunner  grpc_runner{hal_service, client_service, settings.network};
 
     std::thread grpc_thread([&] {

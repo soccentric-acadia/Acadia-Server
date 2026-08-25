@@ -15,6 +15,7 @@
 #include "services/LogService.h"
 #include "grpc_server/StreamBackpressure.h"
 #include "grpc_server/ClientRegistry.h"
+#include "repositories/BoardRepository.h"
 
 #include "client_service.grpc.pb.h"
 #include "client_service.pb.h"
@@ -33,7 +34,8 @@ class ClientServiceImpl final
     : public acadia::stream::ClientService::Service {
 public:
     ClientServiceImpl(RunService& run_svc, LogService& log_svc,
-                      std::shared_ptr<ClientRegistry> registry);
+                      std::shared_ptr<ClientRegistry> registry,
+                      BoardRepository* board_repo);
 
     ::grpc::Status Connect(
         ::grpc::ServerContext*                                                    ctx,
@@ -53,6 +55,7 @@ private:
     RunService& run_svc_;
     LogService& log_svc_;
     std::shared_ptr<ClientRegistry> registry_;  // Task 85: control dispatch
+    BoardRepository* board_repo_ = nullptr;     // Task 91: board lifecycle persistence
 
     // Process a single TestResultBatch, enqueue each sample for DB write.
     // Tracks per-batch pending counts so the writer acks only after durable
