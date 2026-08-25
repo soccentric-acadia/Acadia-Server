@@ -73,6 +73,16 @@ public:
         hal::ListModulesResponse*       resp) override;
 
 private:
+    // Task 84: stream results for a run over duration/forever, honoring
+    // cancellation/deadline. Shared by the three streaming RPCs.
+    void run_streaming(
+        ::grpc::ServerContext*                              ctx,
+        const std::string&                                  module_id,
+        const std::string&                                  run_mode,
+        hal::common::ExecutionMode                          exec_mode,
+        const hal::common::CommonConfig&                    common,
+        ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer);
+
     // Validate module_id against registry.  Returns non-OK status if invalid.
     ::grpc::Status validate_module(const std::string& module_id);
 

@@ -113,30 +113,58 @@ void HalServiceImpl::persist_result(const std::string& run_id,
     return ::grpc::Status::OK;
 }
 
+// Task 84: shared streaming loop — subscribe to the run's results, stream them
+// for duration/forever, honor cancellation/deadline.
+void HalServiceImpl::run_streaming(
+    ::grpc::ServerContext*                              ctx,
+    const std::string&                                  module_id,
+    const std::string&                                  run_mode,
+    hal::common::ExecutionMode                          exec_mode,
+    const hal::common::CommonConfig&                    common,
+    ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer) {
+
+    const bool    run_forever = common.run_forever() || common.duration_ms() <= 0;
+    const int64_t duration_ms = common.duration_ms();
+    const auto     dl = ctx->deadline();
+    const bool has_deadline = dl != std::chrono::system_clock::time_point::max();
+
+    auto run = run_svc_.start_run("{}", run_mode, run_mode, "");
+    run_svc_.mark_running(run.id);
+    spdlog::info("grpc: {} run_id={} module_id={} forever={}",
+                 run_mode, run.id, module_id, run_forever);
+
+    auto started = std::chrono::steady_clock::now();
+    std::mutex w_mu;
+    auto sub = run_svc_.subscribe_results(run.id, [&](const Result& r) {
+        hal::common::ResultEnvelope env;
+        env.set_module_id(module_id);
+        env.set_mode(exec_mode);
+        env.set_status(static_cast<hal::common::TestStatus>(r.status));
+        env.set_error_message(r.error_message);
+        std::lock_guard<std::mutex> lk(w_mu);
+        writer->Write(env);
+    });
+
+    while (!ctx->IsCancelled()) {
+        if (!run_forever) {
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - started).count();
+            if (elapsed >= duration_ms) break;
+        }
+        if (has_deadline && std::chrono::system_clock::now() >= dl) break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    run_svc_.unsubscribe_results(sub);
+    run_svc_.complete_run(run.id, "completed");
+}
+
 ::grpc::Status HalServiceImpl::StartLongTerm(
     ::grpc::ServerContext*                              ctx,
     const hal::LongTermRequest*                        req,
     ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer) {
-
-    auto status = validate_module(req->module_id());
-    if (!status.ok()) return status;
-
-    auto run = run_svc_.start_run("{}", "long_term", "long_term", "");
-    run_svc_.mark_running(run.id);
-
-    spdlog::info("grpc: StartLongTerm run_id={} module_id={}", run.id, req->module_id());
-
-    hal::common::ResultEnvelope ack;
-    ack.set_module_id(req->module_id());
-    ack.set_status(hal::common::PASS);
-    writer->Write(ack);
-
-    // Block until client cancels or server shutdown.
-    while (!ctx->IsCancelled()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    run_svc_.complete_run(run.id, "completed");
+    if (auto st = validate_module(req->module_id()); !st.ok()) return st;
+    run_streaming(ctx, req->module_id(), "long_term", hal::common::LONG_TERM,
+                  req->common(), writer);
     return ::grpc::Status::OK;
 }
 
@@ -144,25 +172,9 @@ void HalServiceImpl::persist_result(const std::string& run_id,
     ::grpc::ServerContext*                              ctx,
     const hal::MonitoringRequest*                      req,
     ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer) {
-
-    auto status = validate_module(req->module_id());
-    if (!status.ok()) return status;
-
-    auto run = run_svc_.start_run("{}", "monitoring", "monitoring", "");
-    run_svc_.mark_running(run.id);
-
-    spdlog::info("grpc: StartMonitoring run_id={} module_id={}", run.id, req->module_id());
-
-    hal::common::ResultEnvelope ack;
-    ack.set_module_id(req->module_id());
-    ack.set_status(hal::common::PASS);
-    writer->Write(ack);
-
-    while (!ctx->IsCancelled()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    run_svc_.complete_run(run.id, "completed");
+    if (auto st = validate_module(req->module_id()); !st.ok()) return st;
+    run_streaming(ctx, req->module_id(), "monitoring", hal::common::MONITORING,
+                  req->common(), writer);
     return ::grpc::Status::OK;
 }
 
@@ -170,25 +182,9 @@ void HalServiceImpl::persist_result(const std::string& run_id,
     ::grpc::ServerContext*                              ctx,
     const hal::EventBasedRequest*                      req,
     ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer) {
-
-    auto status = validate_module(req->module_id());
-    if (!status.ok()) return status;
-
-    auto run = run_svc_.start_run("{}", "event_based", "event_based", "");
-    run_svc_.mark_running(run.id);
-
-    spdlog::info("grpc: StartEventBased run_id={} module_id={}", run.id, req->module_id());
-
-    hal::common::ResultEnvelope ack;
-    ack.set_module_id(req->module_id());
-    ack.set_status(hal::common::PASS);
-    writer->Write(ack);
-
-    while (!ctx->IsCancelled()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    }
-
-    run_svc_.complete_run(run.id, "completed");
+    if (auto st = validate_module(req->module_id()); !st.ok()) return st;
+    run_streaming(ctx, req->module_id(), "event_based", hal::common::EVENT_BASED,
+                  req->common(), writer);
     return ::grpc::Status::OK;
 }
 
