@@ -8,6 +8,7 @@ namespace acadia {
 
 struct OtaUpgrade {
     std::string id;
+    std::string board_id;           // task 97: target board for dispatch
     std::string artifact_path;
     std::string artifact_hash;
     int64_t     artifact_size = 0;

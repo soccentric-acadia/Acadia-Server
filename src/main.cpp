@@ -111,10 +111,14 @@ int main() {
     acadia::CompareService       compare_svc;
 
     // --- Orchestration ---
+    // Task 85/97: the client registry is shared by ClientService (control
+    // dispatch) and OTA orchestration (real board dispatch), so create it here
+    // and pass the same instance to both.
+    auto client_registry = std::make_shared<acadia::grpc::ClientRegistry>();
     acadia::orchestration::RunManager      run_mgr{run_svc, log_svc, notif_svc};
     acadia::orchestration::Scheduler       scheduler{schedule_svc, run_svc};
     acadia::orchestration::TargetHeartbeat heartbeat{target_svc};
-    acadia::orchestration::OtaOrchestrator ota_orch{ota_svc};
+    acadia::orchestration::OtaOrchestrator ota_orch{ota_svc, client_registry};
     acadia::RetentionScheduler             retention{run_svc};
 
     // Reconcile any runs that were left in 'running'/'queued' state from a previous crash.
@@ -131,7 +135,6 @@ int main() {
     retention.start();
 
     // --- gRPC Server (in background thread) ---
-    auto client_registry = std::make_shared<acadia::grpc::ClientRegistry>();  // Task 85
     acadia::BoardRepository board_repo;  // Task 91: durable board lifecycle
     acadia::grpc::HalServiceImpl    hal_service{run_svc, log_svc, mod_svc, settings};
     acadia::grpc::ClientServiceImpl client_service{run_svc, log_svc, client_registry, &board_repo};

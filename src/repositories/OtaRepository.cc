@@ -7,22 +7,22 @@ namespace acadia {
 
 namespace {
 OtaUpgrade row_to_ota(const drogon::orm::Row& r) {
-    return OtaUpgrade{
-        r["id"].as<std::string>(),
-        r["artifact_path"].as<std::string>(),
-        r["artifact_hash"].as<std::string>(),
-        r["artifact_size"].as<int64_t>(),
-        r["from_version"].as<std::string>(),
-        r["to_version"].as<std::string>(),
-        r["status"].as<std::string>(),
-        r["progress"].as<int>(),
-        r["started_at"].isNull() ? "" : r["started_at"].as<std::string>(),
-        r["ended_at"].isNull() ? "" : r["ended_at"].as<std::string>(),
-        r["error_message"].isNull() ? "" : r["error_message"].as<std::string>(),
-        r["rolled_back_from"].isNull() ? "" : r["rolled_back_from"].as<std::string>(),
-        r["created_at"].as<std::string>(),
-        r["created_by"].isNull() ? "" : r["created_by"].as<std::string>()
-    };
+    OtaUpgrade u;
+    u.id             = r["id"].as<std::string>();
+    u.board_id       = r["board_id"].as<std::string>();    u.artifact_path  = r["artifact_path"].as<std::string>();
+    u.artifact_hash  = r["artifact_hash"].as<std::string>();
+    u.artifact_size  = r["artifact_size"].as<int64_t>();
+    u.from_version   = r["from_version"].as<std::string>();
+    u.to_version     = r["to_version"].as<std::string>();
+    u.status         = r["status"].as<std::string>();
+    u.progress       = r["progress"].as<int>();
+    u.started_at     = r["started_at"].isNull() ? "" : r["started_at"].as<std::string>();
+    u.ended_at       = r["ended_at"].isNull() ? "" : r["ended_at"].as<std::string>();
+    u.error_message  = r["error_message"].isNull() ? "" : r["error_message"].as<std::string>();
+    u.rolled_back_from = r["rolled_back_from"].isNull() ? "" : r["rolled_back_from"].as<std::string>();
+    u.created_at     = r["created_at"].as<std::string>();
+    u.created_by     = r["created_by"].isNull() ? "" : r["created_by"].as<std::string>();
+    return u;
 }
 }  // namespace
 
@@ -30,15 +30,16 @@ OtaUpgrade OtaRepository::create(const OtaUpgrade& u) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
         "INSERT INTO ota_upgrades (artifact_path, artifact_hash, artifact_size,"
-        "  from_version, to_version, status, created_by)"
-        " VALUES ($1, $2, $3, $4, $5, $6, $7::UUID)"
-        " RETURNING id,  artifact_path,  artifact_hash,  artifact_size, "
+        "  from_version, to_version, status, board_id, created_by)"
+        " VALUES ($1, $2, $3, $4, $5, $6, $7, $8::UUID)"
+        " RETURNING id, board_id, artifact_path,  artifact_hash,  artifact_size, "
         "  from_version,  to_version,  status,  progress, "
         "  started_at::TEXT,  ended_at::TEXT,  error_message, "
         "  rolled_back_from::TEXT,  created_at::TEXT,  created_by::TEXT", 
         u.artifact_path.c_str(),  u.artifact_hash.c_str(),  u.artifact_size, 
         u.from_version.c_str(),  u.to_version.c_str(), 
         u.status.empty() ? "uploaded" : u.status.c_str(), 
+        u.board_id.c_str(),
         u.created_by.empty() ? nullptr : u.created_by.c_str());
     return row_to_ota(rows[0]);
 }
@@ -46,7 +47,7 @@ OtaUpgrade OtaRepository::create(const OtaUpgrade& u) {
 std::optional<OtaUpgrade> OtaRepository::find_by_id(const std::string& id) {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id,  artifact_path,  artifact_hash,  artifact_size, "
+        "SELECT id,  board_id,  artifact_path,  artifact_hash,  artifact_size, "
         "  from_version,  to_version,  status,  progress, "
         "  started_at::TEXT,  ended_at::TEXT,  error_message, "
         "  rolled_back_from::TEXT,  created_at::TEXT,  created_by::TEXT"
@@ -59,7 +60,7 @@ std::optional<OtaUpgrade> OtaRepository::find_by_id(const std::string& id) {
 std::vector<OtaUpgrade> OtaRepository::list() {
     auto db = db::get_db_client();
     auto rows = db->execSqlSync(
-        "SELECT id,  artifact_path,  artifact_hash,  artifact_size, "
+        "SELECT id,  board_id,  artifact_path,  artifact_hash,  artifact_size, "
         "  from_version,  to_version,  status,  progress, "
         "  started_at::TEXT,  ended_at::TEXT,  error_message, "
         "  rolled_back_from::TEXT,  created_at::TEXT,  created_by::TEXT"
