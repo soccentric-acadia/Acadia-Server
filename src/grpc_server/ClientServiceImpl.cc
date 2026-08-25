@@ -21,9 +21,22 @@ ClientServiceImpl::ClientServiceImpl(RunService& run_svc, LogService& log_svc,
 
 void ClientServiceImpl::handle_result_batch(
     const acadia::stream::TestResultBatch& batch,
-    BoundedQueue<IngestWork>&              queue) {
+    BoundedQueue<IngestWork>&              queue,
+    std::unordered_map<std::string, int>&  batch_pending) {
 
     const std::string mode = std::to_string(static_cast<int>(batch.mode()));
+
+    // Task 87: validate module identity at ingestion.
+    if (batch.module_id().empty()) {
+        spdlog::warn("client_svc: batch run_id={} has empty module_id; rejecting",
+                     batch.run_id());
+        return;
+    }
+
+    // Register this batch's pending sample count so the writer thread can ack
+    // only after ALL its samples are durably persisted (task 88).
+    const std::string batch_key = batch.run_id() + ":" + std::to_string(batch.batch_seq());
+    int enqueued = 0;
 
     for (const auto& sample : batch.samples()) {
         const std::string type_url = sample.payload().type_url();
@@ -47,6 +60,15 @@ void ClientServiceImpl::handle_result_batch(
             continue;
         }
 
+        // Task 87: a sample that names a different module than the batch is a
+        // protocol error — reject it (never trust a mismatched identity).
+        if (!tr.module_id().empty() && tr.module_id() != batch.module_id()) {
+            spdlog::error("client_svc: module mismatch batch.module_id={} sample.module_id={} "
+                          "run_id={}; rejecting sample",
+                          batch.module_id(), tr.module_id(), batch.run_id());
+            continue;
+        }
+
         // UNSPECIFIED guard.
         if (tr.output().status() == hal::common::TEST_STATUS_UNSPECIFIED) {
             spdlog::warn("client_svc: UNSPECIFIED status rejected run_id={} module_id={}",
@@ -57,16 +79,21 @@ void ClientServiceImpl::handle_result_batch(
         IngestWork work;
         work.run_id         = batch.run_id();
         work.module_id      = batch.module_id();
-        work.module_version = "";  // Not provided in batch; resolved from registry at ingest.
+        work.module_version = "";
         work.mode           = mode;
+        work.batch_seq      = batch.batch_seq();
         work.tr             = std::move(tr);
 
+        // Task 89: saturation propagates rather than silently dropping.
         if (!queue.enqueue(std::move(work))) {
-            // Queue closed — stream is shutting down.
-            spdlog::info("client_svc: queue closed, dropping sample run_id={}", batch.run_id());
+            spdlog::warn("client_svc: queue closed during shutdown; batch NOT acked "
+                         "run_id={} seq={} (client will replay)",
+                         batch.run_id(), batch.batch_seq());
             return;
         }
+        ++enqueued;
     }
+    if (enqueued > 0) batch_pending[batch_key] = enqueued;
 }
 
 // ── Handle a LogBatch ────────────────────────────────────────────────────────
@@ -91,8 +118,12 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
 
     BoundedQueue<IngestWork> queue{kQueueCapacity};
     std::atomic<bool> writer_ok{true};
+    // Task 88: a batch is acked only after every sample is durably persisted.
+    std::mutex ack_mu;
+    std::unordered_map<std::string, int> batch_pending;
 
-    // DB writer thread: drains the queue and persists results.
+    // DB writer thread: drains the queue and persists results, then acks the
+    // batch once all its samples are durable.
     std::thread writer_thread{[&] {
         while (true) {
             auto work = queue.dequeue();
@@ -104,6 +135,26 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
                 spdlog::error("client_svc: ingest error run_id={}: {}",
                               work->run_id, e.what());
                 // Do not abort the stream for a single failed ingest.
+            }
+            // Acknowledge only once this batch's samples are all durable.
+            const std::string key = work->run_id + ":" + std::to_string(work->batch_seq);
+            bool ack_batch = false;
+            {
+                std::lock_guard<std::mutex> lk(ack_mu);
+                auto it = batch_pending.find(key);
+                if (it != batch_pending.end()) {
+                    if (--it->second <= 0) { batch_pending.erase(it); ack_batch = true; }
+                }
+            }
+            if (ack_batch) {
+                acadia::stream::ServerMessage ack_msg;
+                auto* ack = ack_msg.mutable_batch_ack();
+                ack->set_run_id(work->run_id);
+                ack->set_batch_seq(work->batch_seq);
+                if (!stream->Write(ack_msg)) {
+                    spdlog::warn("client_svc: failed to send BatchAck run_id={}",
+                                 work->run_id);
+                }
             }
         }
     }};
@@ -123,16 +174,8 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
 
         case acadia::stream::ClientMessage::kResultBatch: {
             const auto& batch = msg.result_batch();
-            handle_result_batch(batch, queue);
-
-            // Send BatchAck.
-            acadia::stream::ServerMessage ack_msg;
-            auto* ack = ack_msg.mutable_batch_ack();
-            ack->set_run_id(batch.run_id());
-            ack->set_batch_seq(batch.batch_seq());
-            if (!stream->Write(ack_msg)) {
-                spdlog::warn("client_svc: failed to send BatchAck run_id={}", batch.run_id());
-            }
+            // Task 88: ack is sent by the writer thread after durable persist.
+            handle_result_batch(batch, queue, batch_pending);
 
             // If terminal batch, finalize the run.
             if (batch.terminal()) {

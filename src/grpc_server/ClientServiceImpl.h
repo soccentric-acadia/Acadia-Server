@@ -46,6 +46,7 @@ private:
         std::string              module_id;
         std::string              module_version;
         std::string              mode;
+        int64_t                  batch_seq = 0;   // Task 88: ack after this batch's samples persist
         hal::common::TestResult  tr;
     };
 
@@ -54,9 +55,12 @@ private:
     std::shared_ptr<ClientRegistry> registry_;  // Task 85: control dispatch
 
     // Process a single TestResultBatch, enqueue each sample for DB write.
+    // Tracks per-batch pending counts so the writer acks only after durable
+    // persist (tasks 87/88/89).
     void handle_result_batch(
         const acadia::stream::TestResultBatch& batch,
-        BoundedQueue<IngestWork>&              queue);
+        BoundedQueue<IngestWork>&              queue,
+        std::unordered_map<std::string, int>&  batch_pending);
 
     // Process a single LogBatch.
     void handle_log_batch(const acadia::stream::LogBatch& batch);
