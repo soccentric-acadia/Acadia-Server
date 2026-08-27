@@ -41,6 +41,9 @@ struct AuthSettings {
     uint32_t    argon2_iter     = 3;
     uint32_t    argon2_parallel = 4;
     uint32_t    login_rate_limit = 10;   // requests/min per IP
+    // X2-003: shared token required on ClientService stream connects.
+    // Empty = open stream (dev/bench only); production MUST set a token.
+    std::string stream_token;
 };
 
 struct SmtpSettings {

@@ -89,6 +89,10 @@ Settings load_settings() {
     s.auth.argon2_iter     = env_u32("ACADIA_ARGON2_ITER",    3);
     s.auth.argon2_parallel = env_u32("ACADIA_ARGON2_PARALLEL", 4);
     s.auth.login_rate_limit = env_u32("ACADIA_LOGIN_RATE_LIMIT", 10);
+    // X2-003: stream auth token. Empty keeps the bench/CI default (open
+    // stream); when set, every ClientService stream must present it in the
+    // `x-acadia-stream-token` metadata key.
+    s.auth.stream_token    = env_str("ACADIA_STREAM_TOKEN", "");
 
     if (s.auth.session_secret.size() < 32) {
         throw std::runtime_error(

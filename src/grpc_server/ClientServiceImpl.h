@@ -35,7 +35,8 @@ class ClientServiceImpl final
 public:
     ClientServiceImpl(RunService& run_svc, LogService& log_svc,
                       std::shared_ptr<ClientRegistry> registry,
-                      BoardRepository* board_repo);
+                      BoardRepository* board_repo,
+                      std::string stream_token = {});
 
     ::grpc::Status Connect(
         ::grpc::ServerContext*                                                    ctx,
@@ -55,7 +56,9 @@ private:
     RunService& run_svc_;
     LogService& log_svc_;
     std::shared_ptr<ClientRegistry> registry_;  // Task 85: control dispatch
-    BoardRepository* board_repo_ = nullptr;     // Task 91: board lifecycle persistence
+    BoardRepository* board_repo_ = nullptr;
+    std::string                 stream_token_;   // X2-003: required stream metadata token
+    // Task 91: board lifecycle persistence
 
     // Process a single TestResultBatch, enqueue each sample for DB write.
     // Tracks per-batch pending counts so the writer acks only after durable
@@ -68,5 +71,11 @@ private:
     // Process a single LogBatch.
     void handle_log_batch(const acadia::stream::LogBatch& batch);
 };
+
+// X2-003: pure-function stream auth, exposed at namespace scope for unit
+// tests. Defined in ClientServiceImpl.cc.
+::grpc::Status verify_stream_auth(
+    const std::multimap<::grpc::string_ref, ::grpc::string_ref>& metadata,
+    const std::string& expected_token);
 
 }  // namespace acadia::grpc

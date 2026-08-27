@@ -5,6 +5,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include <mutex>
 #include <thread>
 #include <chrono>
 
@@ -15,9 +16,47 @@ static constexpr std::size_t kQueueCapacity = 1024;
 
 ClientServiceImpl::ClientServiceImpl(RunService& run_svc, LogService& log_svc,
                                      std::shared_ptr<ClientRegistry> registry,
-                                     BoardRepository* board_repo)
+                                     BoardRepository* board_repo,
+                                     std::string stream_token)
     : run_svc_(run_svc), log_svc_(log_svc), registry_(std::move(registry)),
-      board_repo_(board_repo) {}
+      board_repo_(board_repo), stream_token_(std::move(stream_token)) {}
+
+// ── Stream authentication (X2-003) ────────────────────────────────────────
+//
+// The ClientService stream is the fleet's control plane; an open stream on a
+// production host would let any LAN peer push run configs. Enforcement:
+//   - ACADIA_STREAM_TOKEN set   → the `x-acadia-stream-token` metadata must
+//     match exactly, else UNAUTHENTICATED.
+//   - ACADIA_STREAM_TOKEN empty → open stream (dev/bench/CI only) with a
+//     one-time warning.
+//
+// Kept as a pure function over the metadata for unit testing.
+::grpc::Status verify_stream_auth(
+    const std::multimap<::grpc::string_ref, ::grpc::string_ref>& metadata,
+    const std::string& expected_token) {
+    if (expected_token.empty()) {
+        // Dev/bench mode: no token configured — allow, but only surface the
+        // warning once per process.
+        static std::once_flag open_warn;
+        std::call_once(open_warn, [] {
+            spdlog::warn(
+                "ACADIA_STREAM_TOKEN not set: ClientService streams are UNAUTHENTICATED "
+                "(dev/bench mode — set it in production)");
+        });
+        return ::grpc::Status::OK;
+    }
+    auto it = metadata.find("x-acadia-stream-token");
+    if (it == metadata.end()) {
+        spdlog::warn("stream auth: missing x-acadia-stream-token metadata");
+        return {::grpc::StatusCode::UNAUTHENTICATED,
+                "missing x-acadia-stream-token metadata"};
+    }
+    if (it->second != expected_token) {
+        spdlog::warn("stream auth: token mismatch");
+        return {::grpc::StatusCode::UNAUTHENTICATED, "invalid stream token"};
+    }
+    return ::grpc::Status::OK;
+}
 
 // ── Handle a TestResultBatch ──────────────────────────────────────────────────
 
@@ -117,6 +156,12 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
     ::grpc::ServerContext* ctx,
     ::grpc::ServerReaderWriter<acadia::stream::ServerMessage,
                                 acadia::stream::ClientMessage>* stream) {
+
+    // X2-003: authenticate before any state is touched.
+    {
+        auto status = verify_stream_auth(ctx->client_metadata(), stream_token_);
+        if (!status.ok()) return status;
+    }
 
     BoundedQueue<IngestWork> queue{kQueueCapacity};
     std::atomic<bool> writer_ok{true};

@@ -137,7 +137,8 @@ int main() {
     // --- gRPC Server (in background thread) ---
     acadia::BoardRepository board_repo;  // Task 91: durable board lifecycle
     acadia::grpc::HalServiceImpl    hal_service{run_svc, log_svc, mod_svc, settings};
-    acadia::grpc::ClientServiceImpl client_service{run_svc, log_svc, client_registry, &board_repo};
+    acadia::grpc::ClientServiceImpl client_service{run_svc, log_svc, client_registry, &board_repo,
+                                                   settings.auth.stream_token};
     acadia::grpc::GrpcServerRunner  grpc_runner{hal_service, client_service, settings.network};
 
     std::thread grpc_thread([&] {
