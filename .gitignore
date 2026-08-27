@@ -16,6 +16,11 @@ compile_commands.json
 
 # Generated source files
 generated/
+proto_gen/
+*.pb.cc
+*.pb.h
+*.grpc.pb.cc
+*.grpc.pb.h
 
 # Binaries and libraries
 *.o

@@ -75,11 +75,21 @@ jobs:
           fi
           echo "proto hygiene: OK (no local protos, no committed generated code)"
 
-      - name: Configure      - name: Configure
+      - name: Configure
         run: cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
 
       - name: Build
         run: ninja -C build -j$(nproc)
+
+      - name: No generated code in working tree (X1-002)
+        run: |
+          dirty=$(git status --porcelain)
+          if [ -n "$dirty" ]; then
+            echo "Build produced untracked/modified files — generated code must stay out of git:"
+            echo "$dirty"
+            exit 1
+          fi
+          echo "clean: build produced no tracked changes"
 
       - name: Unit tests
         run: ctest --test-dir build -j$(nproc) --output-on-failure -L unit
