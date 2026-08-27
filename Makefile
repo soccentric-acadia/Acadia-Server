@@ -53,7 +53,7 @@ SSH := $(SSHPASS) ssh -o StrictHostKeyChecking=no
 SCP := $(SSHPASS) scp -o StrictHostKeyChecking=no
 
 # Default target
-all: docker-build ## Alias for docker-build (default)
+all: docker-build-server ## Default target: x86 production build (Acadia-Server runs on x86 hosts; docker-build is the legacy ARM64 image)
 
 _require_deploy_env = $(if $(strip $(1)),,$(error deploy requires an IP (set IP_A/IP_B or ACADIA_TARGET_ADDRESS)))
 # Deploy to remote target: $(1)=IP address
