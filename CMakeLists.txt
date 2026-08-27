@@ -271,7 +271,7 @@ target_include_directories(acadia-internal PUBLIC
 target_link_libraries(acadia-internal PUBLIC tomlplusplus::tomlplusplus)
 target_compile_options(acadia-internal PRIVATE -Wall -Wextra -Wno-unused-parameter)
 
-add_executable(config-test test/config_test.cpp)
+add_executable(config-test tests/legacy/config_test.cpp)
 target_link_libraries(config-test PRIVATE acadia-internal)
 target_compile_options(config-test PRIVATE -Wall -Wextra)
 add_test(NAME config-test COMMAND config-test)
