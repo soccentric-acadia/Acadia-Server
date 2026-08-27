@@ -239,6 +239,10 @@ if(INTEG_TEST_SRCS)
     GTest::gtest_main
   )
   target_compile_options(acadia-integration-tests PRIVATE -Wall -Wextra -Wno-unused-parameter)
+  # SRV-020: tests exercise the repo's real migrations tree.
+  target_compile_definitions(acadia-integration-tests PRIVATE
+    ACADIA_MIGRATIONS_DIR="${CMAKE_SOURCE_DIR}/migrations"
+  )
   include(GoogleTest)
   gtest_discover_tests(acadia-integration-tests
     PROPERTIES LABELS "integration"

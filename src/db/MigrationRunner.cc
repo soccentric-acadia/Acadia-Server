@@ -5,6 +5,7 @@
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <set>
@@ -34,6 +35,9 @@ void MigrationRunner::run() {
     }
     try { db->execSqlSync("SELECT pg_advisory_unlock(87391)"); } catch (...) {}
 }
+
+static std::string to_upper_ascii(const std::string& in);
+static std::string trim_statement(std::string s);
 
 void MigrationRunner::run_locked() {
     auto db = get_db_client();
@@ -89,10 +93,20 @@ void MigrationRunner::run_locked() {
         // Task 95: run each migration inside ONE transaction so the version is
         // recorded atomically with its DDL — a partial migration never leaves
         // the row unrecorded (and never falsely marks it applied).
+        // SRV-020: migration files may carry their own BEGIN/COMMIT (psql
+        // convention). Inside the runner's transaction those are nested and
+        // break atomicity (the inner COMMIT releases the transaction early),
+        // so the runner strips them and owns the transaction boundary.
         db->execSqlSync("BEGIN");
         try {
             for (const std::string& s : split_statements(sql)) {
                 if (s.empty()) continue;
+                const std::string upper = to_upper_ascii(s);
+                if (upper == "BEGIN" || upper == "COMMIT" ||
+                    upper == "ROLLBACK" || upper == "END" ||
+                    upper.rfind("START TRANSACTION", 0) == 0) {
+                    continue;  // runner owns the transaction boundary
+                }
                 auto res = db->execSqlSync(s);
                 (void)res;
             }
@@ -115,9 +129,22 @@ void MigrationRunner::run_locked() {
 }
 
 // Split SQL into statements at top-level semicolons, respecting single-quote
-// strings and dollar-quoted bodies (so CREATE FUNCTION $$ ... ; ... $$; is NOT
-// split in the middle). Returns statements WITHOUT their trailing semicolon.
-static std::string trim_statement(std::string s);
+// strings, double-quote identifiers and dollar-quoted bodies (so CREATE
+// FUNCTION $$ ... ; ... $$; is NOT split in the middle). Line comments (-- …)
+// outside quotes are skipped so a statement never starts with a comment line
+// (SRV-020: comment-prefixed SQL used to be silently dropped by the
+// trim_statement comment check). Returns statements WITHOUT trailing
+// semicolons.
+static std::string to_upper_ascii(const std::string& in) {
+    std::string out;
+    out.reserve(in.size());
+    for (char c : in) {
+        unsigned char u = static_cast<unsigned char>(c);
+        out.push_back(static_cast<char>(std::toupper(u)));
+    }
+    return out;
+}
+
 std::vector<std::string> MigrationRunner::split_statements(const std::string& sql) {
     std::vector<std::string> out;
     std::string cur;
@@ -126,6 +153,12 @@ std::vector<std::string> MigrationRunner::split_statements(const std::string& sq
     size_t i = 0;
     while (i < sql.size()) {
         char c = sql[i];
+        // Line comment (-- … end of line) outside quotes/dollar blocks.
+        if (c == '-' && i + 1 < sql.size() && sql[i + 1] == '-' &&
+            !in_squote && !in_dquote) {
+            while (i < sql.size() && sql[i] != '\n') ++i;
+            continue;
+        }
         // Dollar-quoted block (e.g. $$ ... $$, $func$ ... $func$).
         if (c == '$' && !in_squote && !in_dquote) {
             size_t j = i + 1;

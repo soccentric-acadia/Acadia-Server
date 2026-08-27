@@ -43,3 +43,26 @@ TEST(MigrationSplitter, DoesNotSplitInsideSingleQuotedString) {
     EXPECT_NE(stmts[0].find("VALUES ('a;b')"), std::string::npos);
     EXPECT_NE(stmts[1].find("s='c;d'"), std::string::npos);
 }
+
+// SRV-020 regression: a statement chunk that begins with a -- comment line
+// used to be silently DROPPED by trim_statement, so CREATE TABLE users
+// (prefixed by a section comment) never ran while its CREATE INDEX did —
+// failing with "relation users does not exist" on a fresh database.
+TEST(MigrationSplitter, KeepsSqlPrefixedByCommentLines) {
+    std::string sql =
+        "-- ── Users ──────────────\n"
+        "CREATE TABLE users (id int);\n"
+        "CREATE INDEX users_idx ON users (id);\n";
+    auto stmts = MigrationRunner::split_statements(sql);
+    ASSERT_EQ(stmts.size(), 2u);
+    EXPECT_NE(stmts[0].find("CREATE TABLE users"), std::string::npos);
+    EXPECT_NE(stmts[1].find("CREATE INDEX users_idx"), std::string::npos);
+}
+
+TEST(MigrationSplitter, CommentInsideStringIsPreserved) {
+    // -- inside a single-quoted string is data, not a comment.
+    std::string sql = "INSERT INTO t (s) VALUES ('a--b\nc');";
+    auto stmts = MigrationRunner::split_statements(sql);
+    ASSERT_EQ(stmts.size(), 1u);
+    EXPECT_NE(stmts[0].find("a--b"), std::string::npos);
+}
