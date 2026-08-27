@@ -58,7 +58,24 @@ jobs:
           path: ../Acadia-HAL
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Configure
+      - name: Proto hygiene gate (X1-001)
+        run: |
+          set -e
+          # 1. Canonical protos live ONLY in Acadia-HAL — no local copies allowed.
+          hits=$(git ls-files '*.proto' || true)
+          if [ -n "$hits" ]; then
+            echo "Local .proto files found (canonical protos must live only in Acadia-HAL):"; echo "$hits"; exit 1
+          fi
+          # 2. CMake must source protos from the canonical HAL tree.
+          grep -q 'Acadia-HAL/protos' CMakeLists.txt || { echo "CMakeLists.txt does not source protos from ../Acadia-HAL/protos"; exit 1; }
+          # 3. Generated proto code must never be committed (ODR rule).
+          gen=$(git ls-files | grep -E '\.pb\.(cc|h)$|\.grpc\.pb\.(cc|h)$' || true)
+          if [ -n "$gen" ]; then
+            echo "Generated proto code committed:"; echo "$gen"; exit 1
+          fi
+          echo "proto hygiene: OK (no local protos, no committed generated code)"
+
+      - name: Configure      - name: Configure
         run: cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
 
       - name: Build
