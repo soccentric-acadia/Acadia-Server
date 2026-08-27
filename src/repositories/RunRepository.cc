@@ -84,16 +84,25 @@ std::vector<Run> RunRepository::list(const RunFilter& f) {
     }
 
     sql << " ORDER BY created_at DESC LIMIT " << f.limit << " OFFSET " << f.offset;
-    // Build the SQL call with variable parameters
-    auto rows = [&]() -> drogon::orm::Result {
+    // Build the SQL call with variable parameters.
+    // X2-005 startup-crash fix: the old switch fell into a default branch that
+    // bound params[0]/params[1] even when the SQL had 0 or 1 placeholders —
+    // "supplies 2 parameters, but prepared statement requires 1" and an abort
+    // at startup (reconcile_stale_runs lists by a single status). Bind exactly
+    // the parameters present.
+    auto run_query = [&]() -> drogon::orm::Result {
         switch (params.size()) {
-        case 2:  return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str());
-        case 3:  return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str());
-        case 4:  return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str(),  params[3].c_str());
-        case 5:  return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str(),  params[2].c_str(),  params[3].c_str(),  params[4].c_str());
-        default: return db->execSqlSync(sql.str(),  params[0].c_str(),  params[1].c_str());
-            }
+        case 0: return db->execSqlSync(sql.str());
+        case 1: return db->execSqlSync(sql.str(), params[0].c_str());
+        case 2: return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str());
+        case 3: return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str(), params[2].c_str());
+        case 4: return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str());
+        case 5: return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), params[4].c_str());
+        default:
+            throw std::runtime_error("RunRepository::list: too many filter parameters");
+        }
     }();
+    auto& rows = run_query;
 
     std::vector<Run> out;
     for (const auto& r : rows) out.push_back(row_to_run(r));

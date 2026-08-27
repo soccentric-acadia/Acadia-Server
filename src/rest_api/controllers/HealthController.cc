@@ -3,6 +3,7 @@
 #include <drogon/HttpResponse.h>
 #include <json/json.h>
 #include "version.hpp"
+#include "db/DbClient.h"
 
 namespace acadia::rest {
 
@@ -12,6 +13,36 @@ void HealthController::get(const drogon::HttpRequestPtr& /*req*/,
     resp["status"]  = "ok";
     resp["version"] = ACADIA_SERVER_VERSION;
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
+}
+
+// SRV-052: standard health surfaces (X10-004 semantics).
+//   /healthz — liveness: process is up. Always 200. Used by systemd/compose.
+//   /readyz  — readiness: process up AND can reach the database. 200 or 503.
+void HealthController::livez(const drogon::HttpRequestPtr& /*req*/,
+                              std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+    Json::Value resp;
+    resp["status"] = "alive";
+    auto resp_msg = drogon::HttpResponse::newHttpJsonResponse(resp);
+    resp_msg->setStatusCode(drogon::k200OK);
+    cb(std::move(resp_msg));
+}
+
+void HealthController::ready(const drogon::HttpRequestPtr& /*req*/,
+                              std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+    Json::Value resp;
+    resp["version"] = ACADIA_SERVER_VERSION;
+    bool ready = false;
+    try {
+        auto db = acadia::db::get_db_client();
+        auto result = db->execSqlSync("SELECT 1");
+        ready = result.size() > 0;
+    } catch (const std::exception& e) {
+        resp["error"] = e.what();
+    }
+    resp["ready"] = ready;
+    auto resp_msg = drogon::HttpResponse::newHttpJsonResponse(resp);
+    resp_msg->setStatusCode(ready ? drogon::k200OK : drogon::k503ServiceUnavailable);
+    cb(std::move(resp_msg));
 }
 
 
