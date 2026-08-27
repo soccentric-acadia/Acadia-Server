@@ -178,16 +178,52 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
         while (true) {
             auto work = queue.dequeue();
             if (!work.has_value()) break;  // Queue closed.
+
+            const std::string key = work->run_id + ":" + std::to_string(work->batch_seq);
+
+            // X2-005: idempotent ingestion. A batch replayed after a lost ack
+            // (seq <= last seen for the run) is ACKED but NOT re-ingested —
+            // persisting it twice would double-count results. The ack is sent
+            // immediately (the replayed batch's pending count is settled here).
+            {
+                std::lock_guard<std::mutex> lk(seq_mu);
+                auto it = last_batch_seq.find(work->run_id);
+                int64_t last = it == last_batch_seq.end() ? -1 : it->second;
+                if (last >= 0 && work->batch_seq <= last) {
+                    spdlog::warn(
+                        "client_svc: duplicate batch run_id={} seq={} (last={}) — "
+                        "acked without re-ingest", work->run_id, work->batch_seq, last);
+                    std::lock_guard<std::mutex> alk(ack_mu);
+                    auto pit = batch_pending.find(key);
+                    if (pit != batch_pending.end()) batch_pending.erase(pit);
+                    acadia::stream::ServerMessage ack_msg;
+                    auto* ack = ack_msg.mutable_batch_ack();
+                    ack->set_run_id(work->run_id);
+                    ack->set_batch_seq(work->batch_seq);
+                    if (!stream->Write(ack_msg)) {
+                        spdlog::warn("client_svc: failed to send duplicate BatchAck run_id={}",
+                                     work->run_id);
+                    }
+                    continue;
+                }
+                if (last >= 0 && work->batch_seq > last + 1) {
+                    spdlog::warn("client_svc: GAP run_id={}: expected seq {} got {}",
+                                 work->run_id, last + 1, work->batch_seq);
+                }
+            }
             try {
                 run_svc_.ingest_test_result(work->tr, work->run_id,
                                              work->module_version, work->mode);
+                // Record the sequence only after a successful ingest so a
+                // failed sample is not suppressed on replay.
+                std::lock_guard<std::mutex> lk(seq_mu);
+                last_batch_seq[work->run_id] = work->batch_seq;
             } catch (const std::exception& e) {
                 spdlog::error("client_svc: ingest error run_id={}: {}",
                               work->run_id, e.what());
                 // Do not abort the stream for a single failed ingest.
             }
             // Acknowledge only once this batch's samples are all durable.
-            const std::string key = work->run_id + ":" + std::to_string(work->batch_seq);
             bool ack_batch = false;
             {
                 std::lock_guard<std::mutex> lk(ack_mu);
@@ -195,23 +231,6 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
                 if (it != batch_pending.end()) {
                     if (--it->second <= 0) { batch_pending.erase(it); ack_batch = true; }
                 }
-            }
-            // Task 90: duplicate/gap detection + idempotent resume. Track the
-            // highest batch_seq seen per run. A duplicate (<= last) is still
-            // acked (idempotent) but not re-ingested meaningfully; a gap
-            // (> last+1) is logged so reconnect recovery is observable.
-            {
-                std::lock_guard<std::mutex> lk(seq_mu);
-                auto it = last_batch_seq.find(work->run_id);
-                int64_t last = it == last_batch_seq.end() ? -1 : it->second;
-                if (work->batch_seq <= last) {
-                    spdlog::warn("client_svc: duplicate batch run_id={} seq={} (last={})",
-                                 work->run_id, work->batch_seq, last);
-                } else if (last >= 0 && work->batch_seq > last + 1) {
-                    spdlog::warn("client_svc: GAP run_id={}: expected seq {} got {}",
-                                 work->run_id, last + 1, work->batch_seq);
-                }
-                last_batch_seq[work->run_id] = work->batch_seq;
             }
             if (ack_batch) {
                 acadia::stream::ServerMessage ack_msg;
