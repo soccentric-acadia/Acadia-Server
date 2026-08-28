@@ -271,15 +271,19 @@ void RunsController::events(const drogon::HttpRequestPtr& /*req*/,
                              std::function<void(const drogon::HttpResponsePtr&)>&& cb,
                              std::string id) {
     // Emit initial run-state event.
-    std::string initial;
     try {
-        auto run = svc_.get_run(id);
-        initial  = "event: state\ndata: {\"type\":\"state\",\"run_id\":\"" + id
-                 + "\",\"status\":\"" + run.status + "\"}\n\n";
-    } catch (...) {
-        initial  = "event: error\ndata: {\"type\":\"error\","
-                   "\"message\":\"run not found\"}\n\n";
+        (void)svc_.get_run(id);
+    } catch (const NotFoundError& e) {
+        Json::Value err; err["error"] = e.what();
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(err);
+        resp->setStatusCode(drogon::k404NotFound);
+        cb(resp);
+        return;
     }
+
+    auto run = svc_.get_run(id);
+    std::string initial = "event: state\ndata: {\"type\":\"state\",\"run_id\":\"" + id
+                        + "\",\"status\":\"" + run.status + "\"}\n\n";
 
     auto ctx = std::make_shared<RunSseCtx>();
     {
