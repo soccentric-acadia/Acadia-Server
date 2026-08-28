@@ -3,8 +3,11 @@
 The **Acadia Server** is the central orchestration and data-collection backend for the Acadia
 IV&V (Independent Validation & Verification) tool suite. It exposes:
 
-- A **gRPC service** (`HalService`) for the embedded HAL Client App to submit test results and
-receive streaming commands.
+- A **gRPC `ClientService` stream** for the embedded Client App to receive run
+  configuration/control and submit results, logs, ACKs, and state reports. The
+  Client dials the Server; the Server does not initiate a connection to the
+  Client. The Server's separate `HalService` facade is not the Client result
+  submission channel.
 - A **REST/HTTP API** (`/api/v1`) for the Web UI and external tooling.
 - A **PostgreSQL** backend with versioned migrations.
 - **OTA firmware upgrade** orchestration.
@@ -50,7 +53,7 @@ See [docker/README.md](docker/README.md) for detailed Docker documentation.
 ## Architecture Overview
 
 ```
-HAL Client (embedded)  ──gRPC (port 9090)──►  HalServiceImpl
+ HAL Client (embedded)  ──gRPC (port 50051)──►  ClientServiceImpl
                                                     │
 Web UI / REST clients  ──HTTP (port 8080)──►  Drogon REST API
                                                     │
@@ -140,7 +143,8 @@ All configuration is via environment variables. See `.env.example` for the full 
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ACADIA_GRPC_LISTEN` | `0.0.0.0:9090` | gRPC bind address |
+| `ACADIA_GRPC_LISTEN` | `0.0.0.0:50051` | Server gRPC bind address; the Client connects to this endpoint |
+| `ACADIA_SERVER_ADDRESS` | `127.0.0.1:50051` | Client destination for the long-lived `ClientService` stream |
 | `ACADIA_HTTP_LISTEN` | `0.0.0.0:8080` | HTTP bind address |
 | `ACADIA_DB_HOST` | `localhost` | PostgreSQL host |
 | `ACADIA_DB_NAME` | `acadia` | Database name |
