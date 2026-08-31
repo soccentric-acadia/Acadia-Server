@@ -34,7 +34,7 @@ This will:
 Then enter the container and build:
 ```bash
 docker exec -it acadia-dev bash
-cmake --preset debug && cmake --build build/debug
+make build          # Docker x86 build
 ```
 
 ### Alternative: VS Code Dev Container
@@ -118,20 +118,17 @@ docker compose -f docker/docker-compose.yml up --build
 
 ```bash
 # Debug (default dev preset)
-cmake --preset debug
-cmake --build build/debug
 
 # Release
-cmake --preset release
-cmake --build build/release
+make docker-build-server   # Docker (production profile)
 
 # Run tests
-cmake --preset test
+make test           # Docker ctest
 cmake --build build/test
 ctest --test-dir build/test --output-on-failure
 
 # ASan
-cmake --preset asan
+# asan preset runs inside the Docker build container
 cmake --build build/asan
 ```
 
@@ -302,7 +299,7 @@ migration upgrades, and destructive operations require manual verification.
 - `test/config_test.cpp`.
 - `tests/unit/` covers gRPC backpressure, registry, services, and utilities.
 - `tests/integration/MigrationRunnerTest.cc` covers migration behavior.
-- Typical commands: `cmake --preset test`, `cmake --build build/test`, and `ctest --test-dir
+- Typical commands: `make test           # Docker ctest`, `cmake --build build/test`, and `ctest --test-dir
 build/test --output-on-failure`.
 
 ## Implementation Status

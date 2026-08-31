@@ -31,7 +31,7 @@ make docker-image-server
 
 The Docker targets use the parent `Acadia/` mount so Acadia-Client, Acadia-HAL, and server
 sources resolve in the container. For native dependency setup, follow the existing
-`LOCAL_SETUP.md` and `docker/README.md`; set `VCPKG_ROOT` when using vcpkg manifest mode.
+`docker/README.md`; the toolchain lives inside the Docker build image (no VCPKG_ROOT needed).
 
 ## 3. Build and compile
 
