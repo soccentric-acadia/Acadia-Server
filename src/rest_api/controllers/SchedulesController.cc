@@ -54,8 +54,7 @@ void SchedulesController::create(const drogon::HttpRequestPtr& req, std::functio
     cb(resp);
 }
 
-void SchedulesController::get(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                              std::string id)
+void SchedulesController::get(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     try {
         auto s = svc_.get(id);
@@ -70,8 +69,7 @@ void SchedulesController::get(const drogon::HttpRequestPtr& /*req*/, std::functi
     }
 }
 
-void SchedulesController::update(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                 std::string id)
+void SchedulesController::update(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     auto body = req->getJsonObject();
@@ -90,8 +88,7 @@ void SchedulesController::update(const drogon::HttpRequestPtr& req, std::functio
     cb(drogon::HttpResponse::newHttpJsonResponse(schedule_to_json(updated)));
 }
 
-void SchedulesController::remove(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                 std::string id)
+void SchedulesController::remove(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     svc_.remove(id, user_id);
@@ -100,8 +97,7 @@ void SchedulesController::remove(const drogon::HttpRequestPtr& req, std::functio
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
-void SchedulesController::disable(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                  std::string id)
+void SchedulesController::disable(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     svc_.set_enabled(id, false, user_id);
@@ -110,8 +106,7 @@ void SchedulesController::disable(const drogon::HttpRequestPtr& req, std::functi
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
-void SchedulesController::enable(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                 std::string id)
+void SchedulesController::enable(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     svc_.set_enabled(id, true, user_id);

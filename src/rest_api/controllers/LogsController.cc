@@ -211,8 +211,7 @@ void LogsController::create_bookmark(const drogon::HttpRequestPtr& req, std::fun
     cb(resp);
 }
 
-void LogsController::delete_bookmark(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                     std::string id)
+void LogsController::delete_bookmark(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     svc_.remove_bookmark(id);
     Json::Value resp;

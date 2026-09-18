@@ -33,10 +33,10 @@ void ModuleRegistry::load(const std::string& path)
         m.description = node["description"] ? node["description"].as<std::string>() : "";
         m.version = node["version"] ? node["version"].as<std::string>() : "0.0.0";
         m.category = node["category"] ? node["category"].as<std::string>() : "other";
-        m.result_type_url = node["result_type_url"] ? node["result_type_url"].as<std::string>()
-                                                    : (node["result_type"] ? node["result_type"].as<std::string>() : "");
-        m.config_type_url = node["config_type_url"] ? node["config_type_url"].as<std::string>()
-                                                    : (node["config_type"] ? node["config_type"].as<std::string>() : "");
+        m.result_type_url =
+            node["result_type_url"] ? node["result_type_url"].as<std::string>() : (node["result_type"] ? node["result_type"].as<std::string>() : "");
+        m.config_type_url =
+            node["config_type_url"] ? node["config_type_url"].as<std::string>() : (node["config_type"] ? node["config_type"].as<std::string>() : "");
 
         if (node["modes"] && node["modes"].IsSequence()) {
             for (const auto& mode : node["modes"]) {

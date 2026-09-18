@@ -22,8 +22,8 @@ namespace acadia::rest
 {
 
 void configure_drogon_app(const Settings& settings, AuthService& auth_svc, RunService& run_svc, LogService& log_svc, ModuleService& mod_svc,
-                          TargetService& target_svc, ConfigService& config_svc, TemplateService& template_svc,
-                          ScheduleService& schedule_svc, OtaService& ota_svc, NotificationService& notif_svc, CompareService& cmp_svc)
+                          TargetService& target_svc, ConfigService& config_svc, TemplateService& template_svc, ScheduleService& schedule_svc,
+                          OtaService& ota_svc, NotificationService& notif_svc, CompareService& cmp_svc)
 {
     auto& app = drogon::app();
 

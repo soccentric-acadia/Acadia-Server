@@ -15,8 +15,8 @@ namespace acadia::grpc
 // Queue capacity: 1024 work items.  Each item holds a single TestResult.
 static constexpr std::size_t kQueueCapacity = 1024;
 
-ClientServiceImpl::ClientServiceImpl(RunService& run_svc, LogService& log_svc, std::shared_ptr<ClientRegistry> registry,
-                                     BoardRepository* board_repo, std::string stream_token)
+ClientServiceImpl::ClientServiceImpl(RunService& run_svc, LogService& log_svc, std::shared_ptr<ClientRegistry> registry, BoardRepository* board_repo,
+                                     std::string stream_token)
     : run_svc_(run_svc), log_svc_(log_svc), registry_(std::move(registry)), board_repo_(board_repo), stream_token_(std::move(stream_token))
 {
 }

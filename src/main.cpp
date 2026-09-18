@@ -159,8 +159,8 @@ int main()
     std::signal(SIGTERM, handle_signal);
 
     // --- REST API (Drogon — blocks until quit()) ---
-    acadia::rest::configure_drogon_app(settings, auth_svc, run_svc, log_svc, mod_svc, target_svc, config_svc, template_svc, schedule_svc,
-                                       ota_svc, notif_svc, compare_svc);
+    acadia::rest::configure_drogon_app(settings, auth_svc, run_svc, log_svc, mod_svc, target_svc, config_svc, template_svc, schedule_svc, ota_svc, notif_svc,
+                                       compare_svc);
 
     spdlog::info("Starting Drogon HTTP server on {}", settings.network.http_listen);
     drogon::app().run(); // blocks

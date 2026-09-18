@@ -186,8 +186,7 @@ std::string cron_next_occurrence(const std::string& expression, const std::strin
     struct tm from_tm
     {
     };
-    int r = std::sscanf(from_iso8601.c_str(), "%d-%d-%dT%d:%d", &from_tm.tm_year, &from_tm.tm_mon, &from_tm.tm_mday, &from_tm.tm_hour,
-                        &from_tm.tm_min);
+    int r = std::sscanf(from_iso8601.c_str(), "%d-%d-%dT%d:%d", &from_tm.tm_year, &from_tm.tm_mon, &from_tm.tm_mday, &from_tm.tm_hour, &from_tm.tm_min);
     if (r != 5)
         return {};
     from_tm.tm_year -= 1900;

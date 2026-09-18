@@ -26,8 +26,7 @@ class RunService
 {
   public:
     // Create and start (enqueue) a new run.
-    Run start_run(const std::string& config_snapshot_json, const std::string& mode, const std::string& name,
-                  const std::string& actor_user_id);
+    Run start_run(const std::string& config_snapshot_json, const std::string& mode, const std::string& name, const std::string& actor_user_id);
 
     Run get_run(const std::string& id);
     std::vector<Run> list_runs(const RunFilter& f);
@@ -42,8 +41,7 @@ class RunService
     // Primary ingest path: persist a TestResult proto received from the Client.
     // Converts the proto to a Result struct, inserts (with subtests), returns saved row.
     // Validates status != UNSPECIFIED; throws ValidationError if unspecified.
-    Result ingest_test_result(const hal::common::TestResult& tr, const std::string& run_id, const std::string& module_version,
-                              const std::string& mode);
+    Result ingest_test_result(const hal::common::TestResult& tr, const std::string& run_id, const std::string& module_version, const std::string& mode);
 
     // Returns true if the (status, severity) pair qualifies as a terminal failure
     // that should trigger a "test.failure" notification.
@@ -81,8 +79,8 @@ class RunService
     std::vector<RunModuleSummary> get_module_summaries(const std::string& run_id);
 
     // Trend / analytics delegates.
-    std::vector<TrendPoint> get_module_trend(const std::string& module_id, const std::string& test_id, const std::string& field,
-                                             const std::string& from_ts, const std::string& to_ts);
+    std::vector<TrendPoint> get_module_trend(const std::string& module_id, const std::string& test_id, const std::string& field, const std::string& from_ts,
+                                             const std::string& to_ts);
 
     std::vector<double> get_distribution(const std::string& module_id, const std::string& test_id, const std::string& field,
                                          const std::vector<std::string>& run_ids);

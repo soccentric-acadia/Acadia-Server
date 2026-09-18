@@ -6,8 +6,8 @@
 namespace acadia
 {
 
-void AuditRepository::log(const std::string& user_id, const std::string& action, const std::string& target_type,
-                          const std::string& target_id, const std::string& metadata_json)
+void AuditRepository::log(const std::string& user_id, const std::string& action, const std::string& target_type, const std::string& target_id,
+                          const std::string& metadata_json)
 {
     auto db = db::get_db_client();
     db->execSqlSync("INSERT INTO audit_log (user_id, action, target_type, target_id, metadata)"
@@ -62,16 +62,15 @@ std::vector<AuditEntry> AuditRepository::list(const AuditFilter& f)
         case 4:
             return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str());
         default:
-            return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(),
-                                   params[4].c_str());
+            return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), params[4].c_str());
         }
     }();
 
     std::vector<AuditEntry> out;
     for (const auto& r : rows) {
-        out.push_back({r["id"].as<std::string>(), r["user_id"].isNull() ? "" : r["user_id"].as<std::string>(),
-                       r["action"].as<std::string>(), r["target_type"].as<std::string>(), r["target_id"].as<std::string>(),
-                       r["metadata"].as<std::string>(), r["created_at"].as<std::string>()});
+        out.push_back({r["id"].as<std::string>(), r["user_id"].isNull() ? "" : r["user_id"].as<std::string>(), r["action"].as<std::string>(),
+                       r["target_type"].as<std::string>(), r["target_id"].as<std::string>(), r["metadata"].as<std::string>(),
+                       r["created_at"].as<std::string>()});
     }
     return out;
 }

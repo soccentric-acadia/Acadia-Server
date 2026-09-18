@@ -46,8 +46,8 @@ class ThresholdService
     int evaluate(const Result& result);
 
     // CRUD for threshold rules.
-    ThresholdRule create_rule(const std::string& module_id, const std::string& test_id, const std::string& metric_key,
-                              const std::string& op, const Json::Value& value_json);
+    ThresholdRule create_rule(const std::string& module_id, const std::string& test_id, const std::string& metric_key, const std::string& op,
+                              const Json::Value& value_json);
 
     std::vector<ThresholdRule> list_rules(const std::string& module_id, const std::string& test_id);
 

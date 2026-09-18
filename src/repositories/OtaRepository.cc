@@ -40,9 +40,8 @@ OtaUpgrade OtaRepository::create(const OtaUpgrade& u)
                                 "  from_version,  to_version,  status,  progress, "
                                 "  started_at::TEXT,  ended_at::TEXT,  error_message, "
                                 "  rolled_back_from::TEXT,  created_at::TEXT,  created_by::TEXT",
-                                u.artifact_path.c_str(), u.artifact_hash.c_str(), u.artifact_size, u.from_version.c_str(),
-                                u.to_version.c_str(), u.status.empty() ? "uploaded" : u.status.c_str(), u.board_id.c_str(),
-                                u.created_by.empty() ? nullptr : u.created_by.c_str());
+                                u.artifact_path.c_str(), u.artifact_hash.c_str(), u.artifact_size, u.from_version.c_str(), u.to_version.c_str(),
+                                u.status.empty() ? "uploaded" : u.status.c_str(), u.board_id.c_str(), u.created_by.empty() ? nullptr : u.created_by.c_str());
     return row_to_ota(rows[0]);
 }
 

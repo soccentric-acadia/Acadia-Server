@@ -86,8 +86,7 @@ void AuthController::list_tokens(const drogon::HttpRequestPtr& req, std::functio
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
-void AuthController::revoke_token(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                  std::string id)
+void AuthController::revoke_token(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     svc_.revoke_token(id, user_id);

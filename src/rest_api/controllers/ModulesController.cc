@@ -7,8 +7,7 @@
 namespace acadia::rest
 {
 
-ModulesController::ModulesController(ModuleService& svc, RunService& run_svc, CompareService& cmp_svc)
-    : svc_(svc), run_svc_(run_svc), cmp_svc_(cmp_svc)
+ModulesController::ModulesController(ModuleService& svc, RunService& run_svc, CompareService& cmp_svc) : svc_(svc), run_svc_(run_svc), cmp_svc_(cmp_svc)
 {
 }
 
@@ -80,8 +79,7 @@ void ModulesController::trend(const drogon::HttpRequestPtr& req, std::function<v
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
-void ModulesController::distribution(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                     std::string id)
+void ModulesController::distribution(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     std::string test_id = req->getParameter("test_id");
     std::string field = req->getParameter("field");
@@ -114,8 +112,7 @@ void ModulesController::distribution(const drogon::HttpRequestPtr& req, std::fun
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
-void ModulesController::compare_runs(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                     std::string a, std::string b)
+void ModulesController::compare_runs(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string a, std::string b)
 {
     double drift_pct = 5.0;
     auto dp = req->getParameter("drift_pct");

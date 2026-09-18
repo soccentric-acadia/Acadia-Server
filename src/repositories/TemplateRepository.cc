@@ -25,13 +25,12 @@ Template row_to_tpl(const drogon::orm::Row& r)
 Template TemplateRepository::create(const Template& t)
 {
     auto db = db::get_db_client();
-    auto rows = db->execSqlSync(
-        "INSERT INTO templates (name, description, mode, common_config, modules, created_by)"
-        " VALUES ($1, $2, $3, $4::JSONB, $5::JSONB, $6::UUID)"
-        " RETURNING id,  name,  description,  mode,  common_config::TEXT,  modules::TEXT, "
-        "  created_at::TEXT,  created_by::TEXT,  is_archived",
-        t.name.c_str(), t.description.c_str(), t.mode.c_str(), t.common_config_json.empty() ? "{}" : t.common_config_json.c_str(),
-        t.modules_json.empty() ? "[]" : t.modules_json.c_str(), t.created_by.empty() ? nullptr : t.created_by.c_str());
+    auto rows = db->execSqlSync("INSERT INTO templates (name, description, mode, common_config, modules, created_by)"
+                                " VALUES ($1, $2, $3, $4::JSONB, $5::JSONB, $6::UUID)"
+                                " RETURNING id,  name,  description,  mode,  common_config::TEXT,  modules::TEXT, "
+                                "  created_at::TEXT,  created_by::TEXT,  is_archived",
+                                t.name.c_str(), t.description.c_str(), t.mode.c_str(), t.common_config_json.empty() ? "{}" : t.common_config_json.c_str(),
+                                t.modules_json.empty() ? "[]" : t.modules_json.c_str(), t.created_by.empty() ? nullptr : t.created_by.c_str());
     return row_to_tpl(rows[0]);
 }
 
@@ -67,8 +66,7 @@ void TemplateRepository::update(const Template& t)
     auto db = db::get_db_client();
     db->execSqlSync("UPDATE templates SET name=$1,  description=$2,  mode=$3, "
                     "  common_config=$4::JSONB,  modules=$5::JSONB WHERE id=$6::UUID",
-                    t.name.c_str(), t.description.c_str(), t.mode.c_str(), t.common_config_json.c_str(), t.modules_json.c_str(),
-                    t.id.c_str());
+                    t.name.c_str(), t.description.c_str(), t.mode.c_str(), t.common_config_json.c_str(), t.modules_json.c_str(), t.id.c_str());
 }
 
 void TemplateRepository::archive(const std::string& id)

@@ -98,8 +98,8 @@ static Json::Value result_to_json(const Result& r)
     o["payload_type_url"] = r.payload_type_url;
     // payload bytes as base64.
     if (!r.payload_bytes.empty()) {
-        o["payload_b64"] = drogon::utils::base64Encode(reinterpret_cast<const unsigned char*>(r.payload_bytes.data()),
-                                                       static_cast<unsigned int>(r.payload_bytes.size()));
+        o["payload_b64"] =
+            drogon::utils::base64Encode(reinterpret_cast<const unsigned char*>(r.payload_bytes.data()), static_cast<unsigned int>(r.payload_bytes.size()));
     } else {
         o["payload_b64"] = "";
     }
@@ -130,10 +130,10 @@ static void append_csv_rows(std::ostringstream& out, const Result& r, const std:
     if (!parent_id.empty()) {
         out << csv_field(parent_id) << ",";
     }
-    out << csv_field(r.run_id) << "," << csv_field(r.module_id) << "," << csv_field(r.test_id) << "," << csv_field(r.test_name) << ","
-        << r.sequence << "," << csv_field(r.timestamp) << "," << r.duration_ns << "," << util::status_to_string(r.status) << ","
-        << util::severity_to_string(r.severity) << "," << csv_field(r.error_message) << "," << csv_field(r.reason_json) << ","
-        << csv_field(r.metrics_json) << "," << csv_field(r.monitoring_json) << "," << csv_field(r.event_json) << "\n";
+    out << csv_field(r.run_id) << "," << csv_field(r.module_id) << "," << csv_field(r.test_id) << "," << csv_field(r.test_name) << "," << r.sequence << ","
+        << csv_field(r.timestamp) << "," << r.duration_ns << "," << util::status_to_string(r.status) << "," << util::severity_to_string(r.severity) << ","
+        << csv_field(r.error_message) << "," << csv_field(r.reason_json) << "," << csv_field(r.metrics_json) << "," << csv_field(r.monitoring_json) << ","
+        << csv_field(r.event_json) << "\n";
 
     for (const auto& sub : r.subtests) {
         append_csv_rows(out, sub, r.id);

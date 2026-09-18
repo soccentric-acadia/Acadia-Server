@@ -85,23 +85,22 @@ Result ResultRepository::insert_in_txn(drogon::orm::DbClientPtr db, const Result
 
     std::string parent_id_val = r.parent_id.value_or("");
 
-    auto rows = db->execSqlSync(
-        "INSERT INTO results"
-        " (run_id, module_id, module_version, mode,"
-        "  status, severity, test_id, test_name, sequence, duration_ns,"
-        "  error_message, reason, metrics, monitoring, event,"
-        "  parent_id, payload_bytes, payload_type_url)"
-        " VALUES"
-        " ($1::UUID, $2, $3, $4,"
-        "  $5::SMALLINT, $6::SMALLINT, $7, $8, $9::BIGINT, $10::BIGINT,"
-        "  NULLIF($11,''), $12::JSONB, $13::JSONB, $14::JSONB, $15::JSONB,"
-        "  NULLIF($16,'')::UUID, NULLIF($17,'')::BYTEA, $18)"
-        " RETURNING " +
-            std::string{SELECT_COLS},
-        r.run_id.c_str(), r.module_id.c_str(), r.module_version.c_str(), r.mode.c_str(), r.status, r.severity, r.test_id.c_str(),
-        r.test_name.c_str(), r.sequence, r.duration_ns, r.error_message.c_str(), r.reason_json.empty() ? "{}" : r.reason_json.c_str(),
-        r.metrics_json.empty() ? "{}" : r.metrics_json.c_str(), r.monitoring_json.empty() ? "{}" : r.monitoring_json.c_str(),
-        r.event_json.empty() ? "{}" : r.event_json.c_str(), parent_id_val.c_str(), payload_hex.c_str(), r.payload_type_url.c_str());
+    auto rows = db->execSqlSync("INSERT INTO results"
+                                " (run_id, module_id, module_version, mode,"
+                                "  status, severity, test_id, test_name, sequence, duration_ns,"
+                                "  error_message, reason, metrics, monitoring, event,"
+                                "  parent_id, payload_bytes, payload_type_url)"
+                                " VALUES"
+                                " ($1::UUID, $2, $3, $4,"
+                                "  $5::SMALLINT, $6::SMALLINT, $7, $8, $9::BIGINT, $10::BIGINT,"
+                                "  NULLIF($11,''), $12::JSONB, $13::JSONB, $14::JSONB, $15::JSONB,"
+                                "  NULLIF($16,'')::UUID, NULLIF($17,'')::BYTEA, $18)"
+                                " RETURNING " +
+                                    std::string{SELECT_COLS},
+                                r.run_id.c_str(), r.module_id.c_str(), r.module_version.c_str(), r.mode.c_str(), r.status, r.severity, r.test_id.c_str(),
+                                r.test_name.c_str(), r.sequence, r.duration_ns, r.error_message.c_str(), r.reason_json.empty() ? "{}" : r.reason_json.c_str(),
+                                r.metrics_json.empty() ? "{}" : r.metrics_json.c_str(), r.monitoring_json.empty() ? "{}" : r.monitoring_json.c_str(),
+                                r.event_json.empty() ? "{}" : r.event_json.c_str(), parent_id_val.c_str(), payload_hex.c_str(), r.payload_type_url.c_str());
 
     Result saved = row_to_result(rows[0]);
 
@@ -213,8 +212,7 @@ std::vector<Result> ResultRepository::list(const ResultFilter& f)
         case 5:
             return db->execSqlSync(query, params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), params[4].c_str());
         case 6:
-            return db->execSqlSync(query, params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), params[4].c_str(),
-                                   params[5].c_str());
+            return db->execSqlSync(query, params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), params[4].c_str(), params[5].c_str());
         default:
             return db->execSqlSync(query, params[0].c_str(), params[1].c_str());
         }
@@ -265,8 +263,8 @@ std::vector<RunModuleSummary> ResultRepository::find_last_per_module(const std::
 
 // ── find_module_trend ─────────────────────────────────────────────────────────
 
-std::vector<TrendPoint> ResultRepository::find_module_trend(const std::string& module_id, const std::string& test_id,
-                                                            const std::string& field, const std::string& from_ts, const std::string& to_ts)
+std::vector<TrendPoint> ResultRepository::find_module_trend(const std::string& module_id, const std::string& test_id, const std::string& field,
+                                                            const std::string& from_ts, const std::string& to_ts)
 {
     auto db = db::get_db_client();
     // Extract the numeric value from the typed metrics JSONB.
@@ -385,8 +383,7 @@ std::vector<CompareEntry> ResultRepository::find_for_compare(const std::string& 
 std::vector<Result> ResultRepository::get_subtests(const std::string& parent_id)
 {
     auto db = db::get_db_client();
-    auto rows = db->execSqlSync("SELECT " + std::string{SELECT_COLS} + " FROM results WHERE parent_id = $1::UUID ORDER BY sequence ASC",
-                                parent_id.c_str());
+    auto rows = db->execSqlSync("SELECT " + std::string{SELECT_COLS} + " FROM results WHERE parent_id = $1::UUID ORDER BY sequence ASC", parent_id.c_str());
 
     std::vector<Result> out;
     out.reserve(rows.size());
@@ -397,8 +394,8 @@ std::vector<Result> ResultRepository::get_subtests(const std::string& parent_id)
 
 // ── upsert_run_summary ───────────────────────────────────────────────────────
 
-void ResultRepository::upsert_run_summary(const std::string& run_id, const std::string& module_id, const std::string& test_id,
-                                          int16_t status, int16_t severity, const std::string& timestamp)
+void ResultRepository::upsert_run_summary(const std::string& run_id, const std::string& module_id, const std::string& test_id, int16_t status, int16_t severity,
+                                          const std::string& timestamp)
 {
     auto db = db::get_db_client();
     // Task 93: ordering-safe — only overwrite last_* when the incoming result is

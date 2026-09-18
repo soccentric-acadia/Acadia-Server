@@ -27,8 +27,8 @@ LogEntry LogRepository::insert(const LogEntry& e)
                                 " VALUES ($1, $2, $3, $4::JSONB, $5::UUID)"
                                 " RETURNING id,  source,  severity,  timestamp::TEXT,  message,  metadata::TEXT, "
                                 "  run_id::TEXT",
-                                e.source.c_str(), e.severity.c_str(), e.message.c_str(),
-                                e.metadata_json.empty() ? "{}" : e.metadata_json.c_str(), e.run_id.empty() ? nullptr : e.run_id.c_str());
+                                e.source.c_str(), e.severity.c_str(), e.message.c_str(), e.metadata_json.empty() ? "{}" : e.metadata_json.c_str(),
+                                e.run_id.empty() ? nullptr : e.run_id.c_str());
     return row_to_log(rows[0]);
 }
 
@@ -76,8 +76,7 @@ std::vector<LogEntry> LogRepository::list(const LogFilter& f)
         case 4:
             return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str());
         case 5:
-            return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(),
-                                   params[4].c_str());
+            return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), params[4].c_str());
         default:
             return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str());
         }
@@ -104,8 +103,8 @@ LogBookmark LogRepository::create_bookmark(const std::string& user_id, const std
                                 " RETURNING id,  user_id::TEXT,  log_id::TEXT,  note,  created_at::TEXT",
                                 user_id.c_str(), log_id.c_str(), note.c_str());
     const auto& r = rows[0];
-    return LogBookmark{r["id"].as<std::string>(), r["user_id"].as<std::string>(), r["log_id"].as<std::string>(),
-                       r["note"].as<std::string>(), r["created_at"].as<std::string>()};
+    return LogBookmark{r["id"].as<std::string>(), r["user_id"].as<std::string>(), r["log_id"].as<std::string>(), r["note"].as<std::string>(),
+                       r["created_at"].as<std::string>()};
 }
 
 std::vector<LogBookmark> LogRepository::list_bookmarks(const std::string& user_id)
@@ -116,8 +115,8 @@ std::vector<LogBookmark> LogRepository::list_bookmarks(const std::string& user_i
                                 user_id.c_str());
     std::vector<LogBookmark> out;
     for (const auto& r : rows) {
-        out.push_back({r["id"].as<std::string>(), r["user_id"].as<std::string>(), r["log_id"].as<std::string>(),
-                       r["note"].as<std::string>(), r["created_at"].as<std::string>()});
+        out.push_back({r["id"].as<std::string>(), r["user_id"].as<std::string>(), r["log_id"].as<std::string>(), r["note"].as<std::string>(),
+                       r["created_at"].as<std::string>()});
     }
     return out;
 }
@@ -136,8 +135,8 @@ SavedLogView LogRepository::create_view(const std::string& user_id, const std::s
                                 " RETURNING id,  user_id::TEXT,  name,  filters::TEXT,  created_at::TEXT",
                                 user_id.c_str(), name.c_str(), filters_json.empty() ? "{}" : filters_json.c_str());
     const auto& r = rows[0];
-    return SavedLogView{r["id"].as<std::string>(), r["user_id"].as<std::string>(), r["name"].as<std::string>(),
-                        r["filters"].as<std::string>(), r["created_at"].as<std::string>()};
+    return SavedLogView{r["id"].as<std::string>(), r["user_id"].as<std::string>(), r["name"].as<std::string>(), r["filters"].as<std::string>(),
+                        r["created_at"].as<std::string>()};
 }
 
 std::vector<SavedLogView> LogRepository::list_views(const std::string& user_id)
@@ -148,8 +147,8 @@ std::vector<SavedLogView> LogRepository::list_views(const std::string& user_id)
                                 user_id.c_str());
     std::vector<SavedLogView> out;
     for (const auto& r : rows) {
-        out.push_back({r["id"].as<std::string>(), r["user_id"].as<std::string>(), r["name"].as<std::string>(),
-                       r["filters"].as<std::string>(), r["created_at"].as<std::string>()});
+        out.push_back({r["id"].as<std::string>(), r["user_id"].as<std::string>(), r["name"].as<std::string>(), r["filters"].as<std::string>(),
+                       r["created_at"].as<std::string>()});
     }
     return out;
 }

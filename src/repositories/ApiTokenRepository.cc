@@ -72,9 +72,9 @@ std::vector<ApiToken> ApiTokenRepository::list_for_user(const std::string& user_
                                 user_id.c_str());
     std::vector<ApiToken> out;
     for (const auto& r : rows) {
-        out.push_back({r["id"].as<std::string>(), r["user_id"].as<std::string>(), r["name"].as<std::string>(),
-                       r["token_hash"].as<std::string>(), r["last_used_at"].isNull() ? "" : r["last_used_at"].as<std::string>(),
-                       r["created_at"].as<std::string>(), r["revoked_at"].isNull() ? "" : r["revoked_at"].as<std::string>()});
+        out.push_back({r["id"].as<std::string>(), r["user_id"].as<std::string>(), r["name"].as<std::string>(), r["token_hash"].as<std::string>(),
+                       r["last_used_at"].isNull() ? "" : r["last_used_at"].as<std::string>(), r["created_at"].as<std::string>(),
+                       r["revoked_at"].isNull() ? "" : r["revoked_at"].as<std::string>()});
     }
     return out;
 }

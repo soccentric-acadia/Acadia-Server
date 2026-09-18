@@ -127,8 +127,8 @@ class ResultRepository
 
     // Time-series extraction: returns metric values for a (module_id, test_id, field)
     // over the given time range.  Only results where metrics->>field is numeric are returned.
-    std::vector<TrendPoint> find_module_trend(const std::string& module_id, const std::string& test_id, const std::string& field,
-                                              const std::string& from_ts, const std::string& to_ts);
+    std::vector<TrendPoint> find_module_trend(const std::string& module_id, const std::string& test_id, const std::string& field, const std::string& from_ts,
+                                              const std::string& to_ts);
 
     // Distribution: returns the numeric values of a metric across the given run IDs.
     // Used for histogram rendering.
@@ -142,8 +142,8 @@ class ResultRepository
     std::vector<Result> get_subtests(const std::string& parent_id);
 
     // Upsert run_summaries for a result.  Called after every insert.
-    void upsert_run_summary(const std::string& run_id, const std::string& module_id, const std::string& test_id, int16_t status,
-                            int16_t severity, const std::string& timestamp);
+    void upsert_run_summary(const std::string& run_id, const std::string& module_id, const std::string& test_id, int16_t status, int16_t severity,
+                            const std::string& timestamp);
 };
 
 } // namespace acadia

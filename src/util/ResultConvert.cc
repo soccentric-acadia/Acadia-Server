@@ -167,8 +167,8 @@ Json::Value parse_string_map_json(const std::string& json_str)
 
 // ── Proto → Result conversion ────────────────────────────────────────────────
 
-Result proto_to_result(const hal::common::TestResult& tr, const std::string& run_id, const std::string& module_version,
-                       const std::string& mode, const std::string& parent_id)
+Result proto_to_result(const hal::common::TestResult& tr, const std::string& run_id, const std::string& module_version, const std::string& mode,
+                       const std::string& parent_id)
 {
     Result r;
     r.run_id = run_id;
@@ -183,8 +183,7 @@ Result proto_to_result(const hal::common::TestResult& tr, const std::string& run
 
     // Timestamp: prefer proto timestamp; fall back to now.
     if (tr.has_timestamp()) {
-        auto tp = std::chrono::system_clock::time_point{std::chrono::seconds{tr.timestamp().seconds()} +
-                                                        std::chrono::nanoseconds{tr.timestamp().nanos()}};
+        auto tp = std::chrono::system_clock::time_point{std::chrono::seconds{tr.timestamp().seconds()} + std::chrono::nanoseconds{tr.timestamp().nanos()}};
         r.timestamp = util::to_iso8601(tp);
     } else {
         r.timestamp = util::utc_now_iso8601();

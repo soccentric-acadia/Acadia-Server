@@ -114,8 +114,7 @@ void MigrationRunner::run_locked()
                 if (s.empty())
                     continue;
                 const std::string upper = to_upper_ascii(s);
-                if (upper == "BEGIN" || upper == "COMMIT" || upper == "ROLLBACK" || upper == "END" ||
-                    upper.rfind("START TRANSACTION", 0) == 0) {
+                if (upper == "BEGIN" || upper == "COMMIT" || upper == "ROLLBACK" || upper == "END" || upper.rfind("START TRANSACTION", 0) == 0) {
                     continue; // runner owns the transaction boundary
                 }
                 auto res = db->execSqlSync(s);

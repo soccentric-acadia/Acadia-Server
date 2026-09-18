@@ -57,7 +57,7 @@ Json::Value parse_string_map_json(const std::string& json_str);
 // Convert a hal::common::TestResult proto to an acadia::Result DB struct.
 // parent_id is empty for top-level results; set by the recursive caller for subtests.
 // The caller must set result.id before inserting if the DB does not auto-generate one.
-Result proto_to_result(const hal::common::TestResult& tr, const std::string& run_id, const std::string& module_version,
-                       const std::string& mode, const std::string& parent_id = "");
+Result proto_to_result(const hal::common::TestResult& tr, const std::string& run_id, const std::string& module_version, const std::string& mode,
+                       const std::string& parent_id = "");
 
 } // namespace acadia::util

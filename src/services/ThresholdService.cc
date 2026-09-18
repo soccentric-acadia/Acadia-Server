@@ -121,8 +121,8 @@ int ThresholdService::evaluate(const Result& result)
                     << R"("op":")" << rule.op << "\","
                     << R"("result_id":")" << result.id << "\"}";
             notif_repo_.create("result.threshold_crossed", payload.str());
-            spdlog::info("threshold: crossed — run_id={} module_id={} test_id={} key={} op={}", result.run_id, result.module_id,
-                         result.test_id, rule.metric_key, rule.op);
+            spdlog::info("threshold: crossed — run_id={} module_id={} test_id={} key={} op={}", result.run_id, result.module_id, result.test_id,
+                         rule.metric_key, rule.op);
         }
     }
     return crossings;
@@ -130,8 +130,8 @@ int ThresholdService::evaluate(const Result& result)
 
 // ── CRUD ─────────────────────────────────────────────────────────────────────
 
-ThresholdRule ThresholdService::create_rule(const std::string& module_id, const std::string& test_id, const std::string& metric_key,
-                                            const std::string& op, const Json::Value& value_json)
+ThresholdRule ThresholdService::create_rule(const std::string& module_id, const std::string& test_id, const std::string& metric_key, const std::string& op,
+                                            const Json::Value& value_json)
 {
     Json::FastWriter fw;
     std::string vj = fw.write(value_json);

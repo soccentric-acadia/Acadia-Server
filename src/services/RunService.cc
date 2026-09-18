@@ -10,8 +10,7 @@
 namespace acadia
 {
 
-Run RunService::start_run(const std::string& config_snapshot_json, const std::string& mode, const std::string& name,
-                          const std::string& actor_user_id)
+Run RunService::start_run(const std::string& config_snapshot_json, const std::string& mode, const std::string& name, const std::string& actor_user_id)
 {
     Run r;
     r.name = name.empty() ? "Run" : name;
@@ -52,8 +51,7 @@ Result RunService::ingest_result(const Result& r)
     return saved;
 }
 
-Result RunService::ingest_test_result(const hal::common::TestResult& tr, const std::string& run_id, const std::string& module_version,
-                                      const std::string& mode)
+Result RunService::ingest_test_result(const hal::common::TestResult& tr, const std::string& run_id, const std::string& module_version, const std::string& mode)
 {
     // Guard: reject UNSPECIFIED status — the Client should never produce this.
     if (tr.output().status() == hal::common::TEST_STATUS_UNSPECIFIED) {

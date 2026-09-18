@@ -30,8 +30,7 @@ void BoardRepository::update_state(const std::string& id, int overall_state, int
         db->execSqlSync("UPDATE boards SET last_seen_at=$1, overall_state=$2, "
                         "last_spool_bytes=$3, last_spool_cap=$4, last_spool_pressure=$5 "
                         "WHERE id=$6",
-                        now_iso, std::to_string(overall_state), std::to_string(spool_bytes), std::to_string(spool_cap),
-                        std::to_string(pressure), id);
+                        now_iso, std::to_string(overall_state), std::to_string(spool_bytes), std::to_string(spool_cap), std::to_string(pressure), id);
     }
     catch (const std::exception& e) {
         spdlog::error("board_repo: update_state error: {}", e.what());

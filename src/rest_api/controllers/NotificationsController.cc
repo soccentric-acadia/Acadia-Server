@@ -27,8 +27,7 @@ void NotificationsController::list(const drogon::HttpRequestPtr& /*req*/, std::f
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
-void NotificationsController::mark_read(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                        std::string id)
+void NotificationsController::mark_read(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     svc_.mark_read(id);
     Json::Value resp;

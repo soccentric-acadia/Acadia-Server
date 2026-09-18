@@ -6,8 +6,7 @@
 namespace acadia::orchestration
 {
 
-RunManager::RunManager(RunService& run_svc, LogService& log_svc, NotificationService& notif_svc)
-    : run_svc_(run_svc), log_svc_(log_svc), notif_svc_(notif_svc)
+RunManager::RunManager(RunService& run_svc, LogService& log_svc, NotificationService& notif_svc) : run_svc_(run_svc), log_svc_(log_svc), notif_svc_(notif_svc)
 {
 }
 

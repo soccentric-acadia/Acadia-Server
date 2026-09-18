@@ -138,10 +138,10 @@ Settings load_settings()
 std::string settings_summary(const Settings& s)
 {
     std::ostringstream o;
-    o << "grpc=" << s.network.grpc_listen << " http=" << s.network.http_listen
-      << " metrics=" << (s.metrics_enabled() ? s.network.metrics_listen : "disabled") << " db=" << s.db.user << "@" << s.db.host << ":"
-      << s.db.port << "/" << s.db.name << " grpc_threads=" << s.concurrency.grpc_threads << " http_threads=" << s.concurrency.http_threads
-      << " log=" << s.log_level << " registry=" << s.registry_path << " smtp=" << (s.smtp_enabled() ? s.smtp.host : "disabled");
+    o << "grpc=" << s.network.grpc_listen << " http=" << s.network.http_listen << " metrics=" << (s.metrics_enabled() ? s.network.metrics_listen : "disabled")
+      << " db=" << s.db.user << "@" << s.db.host << ":" << s.db.port << "/" << s.db.name << " grpc_threads=" << s.concurrency.grpc_threads
+      << " http_threads=" << s.concurrency.http_threads << " log=" << s.log_level << " registry=" << s.registry_path
+      << " smtp=" << (s.smtp_enabled() ? s.smtp.host : "disabled");
     return o.str();
 }
 

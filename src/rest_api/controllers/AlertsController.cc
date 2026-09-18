@@ -140,8 +140,8 @@ void AlertsController::create(const drogon::HttpRequestPtr& req, std::function<v
                                       "severity, enabled) VALUES ($1,$2,$3,$4,$5,$6) "
                                       "RETURNING id, module_id, field_path, operator, threshold, severity, "
                                       "enabled, created_at",
-                                      (*body)["module_id"].asString(), (*body)["field_path"].asString(), operator_val,
-                                      (*body)["threshold"].asDouble(), severity, (*body).get("enabled", true).asBool());
+                                      (*body)["module_id"].asString(), (*body)["field_path"].asString(), operator_val, (*body)["threshold"].asDouble(),
+                                      severity, (*body).get("enabled", true).asBool());
         if (result.empty()) {
             Json::Value err;
             err["error"] = "insert failed";
@@ -274,8 +274,7 @@ void AlertsController::update(const drogon::HttpRequestPtr& req, std::function<v
     }
 }
 
-void AlertsController::remove(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                              std::string id)
+void AlertsController::remove(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     auto db = drogon::app().getDbClient();
     if (!db) {

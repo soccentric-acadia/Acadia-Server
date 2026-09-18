@@ -28,8 +28,7 @@ class BoardRepository
     void upsert_board(const std::string& id, const std::string& client_version, const std::string& now_iso);
 
     // Update state from a StateReport (heartbeat).
-    void update_state(const std::string& id, int overall_state, int64_t spool_bytes, int64_t spool_cap, double pressure,
-                      const std::string& now_iso);
+    void update_state(const std::string& id, int overall_state, int64_t spool_bytes, int64_t spool_cap, double pressure, const std::string& now_iso);
 
     // Mark a run active for a board (or clear when run_id empty).
     void set_active_run(const std::string& board_id, const std::string& run_id, int run_state, int64_t last_seq);

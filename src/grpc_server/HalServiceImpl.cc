@@ -71,8 +71,7 @@ void HalServiceImpl::persist_result(const std::string& run_id, const hal::common
     run_svc_.ingest_test_result(tr, run_id, module_version, mode);
 }
 
-::grpc::Status HalServiceImpl::RunSingleShot(::grpc::ServerContext* /*ctx*/, const hal::SingleShotRequest* req,
-                                             hal::common::ResultEnvelope* resp)
+::grpc::Status HalServiceImpl::RunSingleShot(::grpc::ServerContext* /*ctx*/, const hal::SingleShotRequest* req, hal::common::ResultEnvelope* resp)
 {
 
     auto status = validate_module(req->module_id());
@@ -110,9 +109,8 @@ void HalServiceImpl::persist_result(const std::string& run_id, const hal::common
 
 // Task 84: shared streaming loop — subscribe to the run's results, stream them
 // for duration/forever, honor cancellation/deadline.
-void HalServiceImpl::run_streaming(::grpc::ServerContext* ctx, const std::string& module_id, const std::string& run_mode,
-                                   hal::common::ExecutionMode exec_mode, const hal::common::CommonConfig& common,
-                                   ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer)
+void HalServiceImpl::run_streaming(::grpc::ServerContext* ctx, const std::string& module_id, const std::string& run_mode, hal::common::ExecutionMode exec_mode,
+                                   const hal::common::CommonConfig& common, ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer)
 {
 
     const bool run_forever = common.run_forever() || common.duration_ms() <= 0;
@@ -204,8 +202,7 @@ void HalServiceImpl::run_streaming(::grpc::ServerContext* ctx, const std::string
     return ::grpc::Status::OK;
 }
 
-::grpc::Status HalServiceImpl::ListModules(::grpc::ServerContext* /*ctx*/, const hal::ListModulesRequest* /*req*/,
-                                           hal::ListModulesResponse* resp)
+::grpc::Status HalServiceImpl::ListModules(::grpc::ServerContext* /*ctx*/, const hal::ListModulesRequest* /*req*/, hal::ListModulesResponse* resp)
 {
 
     for (const auto& m : mod_svc_.list_all()) {

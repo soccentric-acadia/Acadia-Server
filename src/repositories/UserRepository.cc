@@ -20,8 +20,8 @@ User UserRepository::create(const std::string& username, const std::string& pass
         if (rows.empty())
             throw std::runtime_error("UserRepository::create: no rows returned");
         const auto& r = rows[0];
-        return User{r["id"].as<std::string>(), r["username"].as<std::string>(), r["password_hash"].as<std::string>(),
-                    r["created_at"].as<std::string>(), r["updated_at"].as<std::string>()};
+        return User{r["id"].as<std::string>(), r["username"].as<std::string>(), r["password_hash"].as<std::string>(), r["created_at"].as<std::string>(),
+                    r["updated_at"].as<std::string>()};
     }
     catch (const drogon::orm::DrogonDbException& e) {
         std::string what{e.base().what()};
@@ -41,8 +41,8 @@ std::optional<User> UserRepository::find_by_username(const std::string& username
     if (rows.empty())
         return std::nullopt;
     const auto& r = rows[0];
-    return User{r["id"].as<std::string>(), r["username"].as<std::string>(), r["password_hash"].as<std::string>(),
-                r["created_at"].as<std::string>(), r["updated_at"].as<std::string>()};
+    return User{r["id"].as<std::string>(), r["username"].as<std::string>(), r["password_hash"].as<std::string>(), r["created_at"].as<std::string>(),
+                r["updated_at"].as<std::string>()};
 }
 
 std::optional<User> UserRepository::find_by_id(const std::string& id)
@@ -54,8 +54,8 @@ std::optional<User> UserRepository::find_by_id(const std::string& id)
     if (rows.empty())
         return std::nullopt;
     const auto& r = rows[0];
-    return User{r["id"].as<std::string>(), r["username"].as<std::string>(), r["password_hash"].as<std::string>(),
-                r["created_at"].as<std::string>(), r["updated_at"].as<std::string>()};
+    return User{r["id"].as<std::string>(), r["username"].as<std::string>(), r["password_hash"].as<std::string>(), r["created_at"].as<std::string>(),
+                r["updated_at"].as<std::string>()};
 }
 
 void UserRepository::update_password(const std::string& id, const std::string& new_hash)

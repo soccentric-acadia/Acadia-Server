@@ -75,8 +75,7 @@ void TemplatesController::create(const drogon::HttpRequestPtr& req, std::functio
     cb(resp);
 }
 
-void TemplatesController::get(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                              std::string id)
+void TemplatesController::get(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     try {
         auto t = svc_.get(id);
@@ -91,8 +90,7 @@ void TemplatesController::get(const drogon::HttpRequestPtr& /*req*/, std::functi
     }
 }
 
-void TemplatesController::update(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                 std::string id)
+void TemplatesController::update(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     auto body = req->getJsonObject();
@@ -114,8 +112,7 @@ void TemplatesController::update(const drogon::HttpRequestPtr& req, std::functio
     cb(drogon::HttpResponse::newHttpJsonResponse(template_to_json(updated)));
 }
 
-void TemplatesController::remove(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                 std::string id)
+void TemplatesController::remove(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     svc_.remove(id, user_id);
@@ -124,8 +121,7 @@ void TemplatesController::remove(const drogon::HttpRequestPtr& req, std::functio
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
-void TemplatesController::archive(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                  std::string id)
+void TemplatesController::archive(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     svc_.archive(id, user_id);
@@ -134,8 +130,7 @@ void TemplatesController::archive(const drogon::HttpRequestPtr& req, std::functi
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
-void TemplatesController::instantiate(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb,
-                                      std::string id)
+void TemplatesController::instantiate(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
     // Returns a draft TestConfig JSON derived from this template.
     std::string config_json = svc_.instantiate_to_json(id);
