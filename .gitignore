@@ -68,3 +68,7 @@ _deps/
 *.env
 .env.*
 !.env.example
+
+# Per-task working artifacts.
+Plan.md
+Task.md
