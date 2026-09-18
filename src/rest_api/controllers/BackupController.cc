@@ -1,18 +1,20 @@
 #include "rest_api/controllers/BackupController.h"
-#include <drogon/HttpResponse.h>
-#include <json/json.h>
 #include <cstdlib>
 #include <ctime>
+#include <drogon/HttpResponse.h>
+#include <json/json.h>
 #include <sstream>
 
-namespace acadia::rest {
+namespace acadia::rest
+{
 
-void BackupController::backup(const drogon::HttpRequestPtr& req,
-                               std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+void BackupController::backup(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb)
+{
     // Retrieve connection string from environment (set at server startup).
     const char* db_url = std::getenv("ACADIA_DB_URL");
     if (!db_url) {
-        Json::Value err; err["error"] = "ACADIA_DB_URL not set";
+        Json::Value err;
+        err["error"] = "ACADIA_DB_URL not set";
         auto resp = drogon::HttpResponse::newHttpJsonResponse(err);
         resp->setStatusCode(drogon::k500InternalServerError);
         cb(resp);
@@ -30,7 +32,8 @@ void BackupController::backup(const drogon::HttpRequestPtr& req,
     cmd << "pg_dump --format=plain " << db_url << " 2>/dev/null";
     FILE* pipe = popen(cmd.str().c_str(), "r");
     if (!pipe) {
-        Json::Value err; err["error"] = "pg_dump failed to start";
+        Json::Value err;
+        err["error"] = "pg_dump failed to start";
         auto resp = drogon::HttpResponse::newHttpJsonResponse(err);
         resp->setStatusCode(drogon::k500InternalServerError);
         cb(resp);
@@ -38,14 +41,15 @@ void BackupController::backup(const drogon::HttpRequestPtr& req,
     }
 
     std::string dump;
-    dump.reserve(1024 * 1024);  // 1 MB initial reserve
+    dump.reserve(1024 * 1024); // 1 MB initial reserve
     char buf[4096];
     while (fgets(buf, sizeof(buf), pipe)) {
         dump += buf;
     }
     int rc = pclose(pipe);
     if (rc != 0) {
-        Json::Value err; err["error"] = "pg_dump exited with error";
+        Json::Value err;
+        err["error"] = "pg_dump exited with error";
         auto resp = drogon::HttpResponse::newHttpJsonResponse(err);
         resp->setStatusCode(drogon::k500InternalServerError);
         cb(resp);
@@ -59,4 +63,4 @@ void BackupController::backup(const drogon::HttpRequestPtr& req,
     cb(resp);
 }
 
-}  // namespace acadia::rest
+} // namespace acadia::rest

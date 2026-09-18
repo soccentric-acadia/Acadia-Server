@@ -3,7 +3,8 @@
 #include <string>
 #include <string_view>
 
-namespace acadia::util {
+namespace acadia::util
+{
 
 // Generate a random UUID v4 string (lowercase hex, with hyphens).
 std::string generate_uuid();
@@ -11,4 +12,4 @@ std::string generate_uuid();
 // Returns true if s is a well-formed UUID string.
 bool is_valid_uuid(std::string_view s);
 
-}  // namespace acadia::util
+} // namespace acadia::util

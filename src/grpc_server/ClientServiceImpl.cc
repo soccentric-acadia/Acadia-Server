@@ -5,21 +5,21 @@
 
 #include <spdlog/spdlog.h>
 
+#include <chrono>
 #include <mutex>
 #include <thread>
-#include <chrono>
 
-namespace acadia::grpc {
+namespace acadia::grpc
+{
 
 // Queue capacity: 1024 work items.  Each item holds a single TestResult.
 static constexpr std::size_t kQueueCapacity = 1024;
 
-ClientServiceImpl::ClientServiceImpl(RunService& run_svc, LogService& log_svc,
-                                     std::shared_ptr<ClientRegistry> registry,
-                                     BoardRepository* board_repo,
-                                     std::string stream_token)
-    : run_svc_(run_svc), log_svc_(log_svc), registry_(std::move(registry)),
-      board_repo_(board_repo), stream_token_(std::move(stream_token)) {}
+ClientServiceImpl::ClientServiceImpl(RunService& run_svc, LogService& log_svc, std::shared_ptr<ClientRegistry> registry,
+                                     BoardRepository* board_repo, std::string stream_token)
+    : run_svc_(run_svc), log_svc_(log_svc), registry_(std::move(registry)), board_repo_(board_repo), stream_token_(std::move(stream_token))
+{
+}
 
 // ── Stream authentication (X2-003) ────────────────────────────────────────
 //
@@ -31,25 +31,22 @@ ClientServiceImpl::ClientServiceImpl(RunService& run_svc, LogService& log_svc,
 //     one-time warning.
 //
 // Kept as a pure function over the metadata for unit testing.
-::grpc::Status verify_stream_auth(
-    const std::multimap<::grpc::string_ref, ::grpc::string_ref>& metadata,
-    const std::string& expected_token) {
+::grpc::Status verify_stream_auth(const std::multimap<::grpc::string_ref, ::grpc::string_ref>& metadata, const std::string& expected_token)
+{
     if (expected_token.empty()) {
         // Dev/bench mode: no token configured — allow, but only surface the
         // warning once per process.
         static std::once_flag open_warn;
         std::call_once(open_warn, [] {
-            spdlog::warn(
-                "ACADIA_STREAM_TOKEN not set: ClientService streams are UNAUTHENTICATED "
-                "(dev/bench mode — set it in production)");
+            spdlog::warn("ACADIA_STREAM_TOKEN not set: ClientService streams are UNAUTHENTICATED "
+                         "(dev/bench mode — set it in production)");
         });
         return ::grpc::Status::OK;
     }
     auto it = metadata.find("x-acadia-stream-token");
     if (it == metadata.end()) {
         spdlog::warn("stream auth: missing x-acadia-stream-token metadata");
-        return {::grpc::StatusCode::UNAUTHENTICATED,
-                "missing x-acadia-stream-token metadata"};
+        return {::grpc::StatusCode::UNAUTHENTICATED, "missing x-acadia-stream-token metadata"};
     }
     if (it->second != expected_token) {
         spdlog::warn("stream auth: token mismatch");
@@ -60,17 +57,15 @@ ClientServiceImpl::ClientServiceImpl(RunService& run_svc, LogService& log_svc,
 
 // ── Handle a TestResultBatch ──────────────────────────────────────────────────
 
-void ClientServiceImpl::handle_result_batch(
-    const acadia::stream::TestResultBatch& batch,
-    BoundedQueue<IngestWork>&              queue,
-    std::unordered_map<std::string, int>&  batch_pending) {
+void ClientServiceImpl::handle_result_batch(const acadia::stream::TestResultBatch& batch, BoundedQueue<IngestWork>& queue,
+                                            std::unordered_map<std::string, int>& batch_pending)
+{
 
     const std::string mode = std::to_string(static_cast<int>(batch.mode()));
 
     // Task 87: validate module identity at ingestion.
     if (batch.module_id().empty()) {
-        spdlog::warn("client_svc: batch run_id={} has empty module_id; rejecting",
-                     batch.run_id());
+        spdlog::warn("client_svc: batch run_id={} has empty module_id; rejecting", batch.run_id());
         return;
     }
 
@@ -82,22 +77,19 @@ void ClientServiceImpl::handle_result_batch(
     for (const auto& sample : batch.samples()) {
         const std::string type_url = sample.payload().type_url();
         if (type_url.empty()) {
-            spdlog::debug("client_svc: empty payload type_url run_id={} module_id={}",
-                          batch.run_id(), batch.module_id());
+            spdlog::debug("client_svc: empty payload type_url run_id={} module_id={}", batch.run_id(), batch.module_id());
             continue;
         }
 
         constexpr std::string_view expected = "type.googleapis.com/hal.common.TestResult";
         if (type_url != expected) {
-            spdlog::warn("client_svc: unexpected payload type_url='{}' run_id={}",
-                         type_url, batch.run_id());
+            spdlog::warn("client_svc: unexpected payload type_url='{}' run_id={}", type_url, batch.run_id());
             continue;
         }
 
         hal::common::TestResult tr;
         if (!sample.payload().UnpackTo(&tr)) {
-            spdlog::error("client_svc: failed to unpack TestResult run_id={} module_id={}",
-                          batch.run_id(), batch.module_id());
+            spdlog::error("client_svc: failed to unpack TestResult run_id={} module_id={}", batch.run_id(), batch.module_id());
             continue;
         }
 
@@ -112,18 +104,17 @@ void ClientServiceImpl::handle_result_batch(
 
         // UNSPECIFIED guard.
         if (tr.output().status() == hal::common::TEST_STATUS_UNSPECIFIED) {
-            spdlog::warn("client_svc: UNSPECIFIED status rejected run_id={} module_id={}",
-                         batch.run_id(), batch.module_id());
+            spdlog::warn("client_svc: UNSPECIFIED status rejected run_id={} module_id={}", batch.run_id(), batch.module_id());
             continue;
         }
 
         IngestWork work;
-        work.run_id         = batch.run_id();
-        work.module_id      = batch.module_id();
+        work.run_id = batch.run_id();
+        work.module_id = batch.module_id();
         work.module_version = "";
-        work.mode           = mode;
-        work.batch_seq      = batch.batch_seq();
-        work.tr             = std::move(tr);
+        work.mode = mode;
+        work.batch_seq = batch.batch_seq();
+        work.tr = std::move(tr);
 
         // Task 89: saturation propagates rather than silently dropping.
         if (!queue.enqueue(std::move(work))) {
@@ -134,33 +125,35 @@ void ClientServiceImpl::handle_result_batch(
         }
         ++enqueued;
     }
-    if (enqueued > 0) batch_pending[batch_key] = enqueued;
+    if (enqueued > 0)
+        batch_pending[batch_key] = enqueued;
 }
 
 // ── Handle a LogBatch ────────────────────────────────────────────────────────
 
-void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) {
+void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch)
+{
     for (const auto& line : batch.lines()) {
         LogEntry e;
-        e.run_id   = line.run_id().empty() ? batch.run_id() : line.run_id();
-        e.source   = line.source();
+        e.run_id = line.run_id().empty() ? batch.run_id() : line.run_id();
+        e.source = line.source();
         e.severity = line.level();
-        e.message  = line.text();
+        e.message = line.text();
         log_svc_.ingest(e);
     }
 }
 
 // ── Connect (bidi stream) ─────────────────────────────────────────────────────
 
-::grpc::Status ClientServiceImpl::Connect(
-    ::grpc::ServerContext* ctx,
-    ::grpc::ServerReaderWriter<acadia::stream::ServerMessage,
-                                acadia::stream::ClientMessage>* stream) {
+::grpc::Status ClientServiceImpl::Connect(::grpc::ServerContext* ctx,
+                                          ::grpc::ServerReaderWriter<acadia::stream::ServerMessage, acadia::stream::ClientMessage>* stream)
+{
 
     // X2-003: authenticate before any state is touched.
     {
         auto status = verify_stream_auth(ctx->client_metadata(), stream_token_);
-        if (!status.ok()) return status;
+        if (!status.ok())
+            return status;
     }
 
     BoundedQueue<IngestWork> queue{kQueueCapacity};
@@ -177,7 +170,8 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
     std::thread writer_thread{[&] {
         while (true) {
             auto work = queue.dequeue();
-            if (!work.has_value()) break;  // Queue closed.
+            if (!work.has_value())
+                break; // Queue closed.
 
             const std::string key = work->run_id + ":" + std::to_string(work->batch_seq);
 
@@ -190,37 +184,35 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
                 auto it = last_batch_seq.find(work->run_id);
                 int64_t last = it == last_batch_seq.end() ? -1 : it->second;
                 if (last >= 0 && work->batch_seq <= last) {
-                    spdlog::warn(
-                        "client_svc: duplicate batch run_id={} seq={} (last={}) — "
-                        "acked without re-ingest", work->run_id, work->batch_seq, last);
+                    spdlog::warn("client_svc: duplicate batch run_id={} seq={} (last={}) — "
+                                 "acked without re-ingest",
+                                 work->run_id, work->batch_seq, last);
                     std::lock_guard<std::mutex> alk(ack_mu);
                     auto pit = batch_pending.find(key);
-                    if (pit != batch_pending.end()) batch_pending.erase(pit);
+                    if (pit != batch_pending.end())
+                        batch_pending.erase(pit);
                     acadia::stream::ServerMessage ack_msg;
                     auto* ack = ack_msg.mutable_batch_ack();
                     ack->set_run_id(work->run_id);
                     ack->set_batch_seq(work->batch_seq);
                     if (!stream->Write(ack_msg)) {
-                        spdlog::warn("client_svc: failed to send duplicate BatchAck run_id={}",
-                                     work->run_id);
+                        spdlog::warn("client_svc: failed to send duplicate BatchAck run_id={}", work->run_id);
                     }
                     continue;
                 }
                 if (last >= 0 && work->batch_seq > last + 1) {
-                    spdlog::warn("client_svc: GAP run_id={}: expected seq {} got {}",
-                                 work->run_id, last + 1, work->batch_seq);
+                    spdlog::warn("client_svc: GAP run_id={}: expected seq {} got {}", work->run_id, last + 1, work->batch_seq);
                 }
             }
             try {
-                run_svc_.ingest_test_result(work->tr, work->run_id,
-                                             work->module_version, work->mode);
+                run_svc_.ingest_test_result(work->tr, work->run_id, work->module_version, work->mode);
                 // Record the sequence only after a successful ingest so a
                 // failed sample is not suppressed on replay.
                 std::lock_guard<std::mutex> lk(seq_mu);
                 last_batch_seq[work->run_id] = work->batch_seq;
-            } catch (const std::exception& e) {
-                spdlog::error("client_svc: ingest error run_id={}: {}",
-                              work->run_id, e.what());
+            }
+            catch (const std::exception& e) {
+                spdlog::error("client_svc: ingest error run_id={}: {}", work->run_id, e.what());
                 // Do not abort the stream for a single failed ingest.
             }
             // Acknowledge only once this batch's samples are all durable.
@@ -229,7 +221,10 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
                 std::lock_guard<std::mutex> lk(ack_mu);
                 auto it = batch_pending.find(key);
                 if (it != batch_pending.end()) {
-                    if (--it->second <= 0) { batch_pending.erase(it); ack_batch = true; }
+                    if (--it->second <= 0) {
+                        batch_pending.erase(it);
+                        ack_batch = true;
+                    }
                 }
             }
             if (ack_batch) {
@@ -238,28 +233,26 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
                 ack->set_run_id(work->run_id);
                 ack->set_batch_seq(work->batch_seq);
                 if (!stream->Write(ack_msg)) {
-                    spdlog::warn("client_svc: failed to send BatchAck run_id={}",
-                                 work->run_id);
+                    spdlog::warn("client_svc: failed to send BatchAck run_id={}", work->run_id);
                 }
             }
         }
     }};
 
     acadia::stream::ClientMessage msg;
-    std::string board_id;  // Task 85: known once Hello arrives; used to register for control dispatch.
+    std::string board_id; // Task 85: known once Hello arrives; used to register for control dispatch.
     while (!ctx->IsCancelled() && stream->Read(&msg)) {
         switch (msg.payload_case()) {
         case acadia::stream::ClientMessage::kHello: {
             const auto& hello = msg.hello();
             board_id = hello.board_id();
-            if (registry_) registry_->Register(board_id, stream);
+            if (registry_)
+                registry_->Register(board_id, stream);
             // Task 91: persist board registration (durable lifecycle).
             if (board_repo_ && !board_id.empty()) {
-                board_repo_->upsert_board(board_id, hello.client_version(),
-                                          util::utc_now_iso8601());
+                board_repo_->upsert_board(board_id, hello.client_version(), util::utc_now_iso8601());
             }
-            spdlog::info("client_svc: HelloReport board_id={} client_ver={}",
-                         hello.board_id(), hello.client_version());
+            spdlog::info("client_svc: HelloReport board_id={} client_ver={}", hello.board_id(), hello.client_version());
             break;
         }
 
@@ -270,8 +263,7 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
 
             // If terminal batch, finalize the run.
             if (batch.terminal()) {
-                spdlog::info("client_svc: terminal batch run_id={} module_id={}",
-                             batch.run_id(), batch.module_id());
+                spdlog::info("client_svc: terminal batch run_id={} module_id={}", batch.run_id(), batch.module_id());
                 run_svc_.complete_run(batch.run_id(), "completed");
             }
             break;
@@ -297,15 +289,11 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
             spdlog::debug("client_svc: StateReport board_id={}", sr.board_id());
             // Task 91: persist board heartbeat + active-run state.
             if (board_repo_ && !sr.board_id().empty()) {
-                board_repo_->update_state(sr.board_id(),
-                    static_cast<int>(sr.overall_state()),
-                    static_cast<int64_t>(sr.spool_bytes()),
-                    static_cast<int64_t>(sr.spool_cap_bytes()),
-                    sr.spool_pressure(), util::utc_now_iso8601());
+                board_repo_->update_state(sr.board_id(), static_cast<int>(sr.overall_state()), static_cast<int64_t>(sr.spool_bytes()),
+                                          static_cast<int64_t>(sr.spool_cap_bytes()), sr.spool_pressure(), util::utc_now_iso8601());
                 if (sr.active_runs_size() > 0) {
                     const auto& ai = sr.active_runs(0);
-                    board_repo_->set_active_run(sr.board_id(), ai.run_id(),
-                        static_cast<int>(ai.state()), ai.last_batch_seq());
+                    board_repo_->set_active_run(sr.board_id(), ai.run_id(), static_cast<int>(ai.state()), ai.last_batch_seq());
                 }
             }
             break;
@@ -314,8 +302,7 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
         case acadia::stream::ClientMessage::kConfigureAck: {
             const auto& ack = msg.configure_ack();
             if (!ack.ok()) {
-                spdlog::warn("client_svc: ConfigureAck NACK run_id={} field={} error={}",
-                             ack.run_id(), ack.field(), ack.error());
+                spdlog::warn("client_svc: ConfigureAck NACK run_id={} field={} error={}", ack.run_id(), ack.field(), ack.error());
             }
             break;
         }
@@ -328,12 +315,14 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch) 
 
     // Close the queue and wait for writer thread to flush.
     queue.close();
-    if (writer_thread.joinable()) writer_thread.join();
+    if (writer_thread.joinable())
+        writer_thread.join();
 
-    if (registry_ && !board_id.empty()) registry_->Unregister(board_id);
+    if (registry_ && !board_id.empty())
+        registry_->Unregister(board_id);
 
     spdlog::info("client_svc: stream ended (cancelled={})", ctx->IsCancelled());
     return ::grpc::Status::OK;
 }
 
-}  // namespace acadia::grpc
+} // namespace acadia::grpc

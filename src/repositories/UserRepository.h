@@ -4,9 +4,11 @@
 #include <string>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
-struct User {
+struct User
+{
     std::string id;
     std::string username;
     std::string password_hash;
@@ -14,8 +16,9 @@ struct User {
     std::string updated_at;
 };
 
-class UserRepository {
-public:
+class UserRepository
+{
+  public:
     UserRepository() = default;
 
     // Create a new user.  Throws ConflictError if username exists.
@@ -31,4 +34,4 @@ public:
     void update_password(const std::string& id, const std::string& new_hash);
 };
 
-}  // namespace acadia
+} // namespace acadia

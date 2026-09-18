@@ -9,12 +9,14 @@
 #include <unordered_map>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
 using LogSubscriber = std::function<void(const LogEntry&)>;
 
-class LogService {
-public:
+class LogService
+{
+  public:
     // Ingest a log entry (called from gRPC LogIngest handler).
     LogEntry ingest(const LogEntry& e);
 
@@ -22,26 +24,22 @@ public:
 
     // SSE / live tail subscription.
     uint64_t subscribe(LogSubscriber cb);
-    void     unsubscribe(uint64_t sub_id);
-    void     broadcast(const LogEntry& e);
+    void unsubscribe(uint64_t sub_id);
+    void broadcast(const LogEntry& e);
 
     // Bookmarks and saved views
-    LogBookmark create_bookmark(const std::string& user_id,
-                                const std::string& log_id,
-                                const std::string& note);
+    LogBookmark create_bookmark(const std::string& user_id, const std::string& log_id, const std::string& note);
     std::vector<LogBookmark> list_bookmarks(const std::string& user_id);
     void remove_bookmark(const std::string& id);
 
-    SavedLogView create_view(const std::string& user_id,
-                              const std::string& name,
-                              const std::string& filters_json);
+    SavedLogView create_view(const std::string& user_id, const std::string& name, const std::string& filters_json);
     std::vector<SavedLogView> list_views(const std::string& user_id);
 
-private:
+  private:
     LogRepository log_repo_;
-    std::mutex    subs_mutex_;
+    std::mutex subs_mutex_;
     std::unordered_map<uint64_t, LogSubscriber> subs_;
     std::atomic<uint64_t> next_sub_id_{1};
 };
 
-}  // namespace acadia
+} // namespace acadia

@@ -6,7 +6,8 @@
 
 #include <string>
 
-namespace acadia::util {
+namespace acadia::util
+{
 
 // Serialize a proto message to a JSON string.
 // Returns an empty string on failure (logs the error).
@@ -16,4 +17,4 @@ std::string proto_to_json(const google::protobuf::Message& msg);
 // Returns false and logs on failure.
 bool json_to_proto(const std::string& json, google::protobuf::Message& msg);
 
-}  // namespace acadia::util
+} // namespace acadia::util

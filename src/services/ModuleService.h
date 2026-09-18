@@ -5,18 +5,20 @@
 #include <string>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
-class ModuleService {
-public:
+class ModuleService
+{
+  public:
     explicit ModuleService(const ModuleRegistry& registry);
 
     const std::vector<ModuleInfo>& list_all() const;
     std::optional<ModuleInfo> get(const std::string& module_id) const;
     bool validate(const std::string& module_id) const;
 
-private:
+  private:
     const ModuleRegistry& registry_;
 };
 
-}  // namespace acadia
+} // namespace acadia

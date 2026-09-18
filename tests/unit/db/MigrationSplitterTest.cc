@@ -8,36 +8,36 @@
 
 using acadia::db::MigrationRunner;
 
-TEST(MigrationSplitter, SplitsPlainStatements) {
-    auto stmts = MigrationRunner::split_statements(
-        "CREATE TABLE a (id int);\nCREATE TABLE b (id int);");
+TEST(MigrationSplitter, SplitsPlainStatements)
+{
+    auto stmts = MigrationRunner::split_statements("CREATE TABLE a (id int);\nCREATE TABLE b (id int);");
     ASSERT_EQ(stmts.size(), 2u);
     EXPECT_NE(stmts[0].find("CREATE TABLE a"), std::string::npos);
     EXPECT_NE(stmts[1].find("CREATE TABLE b"), std::string::npos);
 }
 
-TEST(MigrationSplitter, DoesNotSplitInsideDollarQuotedFunction) {
+TEST(MigrationSplitter, DoesNotSplitInsideDollarQuotedFunction)
+{
     // A function body with internal semicolons ($$ ... ; ... $$) must stay ONE
     // statement (the naive semicolon split would have broken this).
-    std::string sql =
-        "CREATE FUNCTION f() RETURNS int AS $$\n"
-        "BEGIN\n"
-        "  PERFORM 1;\n"
-        "  PERFORM 2;\n"
-        "  RETURN 1;\n"
-        "END;\n"
-        "$$ LANGUAGE plpgsql;\n"
-        "CREATE TABLE t (x int);";
+    std::string sql = "CREATE FUNCTION f() RETURNS int AS $$\n"
+                      "BEGIN\n"
+                      "  PERFORM 1;\n"
+                      "  PERFORM 2;\n"
+                      "  RETURN 1;\n"
+                      "END;\n"
+                      "$$ LANGUAGE plpgsql;\n"
+                      "CREATE TABLE t (x int);";
     auto stmts = MigrationRunner::split_statements(sql);
     ASSERT_EQ(stmts.size(), 2u);
     EXPECT_NE(stmts[0].find("CREATE FUNCTION f"), std::string::npos);
     EXPECT_NE(stmts[1].find("CREATE TABLE t"), std::string::npos);
 }
 
-TEST(MigrationSplitter, DoesNotSplitInsideSingleQuotedString) {
+TEST(MigrationSplitter, DoesNotSplitInsideSingleQuotedString)
+{
     // A single-quoted string containing a semicolon must not split.
-    std::string sql =
-        "INSERT INTO t (s) VALUES ('a;b');\nUPDATE t SET s='c;d';";
+    std::string sql = "INSERT INTO t (s) VALUES ('a;b');\nUPDATE t SET s='c;d';";
     auto stmts = MigrationRunner::split_statements(sql);
     ASSERT_EQ(stmts.size(), 2u);
     EXPECT_NE(stmts[0].find("VALUES ('a;b')"), std::string::npos);
@@ -48,18 +48,19 @@ TEST(MigrationSplitter, DoesNotSplitInsideSingleQuotedString) {
 // used to be silently DROPPED by trim_statement, so CREATE TABLE users
 // (prefixed by a section comment) never ran while its CREATE INDEX did —
 // failing with "relation users does not exist" on a fresh database.
-TEST(MigrationSplitter, KeepsSqlPrefixedByCommentLines) {
-    std::string sql =
-        "-- ── Users ──────────────\n"
-        "CREATE TABLE users (id int);\n"
-        "CREATE INDEX users_idx ON users (id);\n";
+TEST(MigrationSplitter, KeepsSqlPrefixedByCommentLines)
+{
+    std::string sql = "-- ── Users ──────────────\n"
+                      "CREATE TABLE users (id int);\n"
+                      "CREATE INDEX users_idx ON users (id);\n";
     auto stmts = MigrationRunner::split_statements(sql);
     ASSERT_EQ(stmts.size(), 2u);
     EXPECT_NE(stmts[0].find("CREATE TABLE users"), std::string::npos);
     EXPECT_NE(stmts[1].find("CREATE INDEX users_idx"), std::string::npos);
 }
 
-TEST(MigrationSplitter, CommentInsideStringIsPreserved) {
+TEST(MigrationSplitter, CommentInsideStringIsPreserved)
+{
     // -- inside a single-quoted string is data, not a comment.
     std::string sql = "INSERT INTO t (s) VALUES ('a--b\nc');";
     auto stmts = MigrationRunner::split_statements(sql);

@@ -9,14 +9,16 @@
 #include <unordered_map>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
-struct ModuleInfo {
+struct ModuleInfo
+{
     std::string id;
     std::string name;
     std::string description;
     std::string version;
-    std::string category;        // e.g. "compute", "sensors", "connectivity"
+    std::string category; // e.g. "compute", "sensors", "connectivity"
     // proto type_url for the module's Result message
     std::string result_type_url;
     // proto type_url for the module's Config message
@@ -25,8 +27,9 @@ struct ModuleInfo {
     std::vector<std::string> modes;
 };
 
-class ModuleRegistry {
-public:
+class ModuleRegistry
+{
+  public:
     ModuleRegistry() = default;
     ~ModuleRegistry() = default;
 
@@ -40,13 +43,19 @@ public:
     [[nodiscard]] std::optional<ModuleInfo> find(std::string_view module_id) const;
 
     // Returns all modules (read-only).
-    [[nodiscard]] const std::vector<ModuleInfo>& all() const { return modules_; }
+    [[nodiscard]] const std::vector<ModuleInfo>& all() const
+    {
+        return modules_;
+    }
 
-    [[nodiscard]] std::size_t size() const { return modules_.size(); }
+    [[nodiscard]] std::size_t size() const
+    {
+        return modules_.size();
+    }
 
-private:
-    std::unordered_map<std::string, std::size_t> index_;  // id → index in modules_
-    std::vector<ModuleInfo>                       modules_;
+  private:
+    std::unordered_map<std::string, std::size_t> index_; // id → index in modules_
+    std::vector<ModuleInfo> modules_;
 };
 
-}  // namespace acadia
+} // namespace acadia

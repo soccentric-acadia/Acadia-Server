@@ -5,10 +5,12 @@
 #include <string>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
-class NotificationService {
-public:
+class NotificationService
+{
+  public:
     explicit NotificationService(const SmtpSettings& smtp);
 
     void emit(const std::string& kind, const std::string& payload_json);
@@ -18,11 +20,11 @@ public:
     void mark_all_read();
     int64_t unread_count();
 
-private:
-    SmtpSettings             smtp_;
-    NotificationRepository   repo_;
+  private:
+    SmtpSettings smtp_;
+    NotificationRepository repo_;
 
     void send_email(const std::string& subject, const std::string& body);
 };
 
-}  // namespace acadia
+} // namespace acadia

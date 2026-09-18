@@ -1,16 +1,17 @@
-#include <fmt/format.h>
 #include "rest_api/controllers/HealthController.h"
-#include <drogon/HttpResponse.h>
-#include <json/json.h>
-#include "version.hpp"
 #include "db/DbClient.h"
+#include "version.hpp"
+#include <drogon/HttpResponse.h>
+#include <fmt/format.h>
+#include <json/json.h>
 
-namespace acadia::rest {
+namespace acadia::rest
+{
 
-void HealthController::get(const drogon::HttpRequestPtr& /*req*/,
-                            std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+void HealthController::get(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb)
+{
     Json::Value resp;
-    resp["status"]  = "ok";
+    resp["status"] = "ok";
     resp["version"] = ACADIA_SERVER_VERSION;
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
@@ -18,8 +19,8 @@ void HealthController::get(const drogon::HttpRequestPtr& /*req*/,
 // SRV-052: standard health surfaces (X10-004 semantics).
 //   /healthz — liveness: process is up. Always 200. Used by systemd/compose.
 //   /readyz  — readiness: process up AND can reach the database. 200 or 503.
-void HealthController::livez(const drogon::HttpRequestPtr& /*req*/,
-                              std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+void HealthController::livez(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb)
+{
     Json::Value resp;
     resp["status"] = "alive";
     auto resp_msg = drogon::HttpResponse::newHttpJsonResponse(resp);
@@ -27,8 +28,8 @@ void HealthController::livez(const drogon::HttpRequestPtr& /*req*/,
     cb(std::move(resp_msg));
 }
 
-void HealthController::ready(const drogon::HttpRequestPtr& /*req*/,
-                              std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+void HealthController::ready(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb)
+{
     Json::Value resp;
     resp["version"] = ACADIA_SERVER_VERSION;
     bool ready = false;
@@ -36,7 +37,8 @@ void HealthController::ready(const drogon::HttpRequestPtr& /*req*/,
         auto db = acadia::db::get_db_client();
         auto result = db->execSqlSync("SELECT 1");
         ready = result.size() > 0;
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         resp["error"] = e.what();
     }
     resp["ready"] = ready;
@@ -45,9 +47,8 @@ void HealthController::ready(const drogon::HttpRequestPtr& /*req*/,
     cb(std::move(resp_msg));
 }
 
-
-void HealthController::openapi(const drogon::HttpRequestPtr& /*req*/,
-                                std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+void HealthController::openapi(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb)
+{
     // Static OpenAPI 3.1 document describing all Acadia REST endpoints.
     // This is a trimmed-but-comprehensive spec; extend as new controllers are added.
     static const std::string kSpecTpl = R"openapi({
@@ -135,4 +136,4 @@ void HealthController::openapi(const drogon::HttpRequestPtr& /*req*/,
     cb(resp);
 }
 
-}  // namespace acadia::rest
+} // namespace acadia::rest

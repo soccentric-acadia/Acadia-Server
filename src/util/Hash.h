@@ -5,7 +5,8 @@
 #include <string_view>
 #include <vector>
 
-namespace acadia::util {
+namespace acadia::util
+{
 
 // SHA-256 hex digest of the given data.
 std::string sha256_hex(std::string_view data);
@@ -17,9 +18,10 @@ std::string sha256_file_hex(const std::string& path);
 bool secure_compare(std::string_view a, std::string_view b);
 
 // ── argon2id ─────────────────────────────────────────────────────────────────
-struct Argon2Params {
-    uint32_t mem_kib  = 65536;
-    uint32_t iter     = 3;
+struct Argon2Params
+{
+    uint32_t mem_kib = 65536;
+    uint32_t iter = 3;
     uint32_t parallel = 4;
 };
 
@@ -35,4 +37,4 @@ std::string random_hex(std::size_t byte_count);
 // Generate a URL-safe random token string of byte_count bytes.
 std::string random_token(std::size_t byte_count = 32);
 
-}  // namespace acadia::util
+} // namespace acadia::util

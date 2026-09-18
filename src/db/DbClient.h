@@ -6,11 +6,13 @@
 #include <memory>
 #include <string>
 
-namespace acadia {
+namespace acadia
+{
 struct DbSettings;
 }
 
-namespace acadia::db {
+namespace acadia::db
+{
 
 // Initialise the global Drogon DB client pool.  Call once before any
 // repository is constructed.  Must be called from Drogon's main thread or
@@ -24,4 +26,4 @@ drogon::orm::DbClientPtr get_db_client();
 // Build a PostgreSQL DSN from settings.
 std::string build_dsn(const DbSettings& cfg);
 
-}  // namespace acadia::db
+} // namespace acadia::db

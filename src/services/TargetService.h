@@ -1,14 +1,16 @@
 #pragma once
 // services/TargetService.h — board registration and heartbeat.
-#include "repositories/TargetRepository.h"
 #include "repositories/AuditRepository.h"
+#include "repositories/TargetRepository.h"
 #include <optional>
 #include <string>
 
-namespace acadia {
+namespace acadia
+{
 
-class TargetService {
-public:
+class TargetService
+{
+  public:
     std::optional<Board> get_board();
     Board register_board(const Board& b, const std::string& actor_user_id);
     void update_board(const Board& b, const std::string& actor_user_id);
@@ -16,9 +18,9 @@ public:
     void update_inventory(const std::string& board_id, const std::string& inventory_json);
     void remove_board(const std::string& actor_user_id);
 
-private:
+  private:
     TargetRepository target_repo_;
-    AuditRepository  audit_repo_;
+    AuditRepository audit_repo_;
 };
 
-}  // namespace acadia
+} // namespace acadia

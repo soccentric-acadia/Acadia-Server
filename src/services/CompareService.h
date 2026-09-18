@@ -13,22 +13,21 @@
 #include <string>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
-class CompareService {
-public:
+class CompareService
+{
+  public:
     // Returns a labelled comparison between run_a and run_b.
     // drift_pct_threshold: percentage change in a numeric metric that counts as "drifted".
-    std::vector<CompareEntry> compare(const std::string& run_a,
-                                       const std::string& run_b,
-                                       double drift_pct_threshold = 5.0);
+    std::vector<CompareEntry> compare(const std::string& run_a, const std::string& run_b, double drift_pct_threshold = 5.0);
 
-private:
+  private:
     ResultRepository result_repo_;
 
     // Classify a single pair of entries.
-    static std::string classify(const CompareEntry& raw,
-                                 double drift_pct_threshold);
+    static std::string classify(const CompareEntry& raw, double drift_pct_threshold);
 };
 
-}  // namespace acadia
+} // namespace acadia

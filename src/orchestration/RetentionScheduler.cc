@@ -8,31 +8,37 @@
 #include <iomanip>
 #include <sstream>
 
-namespace acadia {
+namespace acadia
+{
 
-RetentionScheduler::RetentionScheduler(RunService& run_svc,
-                                         int max_age_days,
-                                         std::chrono::seconds interval)
-    : run_svc_(run_svc),
-      max_age_days_(max_age_days),
-      interval_(interval) {}
+RetentionScheduler::RetentionScheduler(RunService& run_svc, int max_age_days, std::chrono::seconds interval)
+    : run_svc_(run_svc), max_age_days_(max_age_days), interval_(interval)
+{
+}
 
-RetentionScheduler::~RetentionScheduler() {
+RetentionScheduler::~RetentionScheduler()
+{
     stop();
 }
 
-void RetentionScheduler::start() {
-    if (running_.exchange(true)) return;  // already running
+void RetentionScheduler::start()
+{
+    if (running_.exchange(true))
+        return; // already running
     thread_ = std::thread(&RetentionScheduler::run_loop, this);
     spdlog::info("RetentionScheduler started (max_age_days={})", max_age_days_);
 }
 
-void RetentionScheduler::stop() {
-    if (!running_.exchange(false)) return;
-    if (thread_.joinable()) thread_.join();
+void RetentionScheduler::stop()
+{
+    if (!running_.exchange(false))
+        return;
+    if (thread_.joinable())
+        thread_.join();
 }
 
-void RetentionScheduler::run_loop() {
+void RetentionScheduler::run_loop()
+{
     // Do an immediate sweep on startup, then repeat at interval_.
     while (running_.load()) {
         sweep();
@@ -44,12 +50,14 @@ void RetentionScheduler::run_loop() {
     }
 }
 
-void RetentionScheduler::sweep() {
+void RetentionScheduler::sweep()
+{
     int days = max_age_days_;
-    if (days <= 0) return;  // retention disabled
+    if (days <= 0)
+        return; // retention disabled
 
     // Build cutoff timestamp string: now - max_age_days_ in ISO-8601 UTC.
-    auto now   = std::chrono::system_clock::now();
+    auto now = std::chrono::system_clock::now();
     auto cutoff = now - std::chrono::hours(24 * days);
     std::time_t cutoff_t = std::chrono::system_clock::to_time_t(cutoff);
     std::ostringstream oss;
@@ -58,26 +66,31 @@ void RetentionScheduler::sweep() {
 
     // List all finished runs ended before the cutoff (non-baseline only).
     RunFilter f;
-    f.to_ts  = cutoff_str;
-    f.limit  = 200;   // process in batches
+    f.to_ts = cutoff_str;
+    f.limit = 200; // process in batches
     f.offset = 0;
 
     int deleted = 0;
     while (true) {
         auto runs = run_svc_.list_runs(f);
-        if (runs.empty()) break;
+        if (runs.empty())
+            break;
         for (const auto& r : runs) {
-            if (r.baseline_flag) continue;  // never delete baselines
+            if (r.baseline_flag)
+                continue; // never delete baselines
             const std::string& s = r.status;
-            if (s != "completed" && s != "failed" && s != "cancelled") continue;
+            if (s != "completed" && s != "failed" && s != "cancelled")
+                continue;
             try {
                 run_svc_.delete_run(r.id, "system");
                 ++deleted;
-            } catch (const std::exception& ex) {
+            }
+            catch (const std::exception& ex) {
                 spdlog::warn("RetentionScheduler: failed to delete run {}: {}", r.id, ex.what());
             }
         }
-        if (static_cast<int>(runs.size()) < f.limit) break;
+        if (static_cast<int>(runs.size()) < f.limit)
+            break;
         f.offset += f.limit;
     }
 
@@ -86,4 +99,4 @@ void RetentionScheduler::sweep() {
     }
 }
 
-}  // namespace acadia
+} // namespace acadia

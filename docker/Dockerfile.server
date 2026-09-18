@@ -11,6 +11,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     # Build essentials
     build-essential cmake ninja-build git pkg-config ccache wget sudo \
+    # Code quality & docs tooling (make format / cppcheck / doc)
+    clang-format cppcheck doxygen \
     # Protobuf (protoc + headers) and gRPC (includes /usr/bin/grpc_cpp_plugin)
     protobuf-compiler libprotobuf-dev libprotoc-dev \
     libgrpc++-dev libgrpc-dev \

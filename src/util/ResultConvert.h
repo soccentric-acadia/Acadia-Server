@@ -4,16 +4,18 @@
 
 #include "common.pb.h"
 
+#include <cstdint>
 #include <json/json.h>
 #include <string>
-#include <cstdint>
 
-namespace acadia {
+namespace acadia
+{
 // Forward-declare to avoid circular include with ResultRepository.h
 struct Result;
-}  // namespace acadia
+} // namespace acadia
 
-namespace acadia::util {
+namespace acadia::util
+{
 
 // ── Enum string helpers ──────────────────────────────────────────────────────
 
@@ -37,13 +39,11 @@ int16_t string_to_severity(const std::string& s);
 
 // Serialise a map<string, TypedValue> to a JSONB-ready string.
 // Output:  { "key": { "type": "double", "value": 42.5 }, ... }
-std::string typed_map_to_json(
-    const google::protobuf::Map<std::string, hal::common::TypedValue>& m);
+std::string typed_map_to_json(const google::protobuf::Map<std::string, hal::common::TypedValue>& m);
 
 // Serialise a map<string, string> (reason) to a JSONB-ready string.
 // Output: { "key": "value", ... }
-std::string string_map_to_json(
-    const google::protobuf::Map<std::string, std::string>& m);
+std::string string_map_to_json(const google::protobuf::Map<std::string, std::string>& m);
 
 // Parse a JSONB typed-map string back to a Json::Value for REST output.
 // Returns Json::objectValue on parse failure.
@@ -57,10 +57,7 @@ Json::Value parse_string_map_json(const std::string& json_str);
 // Convert a hal::common::TestResult proto to an acadia::Result DB struct.
 // parent_id is empty for top-level results; set by the recursive caller for subtests.
 // The caller must set result.id before inserting if the DB does not auto-generate one.
-Result proto_to_result(const hal::common::TestResult& tr,
-                       const std::string& run_id,
-                       const std::string& module_version,
-                       const std::string& mode,
-                       const std::string& parent_id = "");
+Result proto_to_result(const hal::common::TestResult& tr, const std::string& run_id, const std::string& module_version,
+                       const std::string& mode, const std::string& parent_id = "");
 
-}  // namespace acadia::util
+} // namespace acadia::util

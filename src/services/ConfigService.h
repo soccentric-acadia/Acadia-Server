@@ -1,15 +1,17 @@
 #pragma once
 // services/ConfigService.h
-#include "repositories/TestConfigRepository.h"
 #include "repositories/AuditRepository.h"
+#include "repositories/TestConfigRepository.h"
 #include <optional>
 #include <string>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
-class ConfigService {
-public:
+class ConfigService
+{
+  public:
     TestConfig create(const TestConfig& c, const std::string& actor_user_id);
     TestConfig get(const std::string& id);
     std::vector<TestConfig> list(bool include_archived = false);
@@ -17,9 +19,9 @@ public:
     void archive(const std::string& id, const std::string& actor_user_id);
     void remove(const std::string& id, const std::string& actor_user_id);
 
-private:
+  private:
     TestConfigRepository repo_;
-    AuditRepository      audit_repo_;
+    AuditRepository audit_repo_;
 };
 
-}  // namespace acadia
+} // namespace acadia

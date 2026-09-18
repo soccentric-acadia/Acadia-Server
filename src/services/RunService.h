@@ -1,9 +1,9 @@
 #pragma once
 // services/RunService.h — run lifecycle management.
-#include "repositories/RunRepository.h"
-#include "repositories/ResultRepository.h"
 #include "repositories/AuditRepository.h"
 #include "repositories/NotificationRepository.h"
+#include "repositories/ResultRepository.h"
+#include "repositories/RunRepository.h"
 
 #include "common.pb.h"
 
@@ -16,17 +16,17 @@
 #include <unordered_map>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
 // Subscriber callback for live result streaming to WebSocket/SSE clients.
 using ResultSubscriber = std::function<void(const Result&)>;
 
-class RunService {
-public:
+class RunService
+{
+  public:
     // Create and start (enqueue) a new run.
-    Run start_run(const std::string& config_snapshot_json,
-                  const std::string& mode,
-                  const std::string& name,
+    Run start_run(const std::string& config_snapshot_json, const std::string& mode, const std::string& name,
                   const std::string& actor_user_id);
 
     Run get_run(const std::string& id);
@@ -42,9 +42,7 @@ public:
     // Primary ingest path: persist a TestResult proto received from the Client.
     // Converts the proto to a Result struct, inserts (with subtests), returns saved row.
     // Validates status != UNSPECIFIED; throws ValidationError if unspecified.
-    Result ingest_test_result(const hal::common::TestResult& tr,
-                              const std::string& run_id,
-                              const std::string& module_version,
+    Result ingest_test_result(const hal::common::TestResult& tr, const std::string& run_id, const std::string& module_version,
                               const std::string& mode);
 
     // Returns true if the (status, severity) pair qualifies as a terminal failure
@@ -62,8 +60,7 @@ public:
     static std::string module_badge(const RunModuleSummary& s, bool module_enabled_in_run);
 
     // Finalize the run.
-    void complete_run(const std::string& run_id, const std::string& status,
-                      const std::string& error = "");
+    void complete_run(const std::string& run_id, const std::string& status, const std::string& error = "");
 
     void cancel_run(const std::string& run_id, const std::string& actor_user_id);
     void pause_run(const std::string& run_id, const std::string& actor_user_id);
@@ -71,7 +68,7 @@ public:
 
     // Subscribe to live results for a run (REST/WebSocket live tail).
     uint64_t subscribe_results(const std::string& run_id, ResultSubscriber cb);
-    void     unsubscribe_results(uint64_t sub_id);
+    void unsubscribe_results(uint64_t sub_id);
 
     // Notify all subscribers of a new result.
     void broadcast_result(const std::string& run_id, const Result& r);
@@ -84,19 +81,13 @@ public:
     std::vector<RunModuleSummary> get_module_summaries(const std::string& run_id);
 
     // Trend / analytics delegates.
-    std::vector<TrendPoint> get_module_trend(const std::string& module_id,
-                                              const std::string& test_id,
-                                              const std::string& field,
-                                              const std::string& from_ts,
-                                              const std::string& to_ts);
+    std::vector<TrendPoint> get_module_trend(const std::string& module_id, const std::string& test_id, const std::string& field,
+                                             const std::string& from_ts, const std::string& to_ts);
 
-    std::vector<double> get_distribution(const std::string& module_id,
-                                          const std::string& test_id,
-                                          const std::string& field,
-                                          const std::vector<std::string>& run_ids);
+    std::vector<double> get_distribution(const std::string& module_id, const std::string& test_id, const std::string& field,
+                                         const std::vector<std::string>& run_ids);
 
-    std::vector<CompareEntry> get_compare(const std::string& run_a,
-                                           const std::string& run_b);
+    std::vector<CompareEntry> get_compare(const std::string& run_a, const std::string& run_b);
 
     std::vector<Result> get_subtests(const std::string& parent_id);
 
@@ -113,16 +104,16 @@ public:
     // Returns the number of runs reconciled.
     int reconcile_stale_runs();
 
-private:
-    RunRepository        run_repo_;
-    ResultRepository     result_repo_;
-    AuditRepository      audit_repo_;
+  private:
+    RunRepository run_repo_;
+    ResultRepository result_repo_;
+    AuditRepository audit_repo_;
     NotificationRepository notif_repo_;
 
-    std::mutex                                         subs_mutex_;
-    std::unordered_map<uint64_t, ResultSubscriber>     subs_;
+    std::mutex subs_mutex_;
+    std::unordered_map<uint64_t, ResultSubscriber> subs_;
     std::unordered_map<std::string, std::vector<uint64_t>> run_subs_;
-    std::atomic<uint64_t>                              next_sub_id_{1};
+    std::atomic<uint64_t> next_sub_id_{1};
 };
 
-}  // namespace acadia
+} // namespace acadia

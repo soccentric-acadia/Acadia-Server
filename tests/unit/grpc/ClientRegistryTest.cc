@@ -4,7 +4,8 @@
 
 using acadia::grpc::ClientRegistry;
 
-TEST(ClientRegistryTest, RegisterHasAndUnregister) {
+TEST(ClientRegistryTest, RegisterHasAndUnregister)
+{
     ClientRegistry reg;
     // A registry without a real stream: Has reflects registration state.
     EXPECT_FALSE(reg.Has("board-1"));

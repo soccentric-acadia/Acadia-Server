@@ -4,24 +4,25 @@
 #include <atomic>
 #include <thread>
 
-namespace acadia::orchestration {
+namespace acadia::orchestration
+{
 
-class TargetHeartbeat {
-public:
-    explicit TargetHeartbeat(TargetService& target_svc,
-                              std::chrono::seconds interval = std::chrono::seconds{30});
+class TargetHeartbeat
+{
+  public:
+    explicit TargetHeartbeat(TargetService& target_svc, std::chrono::seconds interval = std::chrono::seconds{30});
     ~TargetHeartbeat();
 
     void start();
     void stop();
 
-private:
+  private:
     void loop();
 
-    TargetService&        target_svc_;
-    std::chrono::seconds  interval_;
-    std::atomic<bool>     running_{false};
-    std::thread           thread_;
+    TargetService& target_svc_;
+    std::chrono::seconds interval_;
+    std::atomic<bool> running_{false};
+    std::thread thread_;
 };
 
-}  // namespace acadia::orchestration
+} // namespace acadia::orchestration

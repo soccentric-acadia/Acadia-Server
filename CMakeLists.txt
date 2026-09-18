@@ -203,6 +203,12 @@ target_link_libraries(acadia-server PRIVATE acadia-core)
 target_compile_options(acadia-server PRIVATE -Wall -Wextra -Wno-unused-parameter)
 install(TARGETS acadia-server DESTINATION bin)
 
+# ── Tests (optional) ───────────────────────────────────────────────────────
+option(BUILD_TESTS "Build unit and integration tests" ON)
+if(NOT BUILD_TESTS)
+  return()
+endif()
+
 # ── Unit tests ────────────────────────────────────────────────────────────────
 enable_testing()
 
@@ -275,3 +281,59 @@ add_executable(config-test tests/legacy/config_test.cpp)
 target_link_libraries(config-test PRIVATE acadia-internal)
 target_compile_options(config-test PRIVATE -Wall -Wextra)
 add_test(NAME config-test COMMAND config-test)
+
+# ── Developer tooling (format / cppcheck / docs) ───────────────────────────
+find_program(CLANG_FORMAT_EXE NAMES clang-format clang-format-18 clang-format-17 clang-format-16 clang-format-15 clang-format-14)
+find_program(CPPCHECK_EXE     NAMES cppcheck)
+find_program(DOXYGEN_EXE      NAMES doxygen)
+
+if(CLANG_FORMAT_EXE)
+  file(GLOB_RECURSE ACADIA_FORMAT_SRCS CONFIGURE_DEPENDS
+    "${CMAKE_SOURCE_DIR}/src/*.cc"
+    "${CMAKE_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/*.h"
+    "${CMAKE_SOURCE_DIR}/internal/*.cpp"
+    "${CMAKE_SOURCE_DIR}/internal/*.h"
+    "${CMAKE_SOURCE_DIR}/tests/*.cc"
+    "${CMAKE_SOURCE_DIR}/tests/*.h"
+  )
+  add_custom_target(format
+    COMMAND "${CLANG_FORMAT_EXE}" -i ${ACADIA_FORMAT_SRCS}
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Running clang-format on project sources"
+    VERBATIM
+  )
+else()
+  message(STATUS "clang-format not found — 'format' target unavailable")
+endif()
+
+if(CPPCHECK_EXE)
+  add_custom_target(cppcheck
+    COMMAND "${CPPCHECK_EXE}"
+            --project=${CMAKE_BINARY_DIR}/compile_commands.json
+            --enable=warning,performance,portability
+            --error-exitcode=1
+            --inline-suppr
+            --std=c++20
+            --suppress=passedByValue
+            --suppress=*:${CMAKE_BINARY_DIR}/generated/*
+            -i "${CMAKE_BINARY_DIR}/generated"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Running cppcheck static analysis"
+    VERBATIM
+  )
+else()
+  message(STATUS "cppcheck not found — 'cppcheck' target unavailable")
+endif()
+
+if(DOXYGEN_EXE)
+  configure_file("${CMAKE_SOURCE_DIR}/Doxyfile.in" "${CMAKE_BINARY_DIR}/Doxyfile" @ONLY)
+  add_custom_target(doc_doxygen
+    COMMAND "${DOXYGEN_EXE}" "${CMAKE_BINARY_DIR}/Doxyfile"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Generating Doxygen documentation"
+    VERBATIM
+  )
+else()
+  message(STATUS "doxygen not found — 'doc_doxygen' target unavailable")
+endif()

@@ -2,25 +2,33 @@
 #include "util/Errors.h"
 #include <spdlog/spdlog.h>
 
-namespace acadia::orchestration {
+namespace acadia::orchestration
+{
 
-TargetHeartbeat::TargetHeartbeat(TargetService& target_svc,
-                                   std::chrono::seconds interval)
-    : target_svc_(target_svc), interval_(interval) {}
+TargetHeartbeat::TargetHeartbeat(TargetService& target_svc, std::chrono::seconds interval) : target_svc_(target_svc), interval_(interval)
+{
+}
 
-TargetHeartbeat::~TargetHeartbeat() { stop(); }
+TargetHeartbeat::~TargetHeartbeat()
+{
+    stop();
+}
 
-void TargetHeartbeat::start() {
+void TargetHeartbeat::start()
+{
     running_ = true;
     thread_ = std::thread([this] { loop(); });
 }
 
-void TargetHeartbeat::stop() {
+void TargetHeartbeat::stop()
+{
     running_ = false;
-    if (thread_.joinable()) thread_.join();
+    if (thread_.joinable())
+        thread_.join();
 }
 
-void TargetHeartbeat::loop() {
+void TargetHeartbeat::loop()
+{
     while (running_) {
         std::this_thread::sleep_for(interval_);
         try {
@@ -28,12 +36,14 @@ void TargetHeartbeat::loop() {
             if (board) {
                 target_svc_.heartbeat(board->id, "online");
             }
-        } catch (const NotFoundError&) {
+        }
+        catch (const NotFoundError&) {
             // No board registered yet — silently ignore.
-        } catch (const std::exception& e) {
+        }
+        catch (const std::exception& e) {
             spdlog::warn("TargetHeartbeat error: {}", e.what());
         }
     }
 }
 
-}  // namespace acadia::orchestration
+} // namespace acadia::orchestration

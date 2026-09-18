@@ -3,13 +3,15 @@
 #include <google/protobuf/util/json_util.h>
 #include <spdlog/spdlog.h>
 
-namespace acadia::util {
+namespace acadia::util
+{
 
-std::string proto_to_json(const google::protobuf::Message& msg) {
+std::string proto_to_json(const google::protobuf::Message& msg)
+{
     google::protobuf::util::JsonPrintOptions opts;
-    opts.add_whitespace                = false;
+    opts.add_whitespace = false;
     opts.always_print_primitive_fields = true;
-    opts.preserve_proto_field_names    = true;
+    opts.preserve_proto_field_names = true;
 
     std::string out;
     auto status = google::protobuf::util::MessageToJsonString(msg, &out, opts);
@@ -20,7 +22,8 @@ std::string proto_to_json(const google::protobuf::Message& msg) {
     return out;
 }
 
-bool json_to_proto(const std::string& json, google::protobuf::Message& msg) {
+bool json_to_proto(const std::string& json, google::protobuf::Message& msg)
+{
     google::protobuf::util::JsonParseOptions opts;
     opts.ignore_unknown_fields = false;
 
@@ -32,4 +35,4 @@ bool json_to_proto(const std::string& json, google::protobuf::Message& msg) {
     return true;
 }
 
-}  // namespace acadia::util
+} // namespace acadia::util

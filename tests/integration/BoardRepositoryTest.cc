@@ -4,30 +4,30 @@
 #include "repositories/BoardRepository.h"
 #include "db/DbClient.h"
 #include "db/MigrationRunner.h"
+#include <chrono>
+#include <cstdlib>
 #include <drogon/drogon.h>
 #include <gtest/gtest.h>
-#include <cstdlib>
-#include <chrono>
 #include <string>
 
 #include "config/Settings.h"
 
-namespace {
-const char* test_dsn() { return std::getenv("ACADIA_TEST_DSN"); }
-
-std::string now_iso() {
-    using clock = std::chrono::system_clock;
-    auto t = clock::to_time_t(clock::now());
-    char buf[32];
-    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", gmtime(&t));
-    return buf;
+namespace
+{
+const char* test_dsn()
+{
+    return std::getenv("ACADIA_TEST_DSN");
 }
-}  // namespace
 
-class BoardRepositoryTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        if (!test_dsn()) GTEST_SKIP() << "ACADIA_TEST_DSN not set";
+} // namespace
+
+class BoardRepositoryTest : public ::testing::Test
+{
+  protected:
+    void SetUp() override
+    {
+        if (!test_dsn())
+            GTEST_SKIP() << "ACADIA_TEST_DSN not set";
         // Parse ACADIA_TEST_DSN (host=… port=… dbname=… user=… password=…)
         // and initialise the shared Drogon client (same pattern as
         // MigrationRunnerTest).
@@ -37,7 +37,8 @@ protected:
             auto getval = [&dsn](const char* key, std::string fallback) {
                 const std::string needle = std::string(key) + "=";
                 auto pos = dsn.find(needle);
-                if (pos == std::string::npos) return fallback;
+                if (pos == std::string::npos)
+                    return fallback;
                 auto start = pos + needle.size();
                 auto end = dsn.find(' ', start);
                 return dsn.substr(start, end - start);
@@ -57,11 +58,12 @@ protected:
     static inline bool db_initialised_ = false;
 };
 
-TEST_F(BoardRepositoryTest, HelloUpsertIsIdempotentAndKeepsFirstSeen) {
+TEST_F(BoardRepositoryTest, HelloUpsertIsIdempotentAndKeepsFirstSeen)
+{
     acadia::BoardRepository repo;
     const std::string id = "board-lifecycle-test-1";
     repo.upsert_board(id, "0.1.0", "2026-01-01T00:00:00Z");
-    repo.upsert_board(id, "0.2.0", "2026-01-02T00:00:00Z");  // reconnect
+    repo.upsert_board(id, "0.2.0", "2026-01-02T00:00:00Z"); // reconnect
 
     auto rec = repo.get(id);
     ASSERT_TRUE(rec.has_value());
@@ -70,13 +72,13 @@ TEST_F(BoardRepositoryTest, HelloUpsertIsIdempotentAndKeepsFirstSeen) {
     EXPECT_EQ(rec->last_seen_at, "2026-01-02T00:00:00Z");
 }
 
-TEST_F(BoardRepositoryTest, StateReportUpdatesHealthFields) {
+TEST_F(BoardRepositoryTest, StateReportUpdatesHealthFields)
+{
     acadia::BoardRepository repo;
     const std::string id = "board-lifecycle-test-2";
     repo.upsert_board(id, "0.1.0", "2026-01-01T00:00:00Z");
     repo.update_state(id, /*overall_state=*/2, /*spool_bytes=*/10,
-                      /*spool_cap=*/100, /*pressure=*/0.1,
-                      "2026-01-03T00:00:00Z");
+                      /*spool_cap=*/100, /*pressure=*/0.1, "2026-01-03T00:00:00Z");
 
     auto rec = repo.get(id);
     ASSERT_TRUE(rec.has_value());
@@ -86,7 +88,8 @@ TEST_F(BoardRepositoryTest, StateReportUpdatesHealthFields) {
     EXPECT_DOUBLE_EQ(rec->last_spool_pressure, 0.1);
 }
 
-TEST_F(BoardRepositoryTest, ActiveRunSetAndCleared) {
+TEST_F(BoardRepositoryTest, ActiveRunSetAndCleared)
+{
     acadia::BoardRepository repo;
     const std::string id = "board-lifecycle-test-3";
     repo.upsert_board(id, "0.1.0", "2026-01-01T00:00:00Z");
@@ -105,7 +108,8 @@ TEST_F(BoardRepositoryTest, ActiveRunSetAndCleared) {
     EXPECT_EQ(rec->active_run_id, "");
 }
 
-TEST_F(BoardRepositoryTest, UnknownBoardReturnsNullopt) {
+TEST_F(BoardRepositoryTest, UnknownBoardReturnsNullopt)
+{
     acadia::BoardRepository repo;
     EXPECT_FALSE(repo.get("no-such-board").has_value());
 }

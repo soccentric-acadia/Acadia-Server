@@ -6,7 +6,8 @@
 
 using acadia::grpc::BoundedQueue;
 
-TEST(BoundedQueueTest, BasicEnqueueDequeue) {
+TEST(BoundedQueueTest, BasicEnqueueDequeue)
+{
     BoundedQueue<int> q{4};
     EXPECT_TRUE(q.enqueue(1));
     EXPECT_TRUE(q.enqueue(2));
@@ -14,7 +15,8 @@ TEST(BoundedQueueTest, BasicEnqueueDequeue) {
     EXPECT_EQ(*q.dequeue(), 2);
 }
 
-TEST(BoundedQueueTest, CloseUnblocksDequeue) {
+TEST(BoundedQueueTest, CloseUnblocksDequeue)
+{
     BoundedQueue<int> q{4};
     std::thread t{[&] {
         auto v = q.dequeue();
@@ -24,27 +26,29 @@ TEST(BoundedQueueTest, CloseUnblocksDequeue) {
     t.join();
 }
 
-TEST(BoundedQueueTest, EnqueueAfterCloseFails) {
+TEST(BoundedQueueTest, EnqueueAfterCloseFails)
+{
     BoundedQueue<int> q{4};
     q.close();
     EXPECT_FALSE(q.enqueue(42));
 }
 
-TEST(BoundedQueueTest, BackpressureBlocks) {
+TEST(BoundedQueueTest, BackpressureBlocks)
+{
     BoundedQueue<int> q{2};
     EXPECT_TRUE(q.enqueue(1));
     EXPECT_TRUE(q.enqueue(2));
 
     std::atomic<bool> enqueued{false};
     std::thread producer{[&] {
-        q.enqueue(3);  // Will block until consumer reads.
+        q.enqueue(3); // Will block until consumer reads.
         enqueued = true;
     }};
 
     std::this_thread::sleep_for(std::chrono::milliseconds{20});
     EXPECT_FALSE(enqueued);
 
-    q.dequeue();  // Release one slot.
+    q.dequeue(); // Release one slot.
     std::this_thread::sleep_for(std::chrono::milliseconds{20});
     EXPECT_TRUE(enqueued);
 

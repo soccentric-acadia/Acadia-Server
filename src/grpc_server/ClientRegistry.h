@@ -14,12 +14,13 @@
 #include <string>
 #include <unordered_map>
 
-namespace acadia::grpc {
+namespace acadia::grpc
+{
 
-class ClientRegistry {
-public:
-    using Stream = ::grpc::ServerReaderWriter<acadia::stream::ServerMessage,
-                                               acadia::stream::ClientMessage>;
+class ClientRegistry
+{
+  public:
+    using Stream = ::grpc::ServerReaderWriter<acadia::stream::ServerMessage, acadia::stream::ClientMessage>;
 
     void Register(const std::string& board_id, Stream* stream);
     void Unregister(const std::string& board_id);
@@ -29,9 +30,9 @@ public:
     // for that board was connected and the write succeeded).
     bool SendControl(const std::string& board_id, acadia::stream::ServerMessage msg);
 
-private:
+  private:
     mutable std::mutex mu_;
     std::unordered_map<std::string, Stream*> streams_;
 };
 
-}  // namespace acadia::grpc
+} // namespace acadia::grpc

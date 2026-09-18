@@ -6,32 +6,34 @@
 
 #include <sstream>
 
-namespace acadia {
+namespace acadia
+{
 
-namespace {
+namespace
+{
 
 // ── Row helpers ──────────────────────────────────────────────────────────────
 
-Result row_to_result(const drogon::orm::Row& r) {
+Result row_to_result(const drogon::orm::Row& r)
+{
     Result res;
-    res.id               = r["id"].as<std::string>();
-    res.run_id           = r["run_id"].as<std::string>();
-    res.module_id        = r["module_id"].as<std::string>();
-    res.module_version   = r["module_version"].as<std::string>();
-    res.timestamp        = r["timestamp"].as<std::string>();
-    res.mode             = r["mode"].as<std::string>();
-    res.status           = r["status"].as<int16_t>();
-    res.severity         = r["severity"].as<int16_t>();
-    res.test_id          = r["test_id"].as<std::string>();
-    res.test_name        = r["test_name"].as<std::string>();
-    res.sequence         = r["sequence"].as<int64_t>();
-    res.duration_ns      = r["duration_ns"].as<int64_t>();
-    res.error_message    = r["error_message"].isNull() ? ""
-                           : r["error_message"].as<std::string>();
-    res.reason_json      = r["reason"].as<std::string>();
-    res.metrics_json     = r["metrics"].as<std::string>();
-    res.monitoring_json  = r["monitoring"].as<std::string>();
-    res.event_json       = r["event"].as<std::string>();
+    res.id = r["id"].as<std::string>();
+    res.run_id = r["run_id"].as<std::string>();
+    res.module_id = r["module_id"].as<std::string>();
+    res.module_version = r["module_version"].as<std::string>();
+    res.timestamp = r["timestamp"].as<std::string>();
+    res.mode = r["mode"].as<std::string>();
+    res.status = r["status"].as<int16_t>();
+    res.severity = r["severity"].as<int16_t>();
+    res.test_id = r["test_id"].as<std::string>();
+    res.test_name = r["test_name"].as<std::string>();
+    res.sequence = r["sequence"].as<int64_t>();
+    res.duration_ns = r["duration_ns"].as<int64_t>();
+    res.error_message = r["error_message"].isNull() ? "" : r["error_message"].as<std::string>();
+    res.reason_json = r["reason"].as<std::string>();
+    res.metrics_json = r["metrics"].as<std::string>();
+    res.monitoring_json = r["monitoring"].as<std::string>();
+    res.event_json = r["event"].as<std::string>();
     if (!r["parent_id"].isNull())
         res.parent_id = r["parent_id"].as<std::string>();
     res.payload_type_url = r["payload_type_url"].as<std::string>();
@@ -42,17 +44,17 @@ Result row_to_result(const drogon::orm::Row& r) {
     return res;
 }
 
-static const char* SELECT_COLS =
-    "id, run_id, module_id, module_version, timestamp::TEXT,"
-    " mode, status, severity, test_id, test_name, sequence, duration_ns,"
-    " error_message, reason::TEXT, metrics::TEXT, monitoring::TEXT, event::TEXT,"
-    " parent_id::TEXT, payload_bytes, payload_type_url";
+static const char* SELECT_COLS = "id, run_id, module_id, module_version, timestamp::TEXT,"
+                                 " mode, status, severity, test_id, test_name, sequence, duration_ns,"
+                                 " error_message, reason::TEXT, metrics::TEXT, monitoring::TEXT, event::TEXT,"
+                                 " parent_id::TEXT, payload_bytes, payload_type_url";
 
-}  // namespace
+} // namespace
 
 // ── insert ───────────────────────────────────────────────────────────────────
 
-Result ResultRepository::insert(const Result& r) {
+Result ResultRepository::insert(const Result& r)
+{
     auto db = db::get_db_client();
 
     // Task 92: the complete result tree (parent + all recursive children) must
@@ -63,14 +65,20 @@ Result ResultRepository::insert(const Result& r) {
         Result saved = insert_in_txn(db, r);
         db->execSqlSync("COMMIT");
         return saved;
-    } catch (const std::exception&) {
-        try { db->execSqlSync("ROLLBACK"); } catch (...) {}
+    }
+    catch (const std::exception&) {
+        try {
+            db->execSqlSync("ROLLBACK");
+        }
+        catch (...) {
+        }
         throw;
     }
 }
 
 // Insert parent + recursive children inside an already-open transaction (task 92).
-Result ResultRepository::insert_in_txn(drogon::orm::DbClientPtr db, const Result& r) {
+Result ResultRepository::insert_in_txn(drogon::orm::DbClientPtr db, const Result& r)
+{
     std::string payload_hex;
     if (!r.payload_bytes.empty())
         payload_hex = std::string(r.payload_bytes.begin(), r.payload_bytes.end());
@@ -88,25 +96,12 @@ Result ResultRepository::insert_in_txn(drogon::orm::DbClientPtr db, const Result
         "  $5::SMALLINT, $6::SMALLINT, $7, $8, $9::BIGINT, $10::BIGINT,"
         "  NULLIF($11,''), $12::JSONB, $13::JSONB, $14::JSONB, $15::JSONB,"
         "  NULLIF($16,'')::UUID, NULLIF($17,'')::BYTEA, $18)"
-        " RETURNING " + std::string{SELECT_COLS},
-        r.run_id.c_str(),
-        r.module_id.c_str(),
-        r.module_version.c_str(),
-        r.mode.c_str(),
-        r.status,
-        r.severity,
-        r.test_id.c_str(),
-        r.test_name.c_str(),
-        r.sequence,
-        r.duration_ns,
-        r.error_message.c_str(),
-        r.reason_json.empty()     ? "{}" : r.reason_json.c_str(),
-        r.metrics_json.empty()    ? "{}" : r.metrics_json.c_str(),
-        r.monitoring_json.empty() ? "{}" : r.monitoring_json.c_str(),
-        r.event_json.empty()      ? "{}" : r.event_json.c_str(),
-        parent_id_val.c_str(),
-        payload_hex.c_str(),
-        r.payload_type_url.c_str());
+        " RETURNING " +
+            std::string{SELECT_COLS},
+        r.run_id.c_str(), r.module_id.c_str(), r.module_version.c_str(), r.mode.c_str(), r.status, r.severity, r.test_id.c_str(),
+        r.test_name.c_str(), r.sequence, r.duration_ns, r.error_message.c_str(), r.reason_json.empty() ? "{}" : r.reason_json.c_str(),
+        r.metrics_json.empty() ? "{}" : r.metrics_json.c_str(), r.monitoring_json.empty() ? "{}" : r.monitoring_json.c_str(),
+        r.event_json.empty() ? "{}" : r.event_json.c_str(), parent_id_val.c_str(), payload_hex.c_str(), r.payload_type_url.c_str());
 
     Result saved = row_to_result(rows[0]);
 
@@ -114,43 +109,45 @@ Result ResultRepository::insert_in_txn(drogon::orm::DbClientPtr db, const Result
     for (const auto& sub : r.subtests) {
         Result child = sub;
         child.parent_id = saved.id;
-        if (child.run_id.empty())         child.run_id         = saved.run_id;
-        if (child.module_id.empty())      child.module_id      = saved.module_id;
-        if (child.module_version.empty()) child.module_version = saved.module_version;
-        if (child.mode.empty())           child.mode           = saved.mode;
-        insert_in_txn(db, child);   // recursive, same transaction
+        if (child.run_id.empty())
+            child.run_id = saved.run_id;
+        if (child.module_id.empty())
+            child.module_id = saved.module_id;
+        if (child.module_version.empty())
+            child.module_version = saved.module_version;
+        if (child.mode.empty())
+            child.mode = saved.mode;
+        insert_in_txn(db, child); // recursive, same transaction
     }
 
     saved.subtests = r.subtests;
 
-    upsert_run_summary(saved.run_id, saved.module_id, saved.test_id,
-                       saved.status, saved.severity, saved.timestamp);
+    upsert_run_summary(saved.run_id, saved.module_id, saved.test_id, saved.status, saved.severity, saved.timestamp);
 
     return saved;
 }
 
 // ── find_by_id ───────────────────────────────────────────────────────────────
 
-std::optional<Result> ResultRepository::find_by_id(const std::string& id) {
+std::optional<Result> ResultRepository::find_by_id(const std::string& id)
+{
     auto db = db::get_db_client();
-    auto rows = db->execSqlSync(
-        "SELECT " + std::string{SELECT_COLS} +
-        " FROM results WHERE id = $1::UUID",
-        id.c_str());
-    if (rows.empty()) return std::nullopt;
+    auto rows = db->execSqlSync("SELECT " + std::string{SELECT_COLS} + " FROM results WHERE id = $1::UUID", id.c_str());
+    if (rows.empty())
+        return std::nullopt;
     return row_to_result(rows[0]);
 }
 
 // ── list ─────────────────────────────────────────────────────────────────────
 
-std::vector<Result> ResultRepository::list(const ResultFilter& f) {
+std::vector<Result> ResultRepository::list(const ResultFilter& f)
+{
     auto db = db::get_db_client();
     std::ostringstream sql;
     std::vector<std::string> params;
     int p = 1;
 
-    sql << "SELECT " << SELECT_COLS
-        << " FROM results WHERE run_id = $" << p++;
+    sql << "SELECT " << SELECT_COLS << " FROM results WHERE run_id = $" << p++;
     params.push_back(f.run_id);
 
     if (!f.module_id.empty()) {
@@ -169,7 +166,8 @@ std::vector<Result> ResultRepository::list(const ResultFilter& f) {
         std::ostringstream arr;
         arr << "{";
         for (std::size_t i = 0; i < f.statuses.size(); ++i) {
-            if (i) arr << ",";
+            if (i)
+                arr << ",";
             arr << f.statuses[i];
         }
         arr << "}";
@@ -180,7 +178,8 @@ std::vector<Result> ResultRepository::list(const ResultFilter& f) {
         std::ostringstream arr;
         arr << "{";
         for (std::size_t i = 0; i < f.severities.size(); ++i) {
-            if (i) arr << ",";
+            if (i)
+                arr << ",";
             arr << f.severities[i];
         }
         arr << "}";
@@ -195,8 +194,7 @@ std::vector<Result> ResultRepository::list(const ResultFilter& f) {
         params.push_back(f.until);
     }
 
-    sql << " ORDER BY timestamp ASC LIMIT " << f.limit
-        << " OFFSET " << f.offset;
+    sql << " ORDER BY timestamp ASC LIMIT " << f.limit << " OFFSET " << f.offset;
 
     // Build a variadic call dynamically based on param count.
     // Drogon's execSqlSync is variadic; we support up to 8 bind params.
@@ -204,55 +202,62 @@ std::vector<Result> ResultRepository::list(const ResultFilter& f) {
 
     auto call = [&]() -> drogon::orm::Result {
         switch (params.size()) {
-        case 1: return db->execSqlSync(query, params[0].c_str());
-        case 2: return db->execSqlSync(query, params[0].c_str(), params[1].c_str());
-        case 3: return db->execSqlSync(query, params[0].c_str(), params[1].c_str(), params[2].c_str());
-        case 4: return db->execSqlSync(query, params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str());
-        case 5: return db->execSqlSync(query, params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), params[4].c_str());
-        case 6: return db->execSqlSync(query, params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), params[4].c_str(), params[5].c_str());
-        default: return db->execSqlSync(query, params[0].c_str(), params[1].c_str());
+        case 1:
+            return db->execSqlSync(query, params[0].c_str());
+        case 2:
+            return db->execSqlSync(query, params[0].c_str(), params[1].c_str());
+        case 3:
+            return db->execSqlSync(query, params[0].c_str(), params[1].c_str(), params[2].c_str());
+        case 4:
+            return db->execSqlSync(query, params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str());
+        case 5:
+            return db->execSqlSync(query, params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), params[4].c_str());
+        case 6:
+            return db->execSqlSync(query, params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), params[4].c_str(),
+                                   params[5].c_str());
+        default:
+            return db->execSqlSync(query, params[0].c_str(), params[1].c_str());
         }
     };
     auto db_rows = call();
 
     std::vector<Result> out;
     out.reserve(db_rows.size());
-    for (const auto& row : db_rows) out.push_back(row_to_result(row));
+    for (const auto& row : db_rows)
+        out.push_back(row_to_result(row));
     return out;
 }
 
 // ── count_for_run ─────────────────────────────────────────────────────────────
 
-int64_t ResultRepository::count_for_run(const std::string& run_id) {
+int64_t ResultRepository::count_for_run(const std::string& run_id)
+{
     auto db = db::get_db_client();
-    auto rows = db->execSqlSync(
-        "SELECT COUNT(*) FROM results WHERE run_id = $1::UUID AND parent_id IS NULL",
-        run_id.c_str());
+    auto rows = db->execSqlSync("SELECT COUNT(*) FROM results WHERE run_id = $1::UUID AND parent_id IS NULL", run_id.c_str());
     return rows[0][0].as<int64_t>();
 }
 
 // ── find_last_per_module ──────────────────────────────────────────────────────
 
-std::vector<RunModuleSummary> ResultRepository::find_last_per_module(
-        const std::string& run_id) {
+std::vector<RunModuleSummary> ResultRepository::find_last_per_module(const std::string& run_id)
+{
     auto db = db::get_db_client();
-    auto rows = db->execSqlSync(
-        "SELECT module_id, test_id, last_status, last_severity,"
-        "       last_timestamp::TEXT, result_count"
-        " FROM run_summaries WHERE run_id = $1::UUID"
-        " ORDER BY module_id, test_id",
-        run_id.c_str());
+    auto rows = db->execSqlSync("SELECT module_id, test_id, last_status, last_severity,"
+                                "       last_timestamp::TEXT, result_count"
+                                " FROM run_summaries WHERE run_id = $1::UUID"
+                                " ORDER BY module_id, test_id",
+                                run_id.c_str());
 
     std::vector<RunModuleSummary> out;
     out.reserve(rows.size());
     for (const auto& r : rows) {
         RunModuleSummary s;
-        s.module_id      = r["module_id"].as<std::string>();
-        s.test_id        = r["test_id"].as<std::string>();
-        s.last_status    = r["last_status"].as<int16_t>();
-        s.last_severity  = r["last_severity"].as<int16_t>();
+        s.module_id = r["module_id"].as<std::string>();
+        s.test_id = r["test_id"].as<std::string>();
+        s.last_status = r["last_status"].as<int16_t>();
+        s.last_severity = r["last_severity"].as<int16_t>();
         s.last_timestamp = r["last_timestamp"].as<std::string>();
-        s.result_count   = r["result_count"].as<int64_t>();
+        s.result_count = r["result_count"].as<int64_t>();
         out.push_back(s);
     }
     return out;
@@ -260,43 +265,35 @@ std::vector<RunModuleSummary> ResultRepository::find_last_per_module(
 
 // ── find_module_trend ─────────────────────────────────────────────────────────
 
-std::vector<TrendPoint> ResultRepository::find_module_trend(
-        const std::string& module_id,
-        const std::string& test_id,
-        const std::string& field,
-        const std::string& from_ts,
-        const std::string& to_ts) {
+std::vector<TrendPoint> ResultRepository::find_module_trend(const std::string& module_id, const std::string& test_id,
+                                                            const std::string& field, const std::string& from_ts, const std::string& to_ts)
+{
     auto db = db::get_db_client();
     // Extract the numeric value from the typed metrics JSONB.
     // The stored shape is: metrics → { field: { "type": "T", "value": V } }
     // CAST: try double precision; non-numeric rows are excluded via WHERE.
-    auto rows = db->execSqlSync(
-        "SELECT timestamp::TEXT,"
-        "       (metrics -> $3 ->> 'value')::DOUBLE PRECISION AS val,"
-        "       status, severity"
-        " FROM results"
-        " WHERE module_id = $1"
-        "   AND test_id   = $2"
-        "   AND parent_id IS NULL"
-        "   AND timestamp >= $4::TIMESTAMPTZ"
-        "   AND timestamp <= $5::TIMESTAMPTZ"
-        "   AND metrics ? $3"
-        "   AND metrics -> $3 ->> 'type' IN ('double','int')"
-        " ORDER BY timestamp ASC",
-        module_id.c_str(),
-        test_id.c_str(),
-        field.c_str(),
-        from_ts.c_str(),
-        to_ts.c_str());
+    auto rows = db->execSqlSync("SELECT timestamp::TEXT,"
+                                "       (metrics -> $3 ->> 'value')::DOUBLE PRECISION AS val,"
+                                "       status, severity"
+                                " FROM results"
+                                " WHERE module_id = $1"
+                                "   AND test_id   = $2"
+                                "   AND parent_id IS NULL"
+                                "   AND timestamp >= $4::TIMESTAMPTZ"
+                                "   AND timestamp <= $5::TIMESTAMPTZ"
+                                "   AND metrics ? $3"
+                                "   AND metrics -> $3 ->> 'type' IN ('double','int')"
+                                " ORDER BY timestamp ASC",
+                                module_id.c_str(), test_id.c_str(), field.c_str(), from_ts.c_str(), to_ts.c_str());
 
     std::vector<TrendPoint> out;
     out.reserve(rows.size());
     for (const auto& r : rows) {
         TrendPoint tp;
         tp.timestamp = r["timestamp"].as<std::string>();
-        tp.value     = r["val"].as<double>();
-        tp.status    = r["status"].as<int16_t>();
-        tp.severity  = r["severity"].as<int16_t>();
+        tp.value = r["val"].as<double>();
+        tp.status = r["status"].as<int16_t>();
+        tp.severity = r["severity"].as<int16_t>();
         out.push_back(tp);
     }
     return out;
@@ -304,12 +301,11 @@ std::vector<TrendPoint> ResultRepository::find_module_trend(
 
 // ── find_distribution ────────────────────────────────────────────────────────
 
-std::vector<double> ResultRepository::find_distribution(
-        const std::string& module_id,
-        const std::string& test_id,
-        const std::string& field,
-        const std::vector<std::string>& run_ids) {
-    if (run_ids.empty()) return {};
+std::vector<double> ResultRepository::find_distribution(const std::string& module_id, const std::string& test_id, const std::string& field,
+                                                        const std::vector<std::string>& run_ids)
+{
+    if (run_ids.empty())
+        return {};
     auto db = db::get_db_client();
 
     // Task 94: use checked parameter binding for run_ids (ANY($4::TEXT[]))
@@ -317,24 +313,23 @@ std::vector<double> ResultRepository::find_distribution(
     std::ostringstream arr;
     arr << "{";
     for (std::size_t i = 0; i < run_ids.size(); ++i) {
-        if (i) arr << ",";
+        if (i)
+            arr << ",";
         arr << run_ids[i];
     }
     arr << "}";
 
-    std::string sql =
-        "SELECT (metrics -> $3 ->> 'value')::DOUBLE PRECISION AS val"
-        " FROM results"
-        " WHERE module_id = $1"
-        "   AND test_id   = $2"
-        "   AND parent_id IS NULL"
-        "   AND run_id = ANY($4::TEXT[])"
-        "   AND metrics ? $3"
-        "   AND metrics -> $3 ->> 'type' IN ('double','int')"
-        " ORDER BY timestamp ASC";
+    std::string sql = "SELECT (metrics -> $3 ->> 'value')::DOUBLE PRECISION AS val"
+                      " FROM results"
+                      " WHERE module_id = $1"
+                      "   AND test_id   = $2"
+                      "   AND parent_id IS NULL"
+                      "   AND run_id = ANY($4::TEXT[])"
+                      "   AND metrics ? $3"
+                      "   AND metrics -> $3 ->> 'type' IN ('double','int')"
+                      " ORDER BY timestamp ASC";
 
-    auto rows = db->execSqlSync(sql,
-        module_id.c_str(), test_id.c_str(), field.c_str(), arr.str().c_str());
+    auto rows = db->execSqlSync(sql, module_id.c_str(), test_id.c_str(), field.c_str(), arr.str().c_str());
 
     std::vector<double> out;
     out.reserve(rows.size());
@@ -345,36 +340,34 @@ std::vector<double> ResultRepository::find_distribution(
 
 // ── find_for_compare ──────────────────────────────────────────────────────────
 
-std::vector<CompareEntry> ResultRepository::find_for_compare(
-        const std::string& run_a,
-        const std::string& run_b) {
+std::vector<CompareEntry> ResultRepository::find_for_compare(const std::string& run_a, const std::string& run_b)
+{
     auto db = db::get_db_client();
     // Use run_summaries for last-status per (module_id, test_id).
     // Keep NULLs to distinguish "not present in run_a/run_b".
-    auto rows = db->execSqlSync(
-        "SELECT"
-        "    COALESCE(a.module_id, b.module_id) AS module_id,"
-        "    COALESCE(a.test_id,   b.test_id)   AS test_id,"
-        "    a.last_status   AS run_a_status,"
-        "    b.last_status   AS run_b_status,"
-        "    COALESCE(a.last_severity, 0::SMALLINT) AS run_a_severity,"
-        "    COALESCE(b.last_severity, 0::SMALLINT) AS run_b_severity"
-        " FROM"
-        "    (SELECT module_id, test_id, last_status, last_severity"
-        "     FROM run_summaries WHERE run_id = $1::UUID) a"
-        " FULL OUTER JOIN"
-        "    (SELECT module_id, test_id, last_status, last_severity"
-        "     FROM run_summaries WHERE run_id = $2::UUID) b"
-        " USING (module_id, test_id)"
-        " ORDER BY module_id, test_id",
-        run_a.c_str(), run_b.c_str());
+    auto rows = db->execSqlSync("SELECT"
+                                "    COALESCE(a.module_id, b.module_id) AS module_id,"
+                                "    COALESCE(a.test_id,   b.test_id)   AS test_id,"
+                                "    a.last_status   AS run_a_status,"
+                                "    b.last_status   AS run_b_status,"
+                                "    COALESCE(a.last_severity, 0::SMALLINT) AS run_a_severity,"
+                                "    COALESCE(b.last_severity, 0::SMALLINT) AS run_b_severity"
+                                " FROM"
+                                "    (SELECT module_id, test_id, last_status, last_severity"
+                                "     FROM run_summaries WHERE run_id = $1::UUID) a"
+                                " FULL OUTER JOIN"
+                                "    (SELECT module_id, test_id, last_status, last_severity"
+                                "     FROM run_summaries WHERE run_id = $2::UUID) b"
+                                " USING (module_id, test_id)"
+                                " ORDER BY module_id, test_id",
+                                run_a.c_str(), run_b.c_str());
 
     std::vector<CompareEntry> out;
     out.reserve(rows.size());
     for (const auto& r : rows) {
         CompareEntry e;
-        e.module_id      = r["module_id"].as<std::string>();
-        e.test_id        = r["test_id"].as<std::string>();
+        e.module_id = r["module_id"].as<std::string>();
+        e.test_id = r["test_id"].as<std::string>();
         // NULL means the test did not appear in that run.
         if (!r["run_a_status"].isNull())
             e.run_a_status = r["run_a_status"].as<int16_t>();
@@ -389,49 +382,40 @@ std::vector<CompareEntry> ResultRepository::find_for_compare(
 
 // ── get_subtests ──────────────────────────────────────────────────────────────
 
-std::vector<Result> ResultRepository::get_subtests(const std::string& parent_id) {
+std::vector<Result> ResultRepository::get_subtests(const std::string& parent_id)
+{
     auto db = db::get_db_client();
-    auto rows = db->execSqlSync(
-        "SELECT " + std::string{SELECT_COLS} +
-        " FROM results WHERE parent_id = $1::UUID ORDER BY sequence ASC",
-        parent_id.c_str());
+    auto rows = db->execSqlSync("SELECT " + std::string{SELECT_COLS} + " FROM results WHERE parent_id = $1::UUID ORDER BY sequence ASC",
+                                parent_id.c_str());
 
     std::vector<Result> out;
     out.reserve(rows.size());
-    for (const auto& r : rows) out.push_back(row_to_result(r));
+    for (const auto& r : rows)
+        out.push_back(row_to_result(r));
     return out;
 }
 
 // ── upsert_run_summary ───────────────────────────────────────────────────────
 
-void ResultRepository::upsert_run_summary(const std::string& run_id,
-                                            const std::string& module_id,
-                                            const std::string& test_id,
-                                            int16_t status,
-                                            int16_t severity,
-                                            const std::string& timestamp) {
+void ResultRepository::upsert_run_summary(const std::string& run_id, const std::string& module_id, const std::string& test_id,
+                                          int16_t status, int16_t severity, const std::string& timestamp)
+{
     auto db = db::get_db_client();
     // Task 93: ordering-safe — only overwrite last_* when the incoming result is
     // NEWER (>= existing timestamp). Out-of-order/replayed results cannot
     // regress the summary; result_count still increments (idempotent-ish count).
-    db->execSqlSync(
-        "INSERT INTO run_summaries"
-        " (run_id, module_id, test_id, last_status, last_severity, last_timestamp, result_count)"
-        " VALUES ($1::UUID, $2, $3, $4::SMALLINT, $5::SMALLINT, $6::TIMESTAMPTZ, 1)"
-        " ON CONFLICT (run_id, module_id, test_id) DO UPDATE SET"
-        "   last_status    = CASE WHEN EXCLUDED.last_timestamp >= run_summaries.last_timestamp"
-        "                        THEN EXCLUDED.last_status ELSE run_summaries.last_status END,"
-        "   last_severity  = CASE WHEN EXCLUDED.last_timestamp >= run_summaries.last_timestamp"
-        "                        THEN EXCLUDED.last_severity ELSE run_summaries.last_severity END,"
-        "   last_timestamp = CASE WHEN EXCLUDED.last_timestamp >= run_summaries.last_timestamp"
-        "                        THEN EXCLUDED.last_timestamp ELSE run_summaries.last_timestamp END,"
-        "   result_count   = run_summaries.result_count + 1",
-        run_id.c_str(),
-        module_id.c_str(),
-        test_id.c_str(),
-        status,
-        severity,
-        timestamp.c_str());
+    db->execSqlSync("INSERT INTO run_summaries"
+                    " (run_id, module_id, test_id, last_status, last_severity, last_timestamp, result_count)"
+                    " VALUES ($1::UUID, $2, $3, $4::SMALLINT, $5::SMALLINT, $6::TIMESTAMPTZ, 1)"
+                    " ON CONFLICT (run_id, module_id, test_id) DO UPDATE SET"
+                    "   last_status    = CASE WHEN EXCLUDED.last_timestamp >= run_summaries.last_timestamp"
+                    "                        THEN EXCLUDED.last_status ELSE run_summaries.last_status END,"
+                    "   last_severity  = CASE WHEN EXCLUDED.last_timestamp >= run_summaries.last_timestamp"
+                    "                        THEN EXCLUDED.last_severity ELSE run_summaries.last_severity END,"
+                    "   last_timestamp = CASE WHEN EXCLUDED.last_timestamp >= run_summaries.last_timestamp"
+                    "                        THEN EXCLUDED.last_timestamp ELSE run_summaries.last_timestamp END,"
+                    "   result_count   = run_summaries.result_count + 1",
+                    run_id.c_str(), module_id.c_str(), test_id.c_str(), status, severity, timestamp.c_str());
 }
 
-}  // namespace acadia
+} // namespace acadia

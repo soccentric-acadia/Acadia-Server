@@ -4,18 +4,21 @@
 
 using namespace acadia::util;
 
-TEST(UuidTest, GenerateIsValid) {
+TEST(UuidTest, GenerateIsValid)
+{
     auto u = generate_uuid();
     EXPECT_TRUE(is_valid_uuid(u));
 }
 
-TEST(UuidTest, UniquenessOfGenerated) {
+TEST(UuidTest, UniquenessOfGenerated)
+{
     auto a = generate_uuid();
     auto b = generate_uuid();
     EXPECT_NE(a, b);
 }
 
-TEST(UuidTest, InvalidUuid) {
+TEST(UuidTest, InvalidUuid)
+{
     EXPECT_FALSE(is_valid_uuid("not-a-uuid"));
     EXPECT_FALSE(is_valid_uuid(""));
 }

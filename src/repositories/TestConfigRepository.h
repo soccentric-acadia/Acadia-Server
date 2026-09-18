@@ -4,9 +4,11 @@
 #include <string>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
-struct TestConfig {
+struct TestConfig
+{
     std::string id;
     std::string name;
     std::string description;
@@ -15,17 +17,18 @@ struct TestConfig {
     std::string modules_json;
     std::string created_at;
     std::string created_by;
-    bool        is_archived = false;
+    bool is_archived = false;
 };
 
-class TestConfigRepository {
-public:
-    TestConfig              create(const TestConfig& c);
+class TestConfigRepository
+{
+  public:
+    TestConfig create(const TestConfig& c);
     std::optional<TestConfig> find_by_id(const std::string& id);
     std::vector<TestConfig> list(bool include_archived = false);
-    void                    update(const TestConfig& c);
-    void                    archive(const std::string& id);
-    void                    remove(const std::string& id);
+    void update(const TestConfig& c);
+    void archive(const std::string& id);
+    void remove(const std::string& id);
 };
 
-}  // namespace acadia
+} // namespace acadia

@@ -5,14 +5,16 @@
 
 using namespace acadia::util;
 
-TEST(TimeTest, UtcNowIso8601Format) {
+TEST(TimeTest, UtcNowIso8601Format)
+{
     auto t = utc_now_iso8601();
     // Basic format check: YYYY-MM-DDTHH:MM:SS.xxxxxxZ
     EXPECT_GT(t.size(), 20u);
     EXPECT_EQ(t.back(), 'Z');
 }
 
-TEST(TimeTest, UtcNowUsIsPositive) {
+TEST(TimeTest, UtcNowUsIsPositive)
+{
     auto us = utc_now_us();
     EXPECT_GT(us, 0);
 }

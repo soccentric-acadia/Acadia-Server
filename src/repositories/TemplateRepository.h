@@ -4,9 +4,11 @@
 #include <string>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
-struct Template {
+struct Template
+{
     std::string id;
     std::string name;
     std::string description;
@@ -15,17 +17,18 @@ struct Template {
     std::string modules_json;
     std::string created_at;
     std::string created_by;
-    bool        is_archived = false;
+    bool is_archived = false;
 };
 
-class TemplateRepository {
-public:
-    Template              create(const Template& t);
+class TemplateRepository
+{
+  public:
+    Template create(const Template& t);
     std::optional<Template> find_by_id(const std::string& id);
     std::vector<Template> list(bool include_archived = false);
-    void                  update(const Template& t);
-    void                  archive(const std::string& id);
-    void                  remove(const std::string& id);
+    void update(const Template& t);
+    void archive(const std::string& id);
+    void remove(const std::string& id);
 };
 
-}  // namespace acadia
+} // namespace acadia

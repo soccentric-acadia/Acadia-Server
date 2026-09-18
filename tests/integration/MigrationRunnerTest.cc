@@ -1,26 +1,30 @@
 // tests/integration/MigrationRunnerTest.cc
 // Requires a real PostgreSQL instance.  Set ACADIA_TEST_DSN env var.
 #include "db/MigrationRunner.h"
-#include "db/DbClient.h"
 #include "config/Settings.h"
-#include <drogon/drogon.h>
-#include <gtest/gtest.h>
+#include "db/DbClient.h"
 #include <cstdlib>
+#include <drogon/drogon.h>
 #include <filesystem>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <string>
 
 // Skip integration test if ACADIA_TEST_DSN is not set.
-static const char* test_dsn() {
+static const char* test_dsn()
+{
     return std::getenv("ACADIA_TEST_DSN");
 }
 
 #include "db/DbClient.h"
 
-class MigrationRunnerTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        if (!test_dsn()) GTEST_SKIP() << "ACADIA_TEST_DSN not set";
+class MigrationRunnerTest : public ::testing::Test
+{
+  protected:
+    void SetUp() override
+    {
+        if (!test_dsn())
+            GTEST_SKIP() << "ACADIA_TEST_DSN not set";
         // Initialise the shared DbClient from ACADIA_TEST_DSN
         // (host=… port=… dbname=… user=… password=…).
         if (!db_initialised_) {
@@ -29,7 +33,8 @@ protected:
             auto getval = [&dsn](const char* key, std::string fallback) {
                 const std::string needle = std::string(key) + "=";
                 auto pos = dsn.find(needle);
-                if (pos == std::string::npos) return fallback;
+                if (pos == std::string::npos)
+                    return fallback;
                 auto start = pos + needle.size();
                 auto end = dsn.find(' ', start);
                 return dsn.substr(start, end - start);
@@ -53,7 +58,8 @@ protected:
         }
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         std::filesystem::remove_all(migrations_dir_);
     }
 
@@ -61,7 +67,8 @@ protected:
     static inline bool db_initialised_ = false;
 };
 
-TEST_F(MigrationRunnerTest, RunsMigrationsOnce) {
+TEST_F(MigrationRunnerTest, RunsMigrationsOnce)
+{
     acadia::db::MigrationRunner runner{migrations_dir_.string()};
     EXPECT_NO_THROW(runner.run());
     // Second run should be idempotent.
@@ -71,8 +78,10 @@ TEST_F(MigrationRunnerTest, RunsMigrationsOnce) {
 // SRV-020: the REAL migrations tree (0001..NNNN) must apply cleanly to a
 // fresh database and be idempotent on a second run. Uses the repo's own
 // migrations directory, injected by CMake as ACADIA_MIGRATIONS_DIR.
-TEST_F(MigrationRunnerTest, RealMigrationsApplyAndAreIdempotent) {
-    if (!test_dsn()) GTEST_SKIP() << "ACADIA_TEST_DSN not set";
+TEST_F(MigrationRunnerTest, RealMigrationsApplyAndAreIdempotent)
+{
+    if (!test_dsn())
+        GTEST_SKIP() << "ACADIA_TEST_DSN not set";
 #ifdef ACADIA_MIGRATIONS_DIR
     const std::filesystem::path real_dir{ACADIA_MIGRATIONS_DIR};
 #else
@@ -83,7 +92,8 @@ TEST_F(MigrationRunnerTest, RealMigrationsApplyAndAreIdempotent) {
     // Count migration files.
     std::size_t expected = 0;
     for (const auto& e : std::filesystem::directory_iterator(real_dir))
-        if (e.is_regular_file() && e.path().extension() == ".sql") ++expected;
+        if (e.is_regular_file() && e.path().extension() == ".sql")
+            ++expected;
     ASSERT_GT(expected, 0u);
 
     acadia::db::MigrationRunner runner{real_dir.string()};
@@ -92,12 +102,10 @@ TEST_F(MigrationRunnerTest, RealMigrationsApplyAndAreIdempotent) {
     auto db = acadia::db::get_db_client();
     auto before = db->execSqlSync("SELECT count(*) AS c FROM schema_migrations");
     const auto applied_after_first = before[0]["c"].as<std::size_t>();
-    EXPECT_GE(applied_after_first, expected)
-        << "every migration file should be recorded (fresh DB) or already tracked";
+    EXPECT_GE(applied_after_first, expected) << "every migration file should be recorded (fresh DB) or already tracked";
 
     // Second run: idempotent, version count unchanged.
     EXPECT_NO_THROW(runner.run());
     auto after = db->execSqlSync("SELECT count(*) AS c FROM schema_migrations");
-    EXPECT_EQ(after[0]["c"].as<std::size_t>(), applied_after_first)
-        << "re-running migrations must not add versions";
+    EXPECT_EQ(after[0]["c"].as<std::size_t>(), applied_after_first) << "re-running migrations must not add versions";
 }

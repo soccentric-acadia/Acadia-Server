@@ -19,9 +19,10 @@ DOCKER_JOBS := $(shell echo $$(( $(shell nproc) < 4 ? $(shell nproc) : 4 )))
 DOCKER_IMAGE := acadia
 
 # Mount the *parent* Acadia/ directory so both Acadia-Client, Acadia-Server, and
-# Acadia-HAL are visible inside the container.
+# Acadia-HAL are visible inside the container (../Acadia-HAL/protos is needed
+# for proto generation).
 ACADIA_ROOT := $(shell dirname $(realpath $(CURDIR)))
-DOCKER_SRC_DIR         := /workspace/Acadia-Client
+DOCKER_SRC_DIR         := /workspace/Acadia-Server
 DOCKER_CROSS_BUILD_DIR := $(DOCKER_SRC_DIR)/build/cross
 
 # Server (x86 Ubuntu) Docker settings — must match the tag docker/Makefile's
@@ -99,7 +100,11 @@ clean: ## Remove build directory
 
 list: ## List available test applications
 	@echo "Cross ($(CROSS_BUILD_DIR)):"
-	@ls -1 $(CROSS_BUILD_DIR)/bin/ 2>/dev/null | sed 's/^/    /' || echo "    (none - run 'make docker-build' first)"
+	@if [ -d $(CROSS_BUILD_DIR)/bin ]; then \
+		ls -1 $(CROSS_BUILD_DIR)/bin/ | sed 's/^/    /'; \
+	else \
+		echo "    (none - run 'make docker-build' first)"; \
+	fi
 
 # =============================================================================
 # Cross builds (Docker)
@@ -109,7 +114,9 @@ list: ## List available test applications
 # --init: use tini as PID 1 to properly propagate signals to child processes (e.g. ninja)
 # ccache volume: persist compilation cache across docker runs
 # ACADIA_ROOT is mounted so ../Acadia-HAL/protos and ../Acadia-HAL/src resolve inside the container.
-DOCKER_RUN := docker run --rm -t --init --platform linux/arm64 -v $(ACADIA_ROOT):/workspace -v ccache-acadia-client:/home/rpi/.ccache $(DOCKER_IMAGE) bash -c
+# Image is the unified Dockerfile built for linux/arm64 (works natively on a Pi
+# or via QEMU on x86_64); ccache path matches the image's 'builder' user.
+DOCKER_RUN := docker run --rm -t --init --platform linux/arm64 -v $(ACADIA_ROOT):/workspace -v ccache-acadia-server:/home/builder/.ccache $(DOCKER_IMAGE):arm64 bash -c
 
 # Run command for the server x86 container
 DOCKER_SERVER_RUN := docker run --rm -t --init --platform linux/amd64 -v $(ACADIA_ROOT):/workspace -v ccache-acadia-server:/home/acadia/.ccache $(DOCKER_SERVER_IMAGE) bash -c
@@ -123,11 +130,11 @@ docker-install: ## Install Docker if not present
 	fi
 
 docker-image: docker-install ## Build Docker image (ARM64) if not exists
-	@if ! docker image inspect $(DOCKER_IMAGE) >/dev/null 2>&1; then \
-		echo "Building Docker image $(DOCKER_IMAGE)..."; \
-		make -C docker build; \
+	@if ! docker image inspect $(DOCKER_IMAGE):arm64 >/dev/null 2>&1; then \
+		echo "Building Docker image $(DOCKER_IMAGE):arm64 (ARM64)..."; \
+		make -C docker build-arm64; \
 	else \
-		echo "Docker image $(DOCKER_IMAGE) already exists."; \
+		echo "Docker image $(DOCKER_IMAGE):arm64 already exists."; \
 	fi
 
 docker-configure: docker-image ## Configure project with Docker/Ninja
@@ -148,7 +155,7 @@ docker-clean: docker-image ## Clean Docker build artifacts
 
 docker-shell: docker-image ## Start Docker shell for development
 	@echo "Starting Docker shell for development..."
-	docker run -it --rm --platform linux/arm64 -v $(ACADIA_ROOT):/workspace -v ccache-acadia-client:/home/rpi/.ccache $(DOCKER_IMAGE) bash
+	docker run -it --rm --platform linux/arm64 -v $(ACADIA_ROOT):/workspace -v ccache-acadia-server:/home/builder/.ccache $(DOCKER_IMAGE):arm64 bash
 
 # =============================================================================
 # Server builds (x86 Ubuntu 22.04 via Docker)
@@ -204,17 +211,17 @@ run-b: deploy-b ## Run test app on $(IP_B) (usage: make run-b [name] [args...], 
 # Code quality & Docs (run inside the Docker build container)
 # =============================================================================
 
-format: docker-image ## Format code with clang-format (in Docker)
+format: docker-build-server ## Format code with clang-format (in Docker)
 	@echo "Running clang-format in Docker..."
-	$(DOCKER_RUN) "cd $(DOCKER_CROSS_BUILD_DIR) && ninja format"
+	$(DOCKER_SERVER_RUN) "cd $(DOCKER_SERVER_BUILD_DIR) && ninja format"
 
-cppcheck: docker-image ## Run static analysis with cppcheck (in Docker)
+cppcheck: docker-build-server ## Run static analysis with cppcheck (in Docker)
 	@echo "Running cppcheck in Docker..."
-	$(DOCKER_RUN) "cd $(DOCKER_CROSS_BUILD_DIR) && ninja cppcheck"
+	$(DOCKER_SERVER_RUN) "cd $(DOCKER_SERVER_BUILD_DIR) && ninja cppcheck"
 
-doc: docker-image ## Generate Doxygen documentation (in Docker)
+doc: docker-build-server ## Generate Doxygen documentation (in Docker)
 	@echo "Generating documentation in Docker..."
-	$(DOCKER_RUN) "cd $(DOCKER_CROSS_BUILD_DIR) && ninja doc_doxygen"
+	$(DOCKER_SERVER_RUN) "cd $(DOCKER_SERVER_BUILD_DIR) && ninja doc_doxygen"
 
 # =============================================================================
 # Misc

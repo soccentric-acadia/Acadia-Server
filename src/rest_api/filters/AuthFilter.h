@@ -4,18 +4,18 @@
 #include "services/AuthService.h"
 #include <drogon/HttpFilter.h>
 
-namespace acadia::rest {
+namespace acadia::rest
+{
 
-class AuthFilter : public drogon::HttpFilter<AuthFilter> {
-public:
+class AuthFilter : public drogon::HttpFilter<AuthFilter>
+{
+  public:
     explicit AuthFilter(AuthService& auth_svc);
 
-    void doFilter(const drogon::HttpRequestPtr& req,
-                  drogon::FilterCallback&&      failCb,
-                  drogon::FilterChainCallback&& nextCb) override;
+    void doFilter(const drogon::HttpRequestPtr& req, drogon::FilterCallback&& failCb, drogon::FilterChainCallback&& nextCb) override;
 
-private:
+  private:
     AuthService& auth_svc_;
 };
 
-}  // namespace acadia::rest
+} // namespace acadia::rest

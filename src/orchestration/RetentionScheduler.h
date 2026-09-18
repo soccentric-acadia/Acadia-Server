@@ -8,16 +8,16 @@
 #include <chrono>
 #include <thread>
 
-namespace acadia {
+namespace acadia
+{
 
-class RetentionScheduler {
-public:
+class RetentionScheduler
+{
+  public:
     // run_svc    – used to delete old runs
     // max_age_days – runs older than this (ended_at) are deleted; 0 = disabled
     // interval   – how often to run the sweep (default: daily)
-    explicit RetentionScheduler(RunService& run_svc,
-                                 int max_age_days = 90,
-                                 std::chrono::seconds interval = std::chrono::hours(24));
+    explicit RetentionScheduler(RunService& run_svc, int max_age_days = 90, std::chrono::seconds interval = std::chrono::hours(24));
 
     ~RetentionScheduler();
 
@@ -25,18 +25,24 @@ public:
     void stop();
 
     // Expose/update the max age without restarting.
-    int  max_age_days() const noexcept { return max_age_days_; }
-    void set_max_age_days(int d) noexcept { max_age_days_ = d; }
+    int max_age_days() const noexcept
+    {
+        return max_age_days_;
+    }
+    void set_max_age_days(int d) noexcept
+    {
+        max_age_days_ = d;
+    }
 
-private:
+  private:
     void run_loop();
     void sweep();
 
-    RunService&            run_svc_;
-    int                    max_age_days_;
-    std::chrono::seconds   interval_;
-    std::atomic<bool>      running_{false};
-    std::thread            thread_;
+    RunService& run_svc_;
+    int max_age_days_;
+    std::chrono::seconds interval_;
+    std::atomic<bool> running_{false};
+    std::thread thread_;
 };
 
-}  // namespace acadia
+} // namespace acadia

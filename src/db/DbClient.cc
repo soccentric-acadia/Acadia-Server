@@ -8,13 +8,16 @@
 #include <stdexcept>
 #include <string>
 
-namespace acadia::db {
+namespace acadia::db
+{
 
-namespace {
+namespace
+{
 drogon::orm::DbClientPtr g_db_client;
 }
 
-std::string build_dsn(const DbSettings& cfg) {
+std::string build_dsn(const DbSettings& cfg)
+{
     // Drogon expects: "host=... port=... dbname=... user=... password=..."
     std::string dsn;
     dsn += "host=" + cfg.host;
@@ -28,25 +31,24 @@ std::string build_dsn(const DbSettings& cfg) {
     return dsn;
 }
 
-void init_db_client(const DbSettings& cfg) {
+void init_db_client(const DbSettings& cfg)
+{
     std::string dsn = build_dsn(cfg);
-    spdlog::info("db: connecting to {}@{}:{}/{} pool={}",
-                 cfg.user, cfg.host, cfg.port, cfg.name, cfg.pool_size);
+    spdlog::info("db: connecting to {}@{}:{}/{} pool={}", cfg.user, cfg.host, cfg.port, cfg.name, cfg.pool_size);
 
-    g_db_client = drogon::orm::DbClient::newPgClient(
-        dsn,
-        static_cast<size_t>(cfg.pool_size));
+    g_db_client = drogon::orm::DbClient::newPgClient(dsn, static_cast<size_t>(cfg.pool_size));
 
     if (!g_db_client) {
         throw std::runtime_error("db: failed to create Drogon DbClient");
     }
 }
 
-drogon::orm::DbClientPtr get_db_client() {
+drogon::orm::DbClientPtr get_db_client()
+{
     if (!g_db_client) {
         throw std::runtime_error("db: DbClient not initialised — call init_db_client() first");
     }
     return g_db_client;
 }
 
-}  // namespace acadia::db
+} // namespace acadia::db

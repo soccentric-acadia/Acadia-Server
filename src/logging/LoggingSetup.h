@@ -4,7 +4,8 @@
 
 #include <string_view>
 
-namespace acadia::logging {
+namespace acadia::logging
+{
 
 // Initialise async spdlog logger (JSON, stdout).
 // level: debug | info | warn | error | critical
@@ -15,4 +16,4 @@ void setup_logging(std::string_view level = "info");
 void set_context(std::string_view key, std::string_view value);
 void clear_context();
 
-}  // namespace acadia::logging
+} // namespace acadia::logging

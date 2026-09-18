@@ -4,18 +4,20 @@
 #include <string>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
-struct OtaUpgrade {
+struct OtaUpgrade
+{
     std::string id;
-    std::string board_id;           // task 97: target board for dispatch
+    std::string board_id; // task 97: target board for dispatch
     std::string artifact_path;
     std::string artifact_hash;
-    int64_t     artifact_size = 0;
+    int64_t artifact_size = 0;
     std::string from_version;
     std::string to_version;
     std::string status;
-    int         progress = 0;
+    int progress = 0;
     std::string started_at;
     std::string ended_at;
     std::string error_message;
@@ -24,16 +26,14 @@ struct OtaUpgrade {
     std::string created_by;
 };
 
-class OtaRepository {
-public:
-    OtaUpgrade              create(const OtaUpgrade& u);
+class OtaRepository
+{
+  public:
+    OtaUpgrade create(const OtaUpgrade& u);
     std::optional<OtaUpgrade> find_by_id(const std::string& id);
     std::vector<OtaUpgrade> list();
-    void                    update_status(const std::string& id, const std::string& status,
-                                          int progress = -1,
-                                          const std::string& error = "");
-    void                    set_ended(const std::string& id, const std::string& status,
-                                      const std::string& error = "");
+    void update_status(const std::string& id, const std::string& status, int progress = -1, const std::string& error = "");
+    void set_ended(const std::string& id, const std::string& status, const std::string& error = "");
 };
 
-}  // namespace acadia
+} // namespace acadia

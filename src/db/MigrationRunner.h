@@ -7,10 +7,12 @@
 #include <string>
 #include <vector>
 
-namespace acadia::db {
+namespace acadia::db
+{
 
-class MigrationRunner {
-public:
+class MigrationRunner
+{
+  public:
     // migrations_dir: path to the directory containing *.sql migration files.
     explicit MigrationRunner(std::string migrations_dir);
 
@@ -22,7 +24,7 @@ public:
     // bodies. Statements are returned WITHOUT trailing semicolons (task 95).
     static std::vector<std::string> split_statements(const std::string& sql);
 
-private:
+  private:
     // Task 95: apply under an advisory lock (concurrency-safe), then each
     // migration runs atomically.
     void run_locked();
@@ -30,4 +32,4 @@ private:
     std::string migrations_dir_;
 };
 
-}  // namespace acadia::db
+} // namespace acadia::db

@@ -1,15 +1,17 @@
 #pragma once
 // services/ScheduleService.h
-#include "repositories/ScheduleRepository.h"
 #include "repositories/AuditRepository.h"
+#include "repositories/ScheduleRepository.h"
 #include <optional>
 #include <string>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
-class ScheduleService {
-public:
+class ScheduleService
+{
+  public:
     Schedule create(const Schedule& s, const std::string& actor_user_id);
     Schedule get(const std::string& id);
     std::vector<Schedule> list_enabled();
@@ -26,9 +28,9 @@ public:
     // Compute the next run timestamp for a cron expression.
     static std::string compute_next_run(const std::string& cron_expr);
 
-private:
+  private:
     ScheduleRepository repo_;
-    AuditRepository    audit_repo_;
+    AuditRepository audit_repo_;
 };
 
-}  // namespace acadia
+} // namespace acadia

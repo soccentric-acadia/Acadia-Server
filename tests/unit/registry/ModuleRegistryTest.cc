@@ -1,14 +1,15 @@
 // tests/unit/registry/ModuleRegistryTest.cc
 #include "registry/ModuleRegistry.h"
-#include <gtest/gtest.h>
-#include <fstream>
-#include <filesystem>
 #include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <gtest/gtest.h>
 
 using acadia::ModuleRegistry;
 
 // Write a temp YAML file and verify load().
-TEST(ModuleRegistryTest, LoadFromYaml) {
+TEST(ModuleRegistryTest, LoadFromYaml)
+{
     auto tmp = std::filesystem::temp_directory_path() / "acadia_test_registry.yaml";
     {
         std::ofstream f{tmp};
@@ -36,7 +37,8 @@ modules:
     std::filesystem::remove(tmp);
 }
 
-TEST(ModuleRegistryTest, MissingIdWarnsAndSkips) {
+TEST(ModuleRegistryTest, MissingIdWarnsAndSkips)
+{
     auto tmp = std::filesystem::temp_directory_path() / "acadia_test_registry_bad.yaml";
     {
         std::ofstream f{tmp};

@@ -1,25 +1,24 @@
 #pragma once
 // services/OtaService.h
 #include "config/Settings.h"
-#include "repositories/OtaRepository.h"
 #include "repositories/AuditRepository.h"
+#include "repositories/OtaRepository.h"
 #include <string>
 #include <vector>
 
-namespace acadia {
+namespace acadia
+{
 
-class OtaService {
-public:
+class OtaService
+{
+  public:
     explicit OtaService(const OtaSettings& cfg);
 
     // Accept an uploaded artifact. Returns artifact id.
-    OtaUpgrade accept_artifact(const std::string& filename,
-                                const std::string& tmp_path,
-                                const std::string& actor_user_id);
+    OtaUpgrade accept_artifact(const std::string& filename, const std::string& tmp_path, const std::string& actor_user_id);
 
     // Trigger an upgrade to the board.
-    OtaUpgrade trigger_upgrade(const std::string& artifact_id,
-                                const std::string& actor_user_id);
+    OtaUpgrade trigger_upgrade(const std::string& artifact_id, const std::string& actor_user_id);
 
     OtaUpgrade get(const std::string& id);
     std::vector<OtaUpgrade> list();
@@ -33,13 +32,12 @@ public:
     // Rollback: creates a new OtaUpgrade with rolled_back_from set.
     OtaUpgrade rollback(const std::string& upgrade_id, const std::string& actor_user_id);
 
-private:
-    OtaSettings    cfg_;
-    OtaRepository  repo_;
+  private:
+    OtaSettings cfg_;
+    OtaRepository repo_;
     AuditRepository audit_repo_;
 
-    std::string permanent_path(const std::string& artifact_id,
-                                const std::string& filename) const;
+    std::string permanent_path(const std::string& artifact_id, const std::string& filename) const;
 };
 
-}  // namespace acadia
+} // namespace acadia

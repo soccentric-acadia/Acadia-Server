@@ -4,13 +4,15 @@
 #include <drogon/HttpResponse.h>
 #include <spdlog/spdlog.h>
 
-namespace acadia::rest {
+namespace acadia::rest
+{
 
-AuthFilter::AuthFilter(AuthService& auth_svc) : auth_svc_(auth_svc) {}
+AuthFilter::AuthFilter(AuthService& auth_svc) : auth_svc_(auth_svc)
+{
+}
 
-void AuthFilter::doFilter(const drogon::HttpRequestPtr& req,
-                           drogon::FilterCallback&&      failCb,
-                           drogon::FilterChainCallback&& nextCb) {
+void AuthFilter::doFilter(const drogon::HttpRequestPtr& req, drogon::FilterCallback&& failCb, drogon::FilterChainCallback&& nextCb)
+{
     // 1. Check Bearer token header.
     std::string auth_header = req->getHeader("Authorization");
     if (!auth_header.empty() && auth_header.rfind("Bearer ", 0) == 0) {
@@ -22,7 +24,9 @@ void AuthFilter::doFilter(const drogon::HttpRequestPtr& req,
                 nextCb();
                 return;
             }
-        } catch (const AuthError&) {}
+        }
+        catch (const AuthError&) {
+        }
     }
 
     // 2. Check session cookie.
@@ -44,4 +48,4 @@ void AuthFilter::doFilter(const drogon::HttpRequestPtr& req,
     failCb(resp);
 }
 
-}  // namespace acadia::rest
+} // namespace acadia::rest
