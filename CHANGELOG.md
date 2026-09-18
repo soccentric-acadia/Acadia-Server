@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-18 — Agent documentation and task workflow standardization
+
+- Added canonical `AGENTS.md` and `CLAUDE.md` pointers plus a concise canonical
+  agent document with Docker server build and test instructions.
+- Added ignored local `Plan.md` and `Task.md` workflow artifacts.
+- Verified the required document shape and the declared `make build` and
+  `make test` targets.
+
 All notable changes to Acadia-Server are documented here. Keep a Changelog;
 versioning: SemVer (`project()` version in CMakeLists.txt).
 
