@@ -8,6 +8,7 @@
 #include <chrono>
 #include <mutex>
 #include <thread>
+#include <unordered_set>
 
 namespace acadia::grpc
 {
@@ -161,9 +162,13 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch)
     // Task 88: a batch is acked only after every sample is durably persisted.
     std::mutex ack_mu;
     std::unordered_map<std::string, int> batch_pending;
-    // Task 90: per-run last-seen batch_seq for duplicate/gap detection.
+    // Task 90 + SRV-044: batch-level dedupe state. last_batch_seq tracks the
+    // highest batch_seq ingested per run (gap detection); seen_batches holds
+    // the "run_id:seq" keys already ingested so a replayed batch is acked
+    // without re-ingesting ANY of its samples.
     std::mutex seq_mu;
     std::unordered_map<std::string, int64_t> last_batch_seq;
+    std::unordered_set<std::string> seen_batches;
 
     // DB writer thread: drains the queue and persists results, then acks the
     // batch once all its samples are durable.
@@ -175,41 +180,46 @@ void ClientServiceImpl::handle_log_batch(const acadia::stream::LogBatch& batch)
 
             const std::string key = work->run_id + ":" + std::to_string(work->batch_seq);
 
-            // X2-005: idempotent ingestion. A batch replayed after a lost ack
-            // (seq <= last seen for the run) is ACKED but NOT re-ingested —
-            // persisting it twice would double-count results. The ack is sent
-            // immediately (the replayed batch's pending count is settled here).
+            // X2-005 + SRV-044: idempotent ingestion is per BATCH, not per
+            // sample. The first sample of batch N establishes the batch key;
+            // the remaining samples of the same batch must still be ingested
+            // (checking `batch_seq <= last_batch_seq` per sample dropped every
+            // sample after the first of each batch). A replayed batch — an
+            // already-SEEN batch key — is ACKed but not re-ingested.
+            bool duplicate_batch = false;
             {
                 std::lock_guard<std::mutex> lk(seq_mu);
-                auto it = last_batch_seq.find(work->run_id);
-                int64_t last = it == last_batch_seq.end() ? -1 : it->second;
-                if (last >= 0 && work->batch_seq <= last) {
-                    spdlog::warn("client_svc: duplicate batch run_id={} seq={} (last={}) — "
+                if (seen_batches.count(key)) {
+                    duplicate_batch = true;
+                    spdlog::warn("client_svc: duplicate batch run_id={} seq={} — "
                                  "acked without re-ingest",
-                                 work->run_id, work->batch_seq, last);
-                    std::lock_guard<std::mutex> alk(ack_mu);
-                    auto pit = batch_pending.find(key);
-                    if (pit != batch_pending.end())
-                        batch_pending.erase(pit);
-                    acadia::stream::ServerMessage ack_msg;
-                    auto* ack = ack_msg.mutable_batch_ack();
-                    ack->set_run_id(work->run_id);
-                    ack->set_batch_seq(work->batch_seq);
-                    if (!stream->Write(ack_msg)) {
-                        spdlog::warn("client_svc: failed to send duplicate BatchAck run_id={}", work->run_id);
+                                 work->run_id, work->batch_seq);
+                } else {
+                    seen_batches.insert(key);
+                    auto it = last_batch_seq.find(work->run_id);
+                    int64_t last = it == last_batch_seq.end() ? -1 : it->second;
+                    if (last >= 0 && work->batch_seq > last + 1) {
+                        spdlog::warn("client_svc: GAP run_id={}: expected seq {} got {}", work->run_id, last + 1, work->batch_seq);
                     }
-                    continue;
+                    last_batch_seq[work->run_id] = std::max(last, work->batch_seq);
                 }
-                if (last >= 0 && work->batch_seq > last + 1) {
-                    spdlog::warn("client_svc: GAP run_id={}: expected seq {} got {}", work->run_id, last + 1, work->batch_seq);
+            }
+            if (duplicate_batch) {
+                std::lock_guard<std::mutex> alk(ack_mu);
+                auto pit = batch_pending.find(key);
+                if (pit != batch_pending.end())
+                    batch_pending.erase(pit);
+                acadia::stream::ServerMessage ack_msg;
+                auto* ack = ack_msg.mutable_batch_ack();
+                ack->set_run_id(work->run_id);
+                ack->set_batch_seq(work->batch_seq);
+                if (!stream->Write(ack_msg)) {
+                    spdlog::warn("client_svc: failed to send duplicate BatchAck run_id={}", work->run_id);
                 }
+                continue;
             }
             try {
                 run_svc_.ingest_test_result(work->tr, work->run_id, work->module_version, work->mode);
-                // Record the sequence only after a successful ingest so a
-                // failed sample is not suppressed on replay.
-                std::lock_guard<std::mutex> lk(seq_mu);
-                last_batch_seq[work->run_id] = work->batch_seq;
             }
             catch (const std::exception& e) {
                 spdlog::error("client_svc: ingest error run_id={}: {}", work->run_id, e.what());
