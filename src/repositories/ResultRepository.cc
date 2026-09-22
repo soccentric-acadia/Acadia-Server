@@ -57,23 +57,13 @@ Result ResultRepository::insert(const Result& r)
 {
     auto db = db::get_db_client();
 
-    // Task 92: the complete result tree (parent + all recursive children) must
-    // commit or roll back as ONE transaction, so a child insert failure cannot
-    // leave an orphaned parent.
-    db->execSqlSync("BEGIN");
-    try {
-        Result saved = insert_in_txn(db, r);
-        db->execSqlSync("COMMIT");
-        return saved;
-    }
-    catch (const std::exception&) {
-        try {
-            db->execSqlSync("ROLLBACK");
-        }
-        catch (...) {
-        }
-        throw;
-    }
+    // Task 92 + SRV-068: the complete result tree (parent + all recursive
+    // children) must commit or roll back as ONE transaction on ONE connection.
+    // The old pooled BEGIN/COMMIT execSqlSync calls could land on different
+    // sessions — leaving partial trees/orphans. newTransaction() pins a single
+    // connection for the transaction's lifetime; commit happens on scope exit.
+    auto txn = db->newTransaction();
+    return insert_in_txn(txn, r);
 }
 
 // Insert parent + recursive children inside an already-open transaction (task 92).

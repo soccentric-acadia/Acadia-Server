@@ -25,7 +25,11 @@ MigrationRunner::MigrationRunner(std::string migrations_dir) : migrations_dir_(s
 
 void MigrationRunner::run()
 {
-    auto db = get_db_client();
+    // SRV-067: all migration work (advisory lock, BEGIN/statements/COMMIT)
+    // runs on ONE dedicated connection — a pooled client could run each
+    // execSqlSync on a different session, which breaks transaction atomicity
+    // and releases the session-scoped advisory lock elsewhere.
+    auto db = get_migrations_client();
 
     // Task 95: advisory lock so concurrent Server startups do not race on
     // applying the same migration twice.
@@ -53,7 +57,9 @@ static std::string trim_statement(std::string s);
 
 void MigrationRunner::run_locked()
 {
-    auto db = get_db_client();
+    // SRV-067: same dedicated connection as run() — the transaction boundaries
+    // below are meaningful only when every statement shares one session.
+    auto db = get_migrations_client();
 
     // Ensure the migrations tracking table exists.
     {

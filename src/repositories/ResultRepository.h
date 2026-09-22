@@ -113,7 +113,7 @@ class ResultRepository
     Result insert(const Result& r);
 
     // Task 92: insert parent + recursive children inside one transaction.
-    Result insert_in_txn(drogon::orm::DbClientPtr db, const Result& r);
+    Result insert_in_txn(drogon::orm::DbClientPtr db, const Result& r);  // runs inside a transaction (see insert())
 
     std::optional<Result> find_by_id(const std::string& id);
     std::vector<Result> list(const ResultFilter& f);

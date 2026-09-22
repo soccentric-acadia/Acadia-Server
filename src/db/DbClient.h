@@ -23,6 +23,12 @@ void init_db_client(const DbSettings& cfg);
 // called.
 drogon::orm::DbClientPtr get_db_client();
 
+// Dedicated single-connection client for session-scoped work (SRV-067:
+// migrations). A pool of exactly ONE connection guarantees BEGIN/COMMIT and
+// session advisory locks all execute on the same PostgreSQL session, which a
+// pooled client cannot guarantee.
+drogon::orm::DbClientPtr get_migrations_client();
+
 // Build a PostgreSQL DSN from settings.
 std::string build_dsn(const DbSettings& cfg);
 
