@@ -62,6 +62,44 @@ void configure_drogon_app(const Settings& settings, AuthService& auth_svc, RunSe
         spdlog::info("CORS configured for: {}", settings.cors_origins);
     }
 
+    // DSH-003: the browser-based Dashboard authenticates with the Server's
+    // session cookie (SRV-001 auth). Cross-origin fetches need CORS headers
+    // with Allow-Credentials plus OPTIONS preflight handling.
+    const auto& allowed = settings.cors_origin_list;
+    auto add_cors = [&allowed](const drogon::HttpRequestPtr& req,
+                               const drogon::HttpResponsePtr& resp) {
+        const std::string origin = req->getHeader("Origin");
+        if (origin.empty()) return;
+        bool ok = false;
+        for (const auto& a : allowed) {
+            if (a == "*" || a == origin) { ok = true; break; }
+        }
+        if (!ok) return;
+        resp->addHeader("Access-Control-Allow-Origin", origin);
+        resp->addHeader("Access-Control-Allow-Credentials", "true");
+        resp->addHeader("Vary", "Origin");
+    };
+
+    app.registerPreRoutingAdvice(
+        [&allowed, add_cors](const drogon::HttpRequestPtr& req,
+                             drogon::AdviceCallback&& ackCb,
+                             drogon::AdviceChainCallback&& nextCb) {
+            if (req->method() == drogon::Options) {
+                auto resp = drogon::HttpResponse::newHttpResponse();
+                resp->setStatusCode(drogon::k204NoContent);
+                resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+                resp->addHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+                resp->addHeader("Access-Control-Max-Age", "600");
+                add_cors(req, resp);
+                ackCb(resp);
+                return;
+            }
+            nextCb();
+        });
+    app.registerPostHandlingAdvice(
+        [add_cors](const drogon::HttpRequestPtr& req,
+                   const drogon::HttpResponsePtr& resp) { add_cors(req, resp); });
+
     spdlog::info("Drogon configured: {}:{} threads={}", host, port, threads);
 }
 
