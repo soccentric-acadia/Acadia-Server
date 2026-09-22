@@ -12,6 +12,7 @@ struct User
     std::string id;
     std::string username;
     std::string password_hash;
+    std::string role{"operator"}; // SRV-003: 'admin' or 'operator'
     std::string created_at;
     std::string updated_at;
 };
@@ -22,7 +23,8 @@ class UserRepository
     UserRepository() = default;
 
     // Create a new user.  Throws ConflictError if username exists.
-    User create(const std::string& username, const std::string& password_hash);
+    User create(const std::string& username, const std::string& password_hash,
+                const std::string& role = "operator");
 
     // Find by username.
     std::optional<User> find_by_username(const std::string& username);

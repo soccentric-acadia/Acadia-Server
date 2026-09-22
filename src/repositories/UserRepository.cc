@@ -9,18 +9,18 @@
 namespace acadia
 {
 
-User UserRepository::create(const std::string& username, const std::string& password_hash)
+User UserRepository::create(const std::string& username, const std::string& password_hash, const std::string& role)
 {
     auto db = db::get_db_client();
     try {
-        auto rows = db->execSqlSync("INSERT INTO users (id, username, password_hash)"
-                                    " VALUES (gen_random_uuid(), $1, $2)"
-                                    " RETURNING id,  username,  password_hash,  created_at,  updated_at",
-                                    username.c_str(), password_hash.c_str());
+        auto rows = db->execSqlSync("INSERT INTO users (id, username, password_hash, role)"
+                                    " VALUES (gen_random_uuid(), $1, $2, $3)"
+                                    " RETURNING id,  username,  password_hash,  role,  created_at,  updated_at",
+                                    username.c_str(), password_hash.c_str(), role.c_str());
         if (rows.empty())
             throw std::runtime_error("UserRepository::create: no rows returned");
         const auto& r = rows[0];
-        return User{r["id"].as<std::string>(), r["username"].as<std::string>(), r["password_hash"].as<std::string>(), r["created_at"].as<std::string>(),
+        return User{r["id"].as<std::string>(), r["username"].as<std::string>(), r["password_hash"].as<std::string>(), r["role"].as<std::string>(), r["created_at"].as<std::string>(),
                     r["updated_at"].as<std::string>()};
     }
     catch (const drogon::orm::DrogonDbException& e) {
@@ -35,26 +35,26 @@ User UserRepository::create(const std::string& username, const std::string& pass
 std::optional<User> UserRepository::find_by_username(const std::string& username)
 {
     auto db = db::get_db_client();
-    auto rows = db->execSqlSync("SELECT id,  username,  password_hash,  created_at,  updated_at"
+    auto rows = db->execSqlSync("SELECT id,  username,  password_hash,  role,  created_at,  updated_at"
                                 " FROM users WHERE username = $1",
                                 username.c_str());
     if (rows.empty())
         return std::nullopt;
     const auto& r = rows[0];
-    return User{r["id"].as<std::string>(), r["username"].as<std::string>(), r["password_hash"].as<std::string>(), r["created_at"].as<std::string>(),
+    return User{r["id"].as<std::string>(), r["username"].as<std::string>(), r["password_hash"].as<std::string>(), r["role"].as<std::string>(), r["created_at"].as<std::string>(),
                 r["updated_at"].as<std::string>()};
 }
 
 std::optional<User> UserRepository::find_by_id(const std::string& id)
 {
     auto db = db::get_db_client();
-    auto rows = db->execSqlSync("SELECT id,  username,  password_hash,  created_at,  updated_at"
+    auto rows = db->execSqlSync("SELECT id,  username,  password_hash,  role,  created_at,  updated_at"
                                 " FROM users WHERE id = $1::UUID",
                                 id.c_str());
     if (rows.empty())
         return std::nullopt;
     const auto& r = rows[0];
-    return User{r["id"].as<std::string>(), r["username"].as<std::string>(), r["password_hash"].as<std::string>(), r["created_at"].as<std::string>(),
+    return User{r["id"].as<std::string>(), r["username"].as<std::string>(), r["password_hash"].as<std::string>(), r["role"].as<std::string>(), r["created_at"].as<std::string>(),
                 r["updated_at"].as<std::string>()};
 }
 

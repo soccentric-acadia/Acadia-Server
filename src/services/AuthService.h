@@ -40,6 +40,9 @@ class AuthService
     // Create the initial admin user (only if no users exist yet).
     User ensure_admin(const std::string& username, const std::string& password);
 
+    // SRV-003: true when the user exists and has role='admin'.
+    bool is_admin(const std::string& user_id);
+
     // List tokens for user.
     std::vector<ApiToken> list_tokens(const std::string& user_id);
 

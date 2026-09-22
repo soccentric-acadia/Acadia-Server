@@ -86,9 +86,15 @@ User AuthService::ensure_admin(const std::string& username, const std::string& p
 
     util::Argon2Params p{cfg_.argon2_mem_kib, cfg_.argon2_iter, cfg_.argon2_parallel};
     std::string hash = util::argon2id_hash(password, p);
-    auto user = user_repo_.create(username, hash);
+    auto user = user_repo_.create(username, hash, /*role=*/"admin");
     spdlog::info("auth: created admin user '{}'", username);
     return user;
+}
+
+bool AuthService::is_admin(const std::string& user_id)
+{
+    auto user_opt = user_repo_.find_by_id(user_id);
+    return user_opt.has_value() && user_opt->role == "admin";
 }
 
 std::vector<ApiToken> AuthService::list_tokens(const std::string& user_id)

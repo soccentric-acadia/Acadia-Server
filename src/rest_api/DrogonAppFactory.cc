@@ -55,7 +55,7 @@ void configure_drogon_app(const Settings& settings, AuthService& auth_svc, RunSe
     app.registerController(std::make_shared<SchedulesController>(schedule_svc));
     app.registerController(std::make_shared<TemplatesController>(template_svc));
     app.registerController(std::make_shared<AlertsController>());
-    app.registerController(std::make_shared<BackupController>());
+    app.registerController(std::make_shared<BackupController>(auth_svc));
     app.registerController(std::make_shared<SettingsController>());
 
     if (!settings.cors_origins.empty()) {
