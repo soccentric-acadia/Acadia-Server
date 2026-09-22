@@ -60,6 +60,14 @@ class RunService
     // Finalize the run.
     void complete_run(const std::string& run_id, const std::string& status, const std::string& error = "");
 
+    // SRV-032/033: orchestration hooks set by main().
+    //  - completed_cb fires on every terminal run state so the RunDispatcher
+    //    can advance multi-module runs.
+    //  - control_handler routes cancel/pause/resume control messages to the
+    //    board the run was dispatched to ('stop'|'pause'|'resume').
+    void set_run_completed_cb(std::function<void(const std::string&, const std::string&)> cb);
+    void set_control_handler(std::function<void(const std::string&, const std::string&)> cb);
+
     void cancel_run(const std::string& run_id, const std::string& actor_user_id);
     void pause_run(const std::string& run_id, const std::string& actor_user_id);
     void resume_run(const std::string& run_id, const std::string& actor_user_id);
@@ -107,6 +115,9 @@ class RunService
     ResultRepository result_repo_;
     AuditRepository audit_repo_;
     NotificationRepository notif_repo_;
+
+    std::function<void(const std::string&, const std::string&)> run_completed_cb_;
+    std::function<void(const std::string&, const std::string&)> control_handler_;
 
     std::mutex subs_mutex_;
     std::unordered_map<uint64_t, ResultSubscriber> subs_;

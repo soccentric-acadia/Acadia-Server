@@ -24,6 +24,15 @@ bool ClientRegistry::Has(const std::string& board_id) const
     return streams_.find(board_id) != streams_.end();
 }
 
+std::vector<std::string> ClientRegistry::connected() const
+{
+    std::lock_guard<std::mutex> lk(mu_);
+    std::vector<std::string> out;
+    out.reserve(streams_.size());
+    for (const auto& [id, stream] : streams_) (void)stream, out.push_back(id);
+    return out;
+}
+
 bool ClientRegistry::SendControl(const std::string& board_id, acadia::stream::ServerMessage msg)
 {
     std::lock_guard<std::mutex> lk(mu_);

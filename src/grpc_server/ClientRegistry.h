@@ -13,6 +13,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace acadia::grpc
 {
@@ -25,6 +26,9 @@ class ClientRegistry
     void Register(const std::string& board_id, Stream* stream);
     void Unregister(const std::string& board_id);
     bool Has(const std::string& board_id) const;
+
+    // Board ids with a live control stream (RunDispatcher target selection).
+    std::vector<std::string> connected() const;
 
     // Send a control message to a board. Returns true if dispatched (a client
     // for that board was connected and the write succeeded).

@@ -59,9 +59,6 @@ get_filename_component(PROTO_SRC_DIR
 set(PROTO_GEN_DIR "${CMAKE_BINARY_DIR}/generated/proto")
 file(MAKE_DIRECTORY "${PROTO_GEN_DIR}")
 
-# Only compile the two protos needed in the server.
-# Module-specific protos are sent as google.protobuf.Any and don't need
-# to be compiled into this binary.
 set(PROTO_SRCS "")
 set(PROTO_HDRS "")
 
@@ -128,6 +125,31 @@ add_custom_command(
 )
 list(APPEND PROTO_SRCS "${CLIENT_PB_CC}" "${CLIENT_GRPC_CC}")
 list(APPEND PROTO_HDRS "${CLIENT_PB_H}"  "${CLIENT_GRPC_H}")
+
+# --- modules/*.proto (SRV-032) ---
+# The run dispatcher builds hal.modules.<id>.Config Any payloads from the
+# generated descriptor pool, so every module proto must be compiled in.
+file(GLOB ACADIA_MODULE_PROTOS "${PROTO_SRC_DIR}/modules/*.proto")
+foreach(_p ${ACADIA_MODULE_PROTOS})
+    file(RELATIVE_PATH _rel "${PROTO_SRC_DIR}" "${_p}")
+    string(REGEX REPLACE "\.proto$" ".pb.cc" _cc "${_rel}")
+    string(REGEX REPLACE "\.proto$" ".pb.h" _h "${_rel}")
+    set(_out_cc "${PROTO_GEN_DIR}/${_cc}")
+    set(_out_h "${PROTO_GEN_DIR}/${_h}")
+    add_custom_command(
+      OUTPUT  "${_out_cc}" "${_out_h}"
+      COMMAND "${PROTOC_EXE}"
+              --proto_path=${PROTO_SRC_DIR}
+              --proto_path=/usr/include
+              --cpp_out=${PROTO_GEN_DIR}
+              ${_p}
+      DEPENDS "${_p}" "${COMMON_PROTO}"
+      COMMENT "Generating protobuf C++ from ${_rel}"
+      VERBATIM
+    )
+    list(APPEND PROTO_SRCS "${_out_cc}")
+    list(APPEND PROTO_HDRS "${_out_h}")
+endforeach()
 
 # Proto static library
 add_library(acadia-proto STATIC ${PROTO_SRCS} ${PROTO_HDRS})

@@ -30,6 +30,7 @@
 
 #include "orchestration/OtaOrchestrator.h"
 #include "orchestration/RetentionScheduler.h"
+#include "orchestration/RunDispatcher.h"
 #include "orchestration/RunManager.h"
 #include "orchestration/Scheduler.h"
 #include "orchestration/TargetHeartbeat.h"
@@ -124,6 +125,17 @@ int main()
     acadia::orchestration::OtaOrchestrator ota_orch{ota_svc, client_registry};
     acadia::RetentionScheduler retention{run_svc};
 
+    // SRV-032/SRV-033: the run dispatcher sends queued runs to connected
+    // boards (ConfigureRun/StartRun) and routes cancel/pause/resume control
+    // messages to the dispatching board.
+    acadia::orchestration::RunDispatcher run_dispatcher{run_svc, *client_registry};
+    run_svc.set_run_completed_cb([&run_dispatcher](const std::string& run_id, const std::string& status) {
+        run_dispatcher.on_run_completed(run_id, status);
+    });
+    run_svc.set_control_handler([&run_dispatcher](const std::string& action, const std::string& run_id) {
+        run_dispatcher.send_control(action, run_id);
+    });
+
     // Reconcile any runs that were left in 'running'/'queued' state from a previous crash.
     {
         int stale = run_svc.reconcile_stale_runs();
@@ -136,6 +148,7 @@ int main()
     heartbeat.start();
     ota_orch.start();
     retention.start();
+    run_dispatcher.start();
 
     // --- gRPC Server (in background thread) ---
     acadia::BoardRepository board_repo; // Task 91: durable board lifecycle
@@ -171,6 +184,7 @@ int main()
     heartbeat.stop();
     retention.stop();
     ota_orch.stop();
+    run_dispatcher.stop();
     grpc_runner.shutdown();
     if (grpc_thread.joinable())
         grpc_thread.join();

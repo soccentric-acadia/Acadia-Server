@@ -121,24 +121,43 @@ void RunService::complete_run(const std::string& run_id, const std::string& stat
         notif_repo_.create("run.aborted", R"({"run_id":")" + run_id + "\"}");
         audit_repo_.log("", "run.aborted_with_partial_results", "run", run_id, "{}");
     }
+
+    // SRV-032: let the RunDispatcher advance multi-module runs.
+    if (run_completed_cb_) run_completed_cb_(run_id, status);
+}
+
+void RunService::set_run_completed_cb(std::function<void(const std::string&, const std::string&)> cb)
+{
+    run_completed_cb_ = std::move(cb);
+}
+
+void RunService::set_control_handler(std::function<void(const std::string&, const std::string&)> cb)
+{
+    control_handler_ = std::move(cb);
 }
 
 void RunService::cancel_run(const std::string& run_id, const std::string& actor_user_id)
 {
     run_repo_.update_status(run_id, "cancelled");
     audit_repo_.log(actor_user_id, "run.cancelled", "run", run_id, "{}");
+    // SRV-033: also stop the run on the device.
+    if (control_handler_) control_handler_("stop", run_id);
 }
 
 void RunService::pause_run(const std::string& run_id, const std::string& actor_user_id)
 {
     run_repo_.update_status(run_id, "paused");
     audit_repo_.log(actor_user_id, "run.paused", "run", run_id, "{}");
+    // SRV-033: also pause the run on the device.
+    if (control_handler_) control_handler_("pause", run_id);
 }
 
 void RunService::resume_run(const std::string& run_id, const std::string& actor_user_id)
 {
     run_repo_.update_status(run_id, "running");
     audit_repo_.log(actor_user_id, "run.resumed", "run", run_id, "{}");
+    // SRV-033: also resume the run on the device.
+    if (control_handler_) control_handler_("resume", run_id);
 }
 
 uint64_t RunService::subscribe_results(const std::string& run_id, ResultSubscriber cb)
