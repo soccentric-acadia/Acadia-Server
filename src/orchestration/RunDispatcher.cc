@@ -27,10 +27,10 @@ namespace
 // Map the run table's textual mode to hal.common.ExecutionMode.
 bool execution_mode_from_string(const std::string& mode, hal::common::ExecutionMode* out)
 {
-    if (mode == "single_shot") *out = hal::common::SINGLE_SHOT;
-    else if (mode == "long_term") *out = hal::common::LONG_TERM;
-    else if (mode == "monitoring") *out = hal::common::MONITORING;
-    else if (mode == "event_based") *out = hal::common::EVENT_BASED;
+    if (mode == "single_shot" || mode == "1") *out = hal::common::SINGLE_SHOT;
+    else if (mode == "long_term" || mode == "long_run" || mode == "2") *out = hal::common::LONG_TERM;
+    else if (mode == "monitoring" || mode == "3") *out = hal::common::MONITORING;
+    else if (mode == "event_based" || mode == "event" || mode == "4") *out = hal::common::EVENT_BASED;
     else return false;
     return true;
 }

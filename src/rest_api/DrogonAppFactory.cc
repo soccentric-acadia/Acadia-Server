@@ -45,7 +45,7 @@ void configure_drogon_app(const Settings& settings, AuthService& auth_svc, RunSe
 
     app.registerController(std::make_shared<HealthController>());
     app.registerController(std::make_shared<AuthController>(auth_svc));
-    app.registerController(std::make_shared<RunsController>(run_svc));
+    app.registerController(std::make_shared<RunsController>(run_svc, config_svc));
     app.registerController(std::make_shared<LogsController>(log_svc));
     app.registerController(std::make_shared<ModulesController>(mod_svc, run_svc, cmp_svc));
     app.registerController(std::make_shared<TargetsController>(target_svc));

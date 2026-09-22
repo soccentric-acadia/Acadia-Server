@@ -1,5 +1,6 @@
 #pragma once
 // rest_api/controllers/RunsController.h
+#include "services/ConfigService.h"
 #include "services/RunService.h"
 #include <drogon/HttpController.h>
 
@@ -9,7 +10,7 @@ namespace acadia::rest
 class RunsController : public drogon::HttpController<RunsController, false>
 {
   public:
-    explicit RunsController(RunService& svc);
+    explicit RunsController(RunService& svc, ConfigService& cfg_svc);
 
     METHOD_LIST_BEGIN
     ADD_METHOD_TO(RunsController::list, "/api/v1/runs", "AuthFilter", drogon::Get);
@@ -50,6 +51,7 @@ class RunsController : public drogon::HttpController<RunsController, false>
 
   private:
     RunService& svc_;
+    ConfigService& cfg_svc_;
 };
 
 } // namespace acadia::rest

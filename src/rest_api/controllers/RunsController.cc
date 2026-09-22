@@ -1,4 +1,5 @@
 #include "rest_api/controllers/RunsController.h"
+#include "services/ConfigService.h"
 #include "repositories/ResultRepository.h"
 #include "util/Errors.h"
 #include "util/ResultConvert.h"
@@ -142,7 +143,7 @@ static void append_csv_rows(std::ostringstream& out, const Result& r, const std:
 
 // ── Controller methods ────────────────────────────────────────────────────────
 
-RunsController::RunsController(RunService& svc) : svc_(svc)
+RunsController::RunsController(RunService& svc, ConfigService& cfg_svc) : svc_(svc), cfg_svc_(cfg_svc)
 {
 }
 
@@ -173,7 +174,25 @@ void RunsController::create(const drogon::HttpRequestPtr& req, std::function<voi
     std::string config_id = body ? (*body)["config_id"].asString() : "";
     std::string mode = normalize_mode(body ? (*body)["mode"].asString() : "single_shot");
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
-    auto run = svc_.start_run(config_id, mode, mode, user_id);
+
+    // SRV-032 companion fix: start_run previously stored the RAW config_id
+    // string as the "snapshot"; the RunDispatcher parses snapshot JSON, so a
+    // bare UUID would fail every dispatch. Resolve the TestConfig into its
+    // full snapshot JSON here (same shape TemplateService instantiates).
+    std::string snapshot_json = config_id;
+    try {
+        auto cfg = cfg_svc_.get(config_id);
+        snapshot_json = "{\"name\":\"" + cfg.name + "\",\"description\":\"" + cfg.description +
+                        "\",\"mode\":\"" + cfg.mode + "\",\"common_config\":" + cfg.common_config_json +
+                        ",\"modules\":" + cfg.modules_json + "}";
+    } catch (const NotFoundError&) {
+        // No such config id: keep the raw string — the dispatcher will fail
+        // the run with a clear "unparseable snapshot" error.
+    } catch (const std::exception& e) {
+        snapshot_json = config_id;
+    }
+
+    auto run = svc_.start_run(snapshot_json, mode, mode, user_id);
     cb(drogon::HttpResponse::newHttpJsonResponse(run_to_json(run)));
 }
 
