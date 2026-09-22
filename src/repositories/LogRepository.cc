@@ -67,8 +67,16 @@ std::vector<LogEntry> LogRepository::list(const LogFilter& f)
     }
 
     sql << " ORDER BY timestamp DESC LIMIT " << f.limit << " OFFSET " << f.offset;
+    // SRV-134: port the RunRepository X2-005 fix. The old switch had a
+    // `default` branch binding params[0]/params[1] even when the SQL had 0 or
+    // 1 placeholders (UB/crash on GET /api/v1/logs with no filters) and only
+    // bound 2 of 6 filters. Bind exactly the parameters present.
     auto rows = [&]() -> drogon::orm::Result {
         switch (params.size()) {
+        case 0:
+            return db->execSqlSync(sql.str());
+        case 1:
+            return db->execSqlSync(sql.str(), params[0].c_str());
         case 2:
             return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str());
         case 3:
@@ -77,8 +85,10 @@ std::vector<LogEntry> LogRepository::list(const LogFilter& f)
             return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str());
         case 5:
             return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), params[4].c_str());
+        case 6:
+            return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), params[4].c_str(), params[5].c_str());
         default:
-            return db->execSqlSync(sql.str(), params[0].c_str(), params[1].c_str());
+            throw std::runtime_error("LogRepository::list: too many filter parameters");
         }
     }();
 
