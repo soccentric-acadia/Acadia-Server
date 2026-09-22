@@ -103,6 +103,23 @@ int main()
 
     // --- Services ---
     acadia::AuthService auth_svc{settings.auth};
+
+    // PAR-007: bootstrap the initial admin so operators (and the E2E
+    // pipeline) can log into an authenticated deployment. Optional: only when
+    // both variables are provided and no users exist yet.
+    {
+        const char* admin_user = std::getenv("ACADIA_ADMIN_USERNAME");
+        const char* admin_pass = std::getenv("ACADIA_ADMIN_PASSWORD");
+        if (admin_user && *admin_user && admin_pass && *admin_pass) {
+            try {
+                auth_svc.ensure_admin(admin_user, admin_pass);
+                spdlog::info("bootstrap admin user '{}' ensured", admin_user);
+            } catch (const std::exception& e) {
+                spdlog::error("bootstrap admin failed: {}", e.what());
+            }
+        }
+    }
+
     acadia::RunService run_svc;
     acadia::LogService log_svc;
     acadia::ModuleService mod_svc{registry};
