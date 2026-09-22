@@ -7,8 +7,11 @@
 #include "common.pb.h"
 
 #include <google/protobuf/any.pb.h>
+#include <google/protobuf/util/time_util.h>
+#include <json/json.h>
 #include <spdlog/spdlog.h>
 
+#include <chrono>
 #include <thread>
 #include <vector>
 
@@ -71,7 +74,7 @@ void HalServiceImpl::persist_result(const std::string& run_id, const hal::common
     run_svc_.ingest_test_result(tr, run_id, module_version, mode);
 }
 
-::grpc::Status HalServiceImpl::RunSingleShot(::grpc::ServerContext* /*ctx*/, const hal::SingleShotRequest* req, hal::common::ResultEnvelope* resp)
+::grpc::Status HalServiceImpl::RunSingleShot(::grpc::ServerContext* ctx, const hal::SingleShotRequest* req, hal::common::ResultEnvelope* resp)
 {
 
     auto status = validate_module(req->module_id());
@@ -80,30 +83,71 @@ void HalServiceImpl::persist_result(const std::string& run_id, const hal::common
 
     spdlog::info("grpc: RunSingleShot module_id={}", req->module_id());
 
-    // Task 83: carry the real request into the run snapshot (module_config +
-    // common config), not a synthetic empty "{}". The client dispatches the
-    // actual execution; the run is created with the request it represents.
-    std::string cfg_json = "{}";
-    if (req->has_module_config()) {
-        std::string any_bytes;
-        req->module_config().SerializeToString(&any_bytes);
-        cfg_json = "{\"module_config\":\"" + any_bytes +
-                   "\","
-                   "\"common\":\"" +
-                   req->common().SerializeAsString() + "\"}";
+    // SRV-034: the server must NEVER fabricate a PASS verdict. The single-shot
+    // run is created in the 'queued' state and executed on a real device by
+    // the RunDispatcher (ConfigureRun/StartRun); this RPC then waits — bounded
+    // by the gRPC deadline (max 120 s) — for the run's real results and
+    // returns the actual last verdict. No connected board ⇒ UNAVAILABLE, no
+    // response within the bound ⇒ the run is failed (never 'completed PASS').
+    std::string cfg_json = "{\"module_id\":\"" + req->module_id() + "\"}";
+    {
+        Json::Value snap;
+        snap["modules"] = Json::Value(Json::arrayValue);
+        Json::Value m(Json::objectValue);
+        m["module_id"] = req->module_id();
+        snap["modules"].append(m);
+        Json::StreamWriterBuilder w;
+        w["indentation"] = "";
+        cfg_json = Json::writeString(w, snap);
     }
     auto run = run_svc_.start_run(cfg_json, "single_shot", "single_shot", "");
-    run_svc_.mark_running(run.id);
 
-    // The actual execution happens on the client (HAL); we just record the result.
-    // The client will call this RPC and return a ResultEnvelope directly.
-    // We echo it back and persist it.
+    // Bounded wait for the dispatcher-driven device execution.
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{120};
+    while (std::chrono::steady_clock::now() < deadline) {
+        if (ctx->IsCancelled()) {
+            run_svc_.cancel_run(run.id, "");
+            return ::grpc::Status{::grpc::StatusCode::CANCELLED, "client cancelled"};
+        }
+        auto r = run_svc_.get_run(run.id);
+        if (r.status != "queued" && r.status != "running" && r.status != "paused") break;
+        std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    }
+
+    auto run_row = run_svc_.get_run(run.id);
+    if (run_row.status == "queued") {
+        // No device picked the run up within the wait window.
+        run_svc_.complete_run(run.id, "failed", "no device available to execute the single-shot run");
+        return ::grpc::Status{::grpc::StatusCode::UNAVAILABLE,
+                              "no connected board — run kept for retry but no result is fabricated"};
+    }
+    if (run_row.status == "running" || run_row.status == "paused") {
+        run_svc_.complete_run(run.id, "failed", "single-shot wait timed out before terminal batch");
+        return ::grpc::Status{::grpc::StatusCode::DEADLINE_EXCEEDED,
+                              "device did not complete the run within 120 s — no PASS is fabricated"};
+    }
+
+    // Build the envelope from the run's REAL ingested results.
+    ResultFilter rf;
+    rf.run_id = run.id;
+    rf.limit = 1000;
+    auto results = run_svc_.get_results(rf);
     resp->set_module_id(req->module_id());
-    resp->set_status(hal::common::PASS);
-
-    persist_result(run.id, *resp);
-    run_svc_.complete_run(run.id, "completed");
-
+    resp->mutable_timestamp()->CopyFrom(google::protobuf::util::TimeUtil::GetCurrentTime());
+    if (results.empty()) {
+        resp->set_status(hal::common::TEST_STATUS_ERROR);
+        resp->set_error_message("run finished with no ingested results");
+    } else {
+        // Aggregate: worst of the sample statuses (real device verdicts).
+        int16_t worst = 1; // PASS
+        for (const auto& r : results) {
+            if (r.status > worst) worst = r.status;
+        }
+        resp->set_status(static_cast<hal::common::TestStatus>(worst));
+        if (results.back().status > 1)
+            resp->set_error_message(results.back().error_message);
+    }
+    // Results are already persisted by the ingest path; do not re-ingest.
     return ::grpc::Status::OK;
 }
 
