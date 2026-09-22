@@ -11,7 +11,7 @@ class BackupController : public drogon::HttpController<BackupController, false>
     BackupController() = default;
 
     METHOD_LIST_BEGIN
-    ADD_METHOD_TO(BackupController::backup, "/api/v1/backup", drogon::Post);
+    ADD_METHOD_TO(BackupController::backup, "/api/v1/backup", "AuthFilter", drogon::Post);
     METHOD_LIST_END
 
     // POST /api/v1/backup — triggers pg_dump and returns the dump as a download

@@ -35,6 +35,11 @@ void configure_drogon_app(const Settings& settings, AuthService& auth_svc, RunSe
 
     app.enableSession(3600, drogon::Cookie::SameSite::kStrict);
 
+    // SRV-002: Drogon cannot auto-instantiate AuthFilter by name (it needs an
+    // AuthService&). Register the instance here so every route that lists
+    // "AuthFilter" resolves against this instance.
+    app.registerFilter(std::make_shared<AuthFilter>(auth_svc));
+
     int threads = static_cast<int>(settings.concurrency.http_threads);
     app.setThreadNum(threads > 0 ? threads : 4);
 

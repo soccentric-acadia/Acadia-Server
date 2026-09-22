@@ -14,11 +14,11 @@ class ModulesController : public drogon::HttpController<ModulesController, false
     ModulesController(ModuleService& svc, RunService& run_svc, CompareService& cmp_svc);
 
     METHOD_LIST_BEGIN
-    ADD_METHOD_TO(ModulesController::list, "/api/v1/modules", drogon::Get);
-    ADD_METHOD_TO(ModulesController::get, "/api/v1/modules/{id}", drogon::Get);
-    ADD_METHOD_TO(ModulesController::trend, "/api/v1/modules/{id}/trend", drogon::Get);
-    ADD_METHOD_TO(ModulesController::distribution, "/api/v1/modules/{id}/distribution", drogon::Get);
-    ADD_METHOD_TO(ModulesController::compare_runs, "/api/v1/runs/{a}/compare/{b}", drogon::Get);
+    ADD_METHOD_TO(ModulesController::list, "/api/v1/modules", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(ModulesController::get, "/api/v1/modules/{id}", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(ModulesController::trend, "/api/v1/modules/{id}/trend", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(ModulesController::distribution, "/api/v1/modules/{id}/distribution", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(ModulesController::compare_runs, "/api/v1/runs/{a}/compare/{b}", "AuthFilter", drogon::Get);
     METHOD_LIST_END
 
     void list(const drogon::HttpRequestPtr&, std::function<void(const drogon::HttpResponsePtr&)>&&);

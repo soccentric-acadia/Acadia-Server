@@ -12,11 +12,11 @@ class TargetsController : public drogon::HttpController<TargetsController, false
     explicit TargetsController(TargetService& svc);
 
     METHOD_LIST_BEGIN
-    ADD_METHOD_TO(TargetsController::get_board, "/api/v1/target", drogon::Get);
-    ADD_METHOD_TO(TargetsController::register_board, "/api/v1/target", drogon::Post);
-    ADD_METHOD_TO(TargetsController::update_board, "/api/v1/target", drogon::Put);
-    ADD_METHOD_TO(TargetsController::delete_board, "/api/v1/target", drogon::Delete);
-    ADD_METHOD_TO(TargetsController::heartbeat, "/api/v1/target/heartbeat", drogon::Post);
+    ADD_METHOD_TO(TargetsController::get_board, "/api/v1/target", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(TargetsController::register_board, "/api/v1/target", "AuthFilter", drogon::Post);
+    ADD_METHOD_TO(TargetsController::update_board, "/api/v1/target", "AuthFilter", drogon::Put);
+    ADD_METHOD_TO(TargetsController::delete_board, "/api/v1/target", "AuthFilter", drogon::Delete);
+    ADD_METHOD_TO(TargetsController::heartbeat, "/api/v1/target/heartbeat", "AuthFilter", drogon::Post);
     METHOD_LIST_END
 
     void get_board(const drogon::HttpRequestPtr&, std::function<void(const drogon::HttpResponsePtr&)>&&);

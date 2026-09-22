@@ -12,11 +12,11 @@ class OtaController : public drogon::HttpController<OtaController, false>
     explicit OtaController(OtaService& svc);
 
     METHOD_LIST_BEGIN
-    ADD_METHOD_TO(OtaController::list, "/api/v1/ota", drogon::Get);
-    ADD_METHOD_TO(OtaController::get, "/api/v1/ota/{id}", drogon::Get);
-    ADD_METHOD_TO(OtaController::upload, "/api/v1/ota/upload", drogon::Post);
-    ADD_METHOD_TO(OtaController::trigger, "/api/v1/ota/{id}/trigger", drogon::Post);
-    ADD_METHOD_TO(OtaController::rollback, "/api/v1/ota/{id}/rollback", drogon::Post);
+    ADD_METHOD_TO(OtaController::list, "/api/v1/ota", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(OtaController::get, "/api/v1/ota/{id}", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(OtaController::upload, "/api/v1/ota/upload", "AuthFilter", drogon::Post);
+    ADD_METHOD_TO(OtaController::trigger, "/api/v1/ota/{id}/trigger", "AuthFilter", drogon::Post);
+    ADD_METHOD_TO(OtaController::rollback, "/api/v1/ota/{id}/rollback", "AuthFilter", drogon::Post);
     METHOD_LIST_END
 
     void list(const drogon::HttpRequestPtr&, std::function<void(const drogon::HttpResponsePtr&)>&&);

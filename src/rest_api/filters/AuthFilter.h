@@ -7,7 +7,10 @@
 namespace acadia::rest
 {
 
-class AuthFilter : public drogon::HttpFilter<AuthFilter>
+// SRV-002: AutoCreation=false — Drogon cannot auto-instantiate this filter by
+// name (it requires an AuthService&); it is registered explicitly via
+// app().registerFilter() in DrogonAppFactory.cc.
+class AuthFilter : public drogon::HttpFilter<AuthFilter, false>
 {
   public:
     explicit AuthFilter(AuthService& auth_svc);

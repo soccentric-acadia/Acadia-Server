@@ -12,15 +12,15 @@ class LogsController : public drogon::HttpController<LogsController, false>
     explicit LogsController(LogService& svc);
 
     METHOD_LIST_BEGIN
-    ADD_METHOD_TO(LogsController::list, "/api/v1/runs/{run_id}/logs", drogon::Get);
-    ADD_METHOD_TO(LogsController::tail, "/api/v1/runs/{run_id}/logs/tail", drogon::Get);
-    ADD_METHOD_TO(LogsController::global_list, "/api/v1/logs", drogon::Get);
-    ADD_METHOD_TO(LogsController::search, "/api/v1/logs/search", drogon::Get);
-    ADD_METHOD_TO(LogsController::list_bookmarks, "/api/v1/logs/bookmarks", drogon::Get);
-    ADD_METHOD_TO(LogsController::create_bookmark, "/api/v1/logs/bookmarks", drogon::Post);
-    ADD_METHOD_TO(LogsController::delete_bookmark, "/api/v1/logs/bookmarks/{id}", drogon::Delete);
-    ADD_METHOD_TO(LogsController::list_views, "/api/v1/logs/views", drogon::Get);
-    ADD_METHOD_TO(LogsController::create_view, "/api/v1/logs/views", drogon::Post);
+    ADD_METHOD_TO(LogsController::list, "/api/v1/runs/{run_id}/logs", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(LogsController::tail, "/api/v1/runs/{run_id}/logs/tail", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(LogsController::global_list, "/api/v1/logs", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(LogsController::search, "/api/v1/logs/search", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(LogsController::list_bookmarks, "/api/v1/logs/bookmarks", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(LogsController::create_bookmark, "/api/v1/logs/bookmarks", "AuthFilter", drogon::Post);
+    ADD_METHOD_TO(LogsController::delete_bookmark, "/api/v1/logs/bookmarks/{id}", "AuthFilter", drogon::Delete);
+    ADD_METHOD_TO(LogsController::list_views, "/api/v1/logs/views", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(LogsController::create_view, "/api/v1/logs/views", "AuthFilter", drogon::Post);
     METHOD_LIST_END
 
     void list(const drogon::HttpRequestPtr&, std::function<void(const drogon::HttpResponsePtr&)>&&, std::string run_id);
