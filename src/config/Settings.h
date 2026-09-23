@@ -18,6 +18,7 @@ struct DbSettings
     std::string password;
     uint32_t pool_size = 10;
     uint32_t connect_timeout = 10; // seconds
+    std::string sslmode; // SRV-084: e.g. "require"/"verify-full"; empty = libpq default
 };
 
 struct NetworkSettings
@@ -68,6 +69,11 @@ struct OtaSettings
     std::string signing_key_path; // empty = skip signature verification
 };
 
+struct BackupSettings
+{
+    std::string dir = "/var/lib/acadia/backups"; // SRV-005/006: dump target directory
+};
+
 struct Settings
 {
     DbSettings db;
@@ -77,6 +83,7 @@ struct Settings
     AuthSettings auth;
     SmtpSettings smtp;
     OtaSettings ota;
+    BackupSettings backup; // SRV-005: backup dir is part of Settings, not a raw env lookup
     std::string log_level = "info";
     uint32_t shutdown_timeout = 30; // seconds
     std::string registry_path = "../protos/registry/modules.yaml";

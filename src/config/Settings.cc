@@ -78,6 +78,7 @@ Settings load_settings()
     s.db.password = env_str("ACADIA_DB_PASSWORD", "");
     s.db.pool_size = env_u32("ACADIA_DB_POOL_SIZE", 10);
     s.db.connect_timeout = env_u32("ACADIA_DB_CONNECT_TIMEOUT_SEC", 10);
+    s.db.sslmode = env_str("ACADIA_DB_SSLMODE", ""); // SRV-084
 
     // Network
     s.network.grpc_listen = env_str("ACADIA_GRPC_LISTEN", "0.0.0.0:50051");
@@ -124,6 +125,9 @@ Settings load_settings()
     // OTA
     s.ota.storage_path = env_str("ACADIA_OTA_STORAGE_PATH", "/var/lib/acadia/ota");
     s.ota.signing_key_path = env_str("ACADIA_OTA_SIGNING_KEY_PATH", "");
+
+    // Backup (SRV-005)
+    s.backup.dir = env_str("ACADIA_BACKUP_DIR", "/var/lib/acadia/backups");
 
     // Misc
     s.log_level = env_str("ACADIA_LOG_LEVEL", "info");
