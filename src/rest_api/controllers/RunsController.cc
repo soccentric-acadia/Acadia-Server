@@ -1,4 +1,5 @@
 #include "rest_api/controllers/RunsController.h"
+#include "rest_api/AccessControl.h"
 #include "services/ConfigService.h"
 #include "repositories/ResultRepository.h"
 #include "util/Errors.h"
@@ -13,9 +14,23 @@
 #include <mutex>
 #include <queue>
 #include <sstream>
+#include <stdexcept>
 
 namespace acadia::rest
 {
+
+// jsoncpp has no Json::parse(); parse via CharReaderBuilder/parseFromStream.
+// Throws std::runtime_error on malformed input so callers can fall back.
+static Json::Value parse_json_or_throw(const std::string& s)
+{
+    Json::CharReaderBuilder rb;
+    Json::Value v;
+    std::string errs;
+    std::istringstream ss(s);
+    if (!Json::parseFromStream(rb, ss, &v, &errs))
+        throw std::runtime_error("malformed JSON: " + errs);
+    return v;
+}
 
 // Canonical mode mapping (REST wire string u2192 canonical form)
 // Dashboard sends: "single_shot", "long_run", "monitoring", "event"
@@ -170,21 +185,30 @@ void RunsController::list(const drogon::HttpRequestPtr& req, std::function<void(
 
 void RunsController::create(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb)
 {
+    // SRV-007: viewer role is read-only — mutations require operator or higher.
+    if (forbidden(req, std::move(cb), {"admin", "operator"}))
+        return;
+
     auto body = req->getJsonObject();
     std::string config_id = body ? (*body)["config_id"].asString() : "";
     std::string mode = normalize_mode(body ? (*body)["mode"].asString() : "single_shot");
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
 
-    // SRV-032 companion fix: start_run previously stored the RAW config_id
-    // string as the "snapshot"; the RunDispatcher parses snapshot JSON, so a
-    // bare UUID would fail every dispatch. Resolve the TestConfig into its
-    // full snapshot JSON here (same shape TemplateService instantiates).
+    // SRV-032/SRV-140 companion fix: start_run previously stored the RAW
+    // config_id string as the "snapshot"; the RunDispatcher parses snapshot
+    // JSON, so a bare UUID would fail every dispatch. Resolve the TestConfig
+    // into its full snapshot JSON (jsoncpp-built so names with special
+    // characters can never break the JSONB document — SRV-010).
     std::string snapshot_json = config_id;
     try {
         auto cfg = cfg_svc_.get(config_id);
-        snapshot_json = "{\"name\":\"" + cfg.name + "\",\"description\":\"" + cfg.description +
-                        "\",\"mode\":\"" + cfg.mode + "\",\"common_config\":" + cfg.common_config_json +
-                        ",\"modules\":" + cfg.modules_json + "}";
+        Json::Value snap;
+        snap["name"] = cfg.name;
+        snap["description"] = cfg.description;
+        snap["mode"] = cfg.mode;
+        snap["common_config"] = cfg.common_config_json.empty() ? Json::Value{} : parse_json_or_throw(cfg.common_config_json);
+        snap["modules"] = cfg.modules_json.empty() ? Json::Value{} : parse_json_or_throw(cfg.modules_json);
+        snapshot_json = Json::writeString(Json::StreamWriterBuilder{}, snap);
     } catch (const NotFoundError&) {
         // No such config id: keep the raw string — the dispatcher will fail
         // the run with a clear "unparseable snapshot" error.
@@ -213,6 +237,10 @@ void RunsController::get(const drogon::HttpRequestPtr& /*req*/, std::function<vo
 
 void RunsController::cancel(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
+    // SRV-007: viewer role is read-only — mutations require operator or higher.
+    if (forbidden(req, std::move(cb), {"admin", "operator"}))
+        return;
+
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     svc_.cancel_run(id, user_id);
     Json::Value resp;
@@ -222,6 +250,9 @@ void RunsController::cancel(const drogon::HttpRequestPtr& req, std::function<voi
 
 void RunsController::pause(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
+    /* SRV-007: viewer role is read-only — mutations require operator or higher. */
+    if (forbidden(req, std::move(cb), {"admin", "operator"}))
+        return;
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     svc_.pause_run(id, user_id);
     Json::Value resp;
@@ -231,6 +262,9 @@ void RunsController::pause(const drogon::HttpRequestPtr& req, std::function<void
 
 void RunsController::resume(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
+    /* SRV-007: viewer role is read-only — mutations require operator or higher. */
+    if (forbidden(req, std::move(cb), {"admin", "operator"}))
+        return;
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     svc_.resume_run(id, user_id);
     Json::Value resp;
@@ -372,6 +406,9 @@ void RunsController::events(const drogon::HttpRequestPtr& /*req*/, std::function
 
 void RunsController::remove(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
+    /* SRV-007: viewer role is read-only — mutations require operator or higher. */
+    if (forbidden(req, std::move(cb), {"admin", "operator"}))
+        return;
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     try {
         svc_.delete_run(id, user_id);
@@ -390,6 +427,9 @@ void RunsController::remove(const drogon::HttpRequestPtr& req, std::function<voi
 
 void RunsController::baseline(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
+    /* SRV-007: viewer role is read-only — mutations require operator or higher. */
+    if (forbidden(req, std::move(cb), {"admin", "operator"}))
+        return;
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     try {
         svc_.set_baseline(id, user_id);
@@ -408,6 +448,9 @@ void RunsController::baseline(const drogon::HttpRequestPtr& req, std::function<v
 
 void RunsController::rerun(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
+    /* SRV-007: viewer role is read-only — mutations require operator or higher. */
+    if (forbidden(req, std::move(cb), {"admin", "operator"}))
+        return;
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     try {
         auto new_run = svc_.rerun(id, user_id);

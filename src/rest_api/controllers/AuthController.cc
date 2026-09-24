@@ -4,6 +4,8 @@
 #include <json/json.h>
 #include <spdlog/spdlog.h>
 
+#include <chrono>
+
 namespace acadia::rest
 {
 
@@ -12,10 +14,6 @@ static Json::Value err_json(const std::string& msg)
     Json::Value v;
     v["error"] = msg;
     return v;
-}
-
-AuthController::AuthController(AuthService& svc) : svc_(svc)
-{
 }
 
 void AuthController::login(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb)
@@ -28,7 +26,7 @@ void AuthController::login(const drogon::HttpRequestPtr& req, std::function<void
     auto username = (*body)["username"].asString();
     auto password = (*body)["password"].asString();
     try {
-        auto result = svc_.login(username, password, "");
+        auto result = svc_.login(username, password, req->getPeerAddr().toIp());
         if (!result) {
             auto resp = drogon::HttpResponse::newHttpJsonResponse(err_json("invalid credentials"));
             resp->setStatusCode(drogon::k401Unauthorized);
@@ -37,10 +35,24 @@ void AuthController::login(const drogon::HttpRequestPtr& req, std::function<void
         }
         auto session = req->getSession();
         session->insert("user_id", result->user.id);
-        Json::Value resp;
-        resp["user_id"] = result->user.id;
-        resp["username"] = result->user.username;
-        cb(drogon::HttpResponse::newHttpJsonResponse(resp));
+        session->insert("role", result->user.role);
+        // SRV-016/017: persistent, DB-backed session presented as an
+        // HttpOnly + SameSite cookie that survives restarts and works across
+        // instances; Secure is set when the deployment serves HTTPS
+        // (ACADIA_COOKIE_SECURE=1, e.g. behind a TLS reverse proxy).
+        drogon::Cookie cookie{AuthService::kSessionCookie, result->session_token};
+        cookie.setPath("/");
+        cookie.setMaxAge(AuthService::kSessionLifetimeSec);
+        cookie.setSameSite(drogon::Cookie::SameSite::kStrict);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(cookie_secure_);
+        Json::Value body_out;
+        body_out["user_id"] = result->user.id;
+        body_out["username"] = result->user.username;
+        body_out["role"] = result->user.role;
+        auto json_resp = drogon::HttpResponse::newHttpJsonResponse(body_out);
+        json_resp->addCookie(std::move(cookie));
+        cb(json_resp);
     }
     catch (const AuthError& e) {
         auto resp = drogon::HttpResponse::newHttpJsonResponse(err_json(e.what()));
@@ -51,10 +63,21 @@ void AuthController::login(const drogon::HttpRequestPtr& req, std::function<void
 
 void AuthController::logout(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb)
 {
+    // SRV-016: drop the persistent session server-side and clear the cookie.
+    if (auto sc = req->getCookie(AuthService::kSessionCookie); !sc.empty()) {
+        svc_.delete_session(sc);
+    }
     req->getSession()->clear();
-    Json::Value resp;
-    resp["ok"] = true;
-    cb(drogon::HttpResponse::newHttpJsonResponse(resp));
+    Json::Value body_out;
+    body_out["ok"] = true;
+    auto json_resp = drogon::HttpResponse::newHttpJsonResponse(body_out);
+    drogon::Cookie expired{AuthService::kSessionCookie, ""};
+    expired.setPath("/");
+    expired.setMaxAge(-1); // expired
+    expired.setHttpOnly(true);
+    expired.setSecure(cookie_secure_);
+    json_resp->addCookie(std::move(expired));
+    cb(json_resp);
 }
 
 void AuthController::create_token(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb)
@@ -62,11 +85,22 @@ void AuthController::create_token(const drogon::HttpRequestPtr& req, std::functi
     std::string user_id = req->getAttributes()->get<std::string>("user_id");
     auto body = req->getJsonObject();
     std::string label = body ? (*body)["label"].asString() : "default";
-    auto [token_rec, token_str] = svc_.create_api_token(user_id, label);
+    // SRV-013: optional ttl_hours + scopes in the request body.
+    std::optional<std::chrono::system_clock::time_point> exp;
+    std::string scopes;
+    if (body) {
+        if ((*body).isMember("ttl_hours") && (*body)["ttl_hours"].asInt() > 0) {
+            exp = std::chrono::system_clock::now() + std::chrono::hours{(*body)["ttl_hours"].asInt()};
+        }
+        scopes = (*body)["scopes"].asString();
+    }
+    auto [token_rec, token_str] = svc_.create_api_token(user_id, label, exp, scopes);
     Json::Value resp;
     resp["token"] = token_str; // only shown once
     resp["id"] = token_rec.id;
     resp["label"] = token_rec.name;
+    resp["expires_at"] = token_rec.expires_at;
+    resp["scopes"] = token_rec.scopes;
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
 
@@ -85,6 +119,7 @@ void AuthController::list_tokens(const drogon::HttpRequestPtr& req, std::functio
     resp["tokens"] = arr;
     cb(drogon::HttpResponse::newHttpJsonResponse(resp));
 }
+
 
 void AuthController::revoke_token(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {

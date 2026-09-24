@@ -2,6 +2,7 @@
 // rest_api/controllers/SettingsController.h — manages runtime-mutable server
 // settings (data retention, etc.).  Backed by the app_settings DB table.
 
+#include "rest_api/AccessControl.h"
 #include <drogon/HttpController.h>
 #include <drogon/orm/DbClient.h>
 

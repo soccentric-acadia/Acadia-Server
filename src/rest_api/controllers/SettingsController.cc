@@ -1,4 +1,6 @@
 #include "rest_api/controllers/SettingsController.h"
+#include "rest_api/AccessControl.h"
+#include "db/DbClient.h"
 #include <drogon/HttpResponse.h>
 #include <drogon/orm/DbClient.h>
 #include <json/json.h>
@@ -12,7 +14,7 @@ namespace acadia::rest
 // DbClient.  Returns the value string, or the provided default if not found.
 static std::string read_setting(const std::string& key, const std::string& def = "")
 {
-    auto db = drogon::app().getDbClient();
+    auto db = acadia::db::get_db_client(); // SRV-069: use the process DbClient, not the unconfigured app-level client
     if (!db)
         return def;
     try {
@@ -28,7 +30,7 @@ static std::string read_setting(const std::string& key, const std::string& def =
 
 static void write_setting(const std::string& key, const std::string& value)
 {
-    auto db = drogon::app().getDbClient();
+    auto db = acadia::db::get_db_client(); // SRV-069: use the process DbClient, not the unconfigured app-level client
     if (!db)
         return;
     db->execSqlSync("INSERT INTO app_settings (key, value, updated_at) VALUES ($1,$2,NOW()) "
@@ -52,6 +54,16 @@ void SettingsController::get_retention(const drogon::HttpRequestPtr& /*req*/, st
 
 void SettingsController::put_retention(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb)
 {
+    // SRV-007: settings changes are admin-only (viewer/operator are read-only).
+    if (!has_role(req, {"admin"})) {
+        Json::Value err;
+        err["error"] = "Forbidden: admin role required";
+        auto r = drogon::HttpResponse::newHttpJsonResponse(err);
+        r->setStatusCode(drogon::k403Forbidden);
+        cb(r);
+        return;
+    }
+
     auto body = req->getJsonObject();
     if (!body) {
         Json::Value err;

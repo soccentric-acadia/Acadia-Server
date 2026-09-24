@@ -4,6 +4,7 @@
 // return real stored data. Evaluation of thresholds happens in RunService.
 
 #include "rest_api/controllers/AlertsController.h"
+#include "db/DbClient.h"
 #include <drogon/HttpResponse.h>
 #include <drogon/orm/DbClient.h>
 #include <json/json.h>
@@ -35,7 +36,7 @@ Json::Value rule_from_row(const drogon::orm::Result::value_type& row)
 // Load a rule by id. Returns nullopt if absent.
 std::optional<Json::Value> load_rule(const std::string& id)
 {
-    auto db = drogon::app().getDbClient();
+    auto db = acadia::db::get_db_client(); // SRV-069: use the process DbClient, not the unconfigured app-level client
     if (!db)
         return std::nullopt;
     try {
@@ -56,7 +57,7 @@ std::optional<Json::Value> load_rule(const std::string& id)
 void AlertsController::list(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb)
 {
     Json::Value resp;
-    auto db = drogon::app().getDbClient();
+    auto db = acadia::db::get_db_client(); // SRV-069: use the process DbClient, not the unconfigured app-level client
     if (!db) {
         Json::Value err;
         err["error"] = "database unavailable";
@@ -126,7 +127,7 @@ void AlertsController::create(const drogon::HttpRequestPtr& req, std::function<v
         return;
     }
 
-    auto db = drogon::app().getDbClient();
+    auto db = acadia::db::get_db_client(); // SRV-069: use the process DbClient, not the unconfigured app-level client
     if (!db) {
         Json::Value err;
         err["error"] = "database unavailable";
@@ -196,7 +197,7 @@ void AlertsController::update(const drogon::HttpRequestPtr& req, std::function<v
         cb(resp);
         return;
     }
-    auto db = drogon::app().getDbClient();
+    auto db = acadia::db::get_db_client(); // SRV-069: use the process DbClient, not the unconfigured app-level client
     if (!db) {
         Json::Value err;
         err["error"] = "database unavailable";
@@ -276,7 +277,7 @@ void AlertsController::update(const drogon::HttpRequestPtr& req, std::function<v
 
 void AlertsController::remove(const drogon::HttpRequestPtr& /*req*/, std::function<void(const drogon::HttpResponsePtr&)>&& cb, std::string id)
 {
-    auto db = drogon::app().getDbClient();
+    auto db = acadia::db::get_db_client(); // SRV-069: use the process DbClient, not the unconfigured app-level client
     if (!db) {
         Json::Value err;
         err["error"] = "database unavailable";

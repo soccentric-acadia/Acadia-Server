@@ -16,10 +16,22 @@
 #include "rest_api/filters/AuthFilter.h"
 #include "services/CompareService.h"
 
+#include <cstdlib>
 #include <spdlog/spdlog.h>
 
 namespace acadia::rest
 {
+
+namespace
+{
+bool env_bool(const char* var, bool def)
+{
+    const char* v = std::getenv(var);
+    if (!v || *v == '\0')
+        return def;
+    return std::string{v} == "true" || std::string{v} == "1" || std::string{v} == "yes";
+}
+} // namespace
 
 void configure_drogon_app(const Settings& settings, AuthService& auth_svc, RunService& run_svc, LogService& log_svc, ModuleService& mod_svc,
                           TargetService& target_svc, ConfigService& config_svc, TemplateService& template_svc, ScheduleService& schedule_svc,
@@ -40,11 +52,14 @@ void configure_drogon_app(const Settings& settings, AuthService& auth_svc, RunSe
     // "AuthFilter" resolves against this instance.
     app.registerFilter(std::make_shared<AuthFilter>(auth_svc));
 
+    // SRV-017: Secure session cookies when the deployment fronts HTTPS.
+    const bool secure_cookies = env_bool("ACADIA_COOKIE_SECURE", false);
+
     int threads = static_cast<int>(settings.concurrency.http_threads);
     app.setThreadNum(threads > 0 ? threads : 4);
 
     app.registerController(std::make_shared<HealthController>());
-    app.registerController(std::make_shared<AuthController>(auth_svc));
+    app.registerController(std::make_shared<AuthController>(auth_svc, secure_cookies));
     app.registerController(std::make_shared<RunsController>(run_svc, config_svc));
     app.registerController(std::make_shared<LogsController>(log_svc));
     app.registerController(std::make_shared<ModulesController>(mod_svc, run_svc, cmp_svc));

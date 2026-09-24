@@ -4,6 +4,8 @@
 #include <drogon/HttpResponse.h>
 #include <spdlog/spdlog.h>
 
+#include <json/json.h>
+
 namespace acadia::rest
 {
 
@@ -20,7 +22,9 @@ void AuthFilter::doFilter(const drogon::HttpRequestPtr& req, drogon::FilterCallb
         try {
             auto user_id_opt = auth_svc_.authenticate_token(token);
             if (user_id_opt) {
+                auto user = auth_svc_.get_user(*user_id_opt);
                 req->getAttributes()->insert("user_id", *user_id_opt);
+                req->getAttributes()->insert("role", user ? user->role : std::string{"viewer"});
                 nextCb();
                 return;
             }
@@ -29,12 +33,29 @@ void AuthFilter::doFilter(const drogon::HttpRequestPtr& req, drogon::FilterCallb
         }
     }
 
-    // 2. Check session cookie.
+    // 2. Check session cookie (SRV-016: persistent DB-backed session) or the
+    // in-process Drogon session, then fall through to 401.
+    if (auto sc = req->getCookie(AuthService::kSessionCookie); !sc.empty()) {
+        try {
+            if (auto user_id = auth_svc_.validate_session(sc)) {
+                auto user = auth_svc_.get_user(*user_id);
+                req->getAttributes()->insert("user_id", *user_id);
+                req->getAttributes()->insert("role", user ? user->role : std::string{"viewer"});
+                nextCb();
+                return;
+            }
+        }
+        catch (const AuthError&) {
+        }
+    }
+
+    // 3. In-process Drogon session (same-request convenience path).
     auto session = req->getSession();
     if (session) {
         std::string user_id = session->get<std::string>("user_id");
         if (!user_id.empty()) {
             req->getAttributes()->insert("user_id", user_id);
+            req->getAttributes()->insert("role", session->get<std::string>("role"));
             nextCb();
             return;
         }

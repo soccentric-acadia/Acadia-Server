@@ -9,7 +9,9 @@ namespace acadia::rest
 class AuthController : public drogon::HttpController<AuthController, false>
 {
   public:
-    explicit AuthController(AuthService& svc);
+    // cookie_secure (SRV-017): Secure flag on the session cookie when the
+    // deployment serves HTTPS.
+    AuthController(AuthService& svc, bool cookie_secure = false) : svc_(svc), cookie_secure_(cookie_secure) {}
 
     METHOD_LIST_BEGIN
     // SRV-001: login is the only public auth route; every other auth
@@ -31,6 +33,7 @@ class AuthController : public drogon::HttpController<AuthController, false>
 
   private:
     AuthService& svc_;
+    bool cookie_secure_ = false;
 };
 
 } // namespace acadia::rest
