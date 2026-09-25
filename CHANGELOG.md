@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-25 — Task 012: Live-run view contract fix (VB-5, DSH-001, SRV-141)
+
+- **Parent task:** `soccentric-acadia/Acadia` `tasks/012-live-run-view-contract-fix/`.
+- **User-visible behaviour:** none in the API surface — same route, method,
+  and event names. The one-time initial `state` SSE event on
+  `GET /api/v1/runs/{id}/events` now carries the full run row (via the
+  existing `run_to_json`) instead of just `{run_id, status}`, so the
+  Dashboard's live-run view has enough to render immediately on connect.
+- **Key files:** `src/rest_api/controllers/RunsController.cc`.
+- **Validation:** no build toolchain available in this session; validated by
+  pattern-matching against the identical `Json::StreamWriterBuilder` usage
+  already in the same function — see the parent task's `validation.md`.
+
 ## 2026-09-25 — Task 011: Ship the module registry, fail fast when it's missing (VB-4, SRV-106)
 
 - **Parent task:** `soccentric-acadia/Acadia` `tasks/011-server-module-registry-deployment/`.
