@@ -35,6 +35,8 @@ std::vector<std::string> ClientRegistry::connected() const
 
 bool ClientRegistry::SendControl(const std::string& board_id, acadia::stream::ServerMessage msg)
 {
+    // mu_ is held across the Write call itself (see the header comment on
+    // this method) — this is the single serialization point for the stream.
     std::lock_guard<std::mutex> lk(mu_);
     auto it = streams_.find(board_id);
     if (it == streams_.end()) {

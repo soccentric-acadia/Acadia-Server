@@ -93,12 +93,23 @@ int main()
     }
 
     // --- Module Registry ---
+    // SRV-106: a missing registry used to be a warning, and module
+    // validation then silently accepted nothing/everything for every run.
+    // ACADIA_REGISTRY_PATH ships set in the production image and compose
+    // (VB-1/V-D05); a deployment that still can't find the file is
+    // misconfigured and must fail loudly, the same way DB init/migration
+    // failures above do. An operator who deliberately wants to run with no
+    // registry can still do so by setting ACADIA_REGISTRY_PATH="".
     acadia::ModuleRegistry registry;
-    if (!settings.registry_path.empty() && std::filesystem::exists(settings.registry_path)) {
+    if (!settings.registry_path.empty()) {
+        if (!std::filesystem::exists(settings.registry_path)) {
+            spdlog::critical("Module registry not found at '{}' (set ACADIA_REGISTRY_PATH=\"\" to run with no registry)", settings.registry_path);
+            return 1;
+        }
         registry.load(settings.registry_path);
         spdlog::info("Module registry loaded: {} modules", registry.size());
     } else {
-        spdlog::warn("No module registry found at '{}'", settings.registry_path);
+        spdlog::warn("ACADIA_REGISTRY_PATH is empty — running with no module registry");
     }
 
     // --- Services ---

@@ -12,10 +12,10 @@ class NotificationsController : public drogon::HttpController<NotificationsContr
     explicit NotificationsController(NotificationService& svc);
 
     METHOD_LIST_BEGIN
-    ADD_METHOD_TO(NotificationsController::list, "/api/v1/notifications", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(NotificationsController::mark_read, "/api/v1/notifications/{id}/read", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(NotificationsController::mark_all, "/api/v1/notifications/read-all", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(NotificationsController::unread_count, "/api/v1/notifications/count", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(NotificationsController::list, "/api/v1/notifications", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(NotificationsController::mark_read, "/api/v1/notifications/{id}/read", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(NotificationsController::mark_all, "/api/v1/notifications/read-all", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(NotificationsController::unread_count, "/api/v1/notifications/count", "acadia::rest::AuthFilter", drogon::Get);
     METHOD_LIST_END
 
     void list(const drogon::HttpRequestPtr&, std::function<void(const drogon::HttpResponsePtr&)>&&);

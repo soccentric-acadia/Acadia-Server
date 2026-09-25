@@ -68,6 +68,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /build/build/acadia-server /usr/local/bin/acadia-server
 
+# VB-1/V-D05/SRV-106: ship the module registry so /api/v1/modules is not
+# empty and module validation is not a no-op. See protos/registry/modules.yaml
+# for provenance; ACADIA_REGISTRY_PATH can still be overridden at deploy time.
+COPY protos/registry/modules.yaml /etc/acadia/modules.yaml
+ENV ACADIA_REGISTRY_PATH=/etc/acadia/modules.yaml
+
 RUN useradd --system --no-create-home --uid 10001 acadia
 USER acadia
 

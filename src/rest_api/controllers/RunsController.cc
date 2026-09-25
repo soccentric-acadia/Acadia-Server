@@ -352,7 +352,16 @@ void RunsController::events(const drogon::HttpRequestPtr& /*req*/, std::function
     }
 
     auto run = svc_.get_run(id);
-    std::string initial = "event: state\ndata: {\"type\":\"state\",\"run_id\":\"" + id + "\",\"status\":\"" + run.status + "\"}\n\n";
+    // VB-5/DSH-001/SRV-141: carry the full run (not just id+status) so a
+    // viewer that only ever gets this one "state" event on connect (no
+    // status-change push exists yet — see improvements.md DSH-001) can still
+    // render name/mode/timestamps without a separate REST fetch.
+    Json::Value state_payload = run_to_json(run);
+    state_payload["type"] = "state";
+    Json::StreamWriterBuilder state_wb;
+    state_wb["indentation"] = "";
+    std::string state_json = Json::writeString(state_wb, state_payload);
+    std::string initial = "event: state\ndata: " + state_json + "\n\n";
 
     auto ctx = std::make_shared<RunSseCtx>();
     {

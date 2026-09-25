@@ -12,12 +12,12 @@ class ConfigsController : public drogon::HttpController<ConfigsController, false
     explicit ConfigsController(ConfigService& svc);
 
     METHOD_LIST_BEGIN
-    ADD_METHOD_TO(ConfigsController::list, "/api/v1/configs", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(ConfigsController::create, "/api/v1/configs", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(ConfigsController::get, "/api/v1/configs/{id}", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(ConfigsController::update, "/api/v1/configs/{id}", "AuthFilter", drogon::Put);
-    ADD_METHOD_TO(ConfigsController::remove, "/api/v1/configs/{id}", "AuthFilter", drogon::Delete);
-    ADD_METHOD_TO(ConfigsController::archive, "/api/v1/configs/{id}/archive", "AuthFilter", drogon::Post);
+    ADD_METHOD_TO(ConfigsController::list, "/api/v1/configs", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(ConfigsController::create, "/api/v1/configs", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(ConfigsController::get, "/api/v1/configs/{id}", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(ConfigsController::update, "/api/v1/configs/{id}", "acadia::rest::AuthFilter", drogon::Put);
+    ADD_METHOD_TO(ConfigsController::remove, "/api/v1/configs/{id}", "acadia::rest::AuthFilter", drogon::Delete);
+    ADD_METHOD_TO(ConfigsController::archive, "/api/v1/configs/{id}/archive", "acadia::rest::AuthFilter", drogon::Post);
     METHOD_LIST_END
 
     void list(const drogon::HttpRequestPtr&, std::function<void(const drogon::HttpResponsePtr&)>&&);

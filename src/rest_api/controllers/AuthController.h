@@ -17,11 +17,11 @@ class AuthController : public drogon::HttpController<AuthController, false>
     // SRV-001: login is the only public auth route; every other auth
     // operation requires an authenticated session/token.
     ADD_METHOD_TO(AuthController::login, "/api/v1/auth/login", drogon::Post);
-    ADD_METHOD_TO(AuthController::logout, "/api/v1/auth/logout", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(AuthController::create_token, "/api/v1/auth/tokens", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(AuthController::list_tokens, "/api/v1/auth/tokens", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(AuthController::revoke_token, "/api/v1/auth/tokens/{id}", "AuthFilter", drogon::Delete);
-    ADD_METHOD_TO(AuthController::change_password, "/api/v1/auth/password", "AuthFilter", drogon::Patch);
+    ADD_METHOD_TO(AuthController::logout, "/api/v1/auth/logout", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(AuthController::create_token, "/api/v1/auth/tokens", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(AuthController::list_tokens, "/api/v1/auth/tokens", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(AuthController::revoke_token, "/api/v1/auth/tokens/{id}", "acadia::rest::AuthFilter", drogon::Delete);
+    ADD_METHOD_TO(AuthController::change_password, "/api/v1/auth/password", "acadia::rest::AuthFilter", drogon::Patch);
     METHOD_LIST_END
 
     void login(const drogon::HttpRequestPtr&, std::function<void(const drogon::HttpResponsePtr&)>&&);

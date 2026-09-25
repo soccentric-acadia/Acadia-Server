@@ -85,6 +85,10 @@ Settings load_settings()
     s.network.http_listen = env_str("ACADIA_HTTP_LISTEN", "0.0.0.0:8080");
     s.network.metrics_listen = env_str("ACADIA_METRICS_LISTEN", "0.0.0.0:9100");
     s.network.metrics_enabled = !s.network.metrics_listen.empty();
+    // VB-8/SRV-021: all empty (default) keeps plaintext gRPC.
+    s.network.grpc_tls_cert_pem_path = env_str("ACADIA_GRPC_TLS_CERT_PATH", "");
+    s.network.grpc_tls_key_pem_path = env_str("ACADIA_GRPC_TLS_KEY_PATH", "");
+    s.network.grpc_tls_ca_pem_path = env_str("ACADIA_GRPC_TLS_CA_PATH", "");
 
     // Concurrency
     auto hw = std::thread::hardware_concurrency();
@@ -109,6 +113,10 @@ Settings load_settings()
     // stream); when set, every ClientService stream must present it in the
     // `x-acadia-stream-token` metadata key.
     s.auth.stream_token = env_str("ACADIA_STREAM_TOKEN", "");
+    // VB-8/SRV-025: HalService had no auth at all. Empty keeps the bench/CI
+    // default (open); when set, every HalService call must present it in
+    // the `x-acadia-hal-token` metadata key.
+    s.auth.hal_service_token = env_str("ACADIA_HAL_SERVICE_TOKEN", "");
 
     if (s.auth.session_secret.size() < 32) {
         throw std::runtime_error("ACADIA_SESSION_SECRET must be set and at least 32 characters long");
