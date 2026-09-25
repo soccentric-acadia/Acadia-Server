@@ -20,11 +20,11 @@ class AlertsController : public drogon::HttpController<AlertsController, false>
     AlertsController() = default;
 
     METHOD_LIST_BEGIN
-    ADD_METHOD_TO(AlertsController::list, "/api/v1/alerts", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(AlertsController::create, "/api/v1/alerts", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(AlertsController::get, "/api/v1/alerts/{id}", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(AlertsController::update, "/api/v1/alerts/{id}", "AuthFilter", drogon::Put);
-    ADD_METHOD_TO(AlertsController::remove, "/api/v1/alerts/{id}", "AuthFilter", drogon::Delete);
+    ADD_METHOD_TO(AlertsController::list, "/api/v1/alerts", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(AlertsController::create, "/api/v1/alerts", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(AlertsController::get, "/api/v1/alerts/{id}", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(AlertsController::update, "/api/v1/alerts/{id}", "acadia::rest::AuthFilter", drogon::Put);
+    ADD_METHOD_TO(AlertsController::remove, "/api/v1/alerts/{id}", "acadia::rest::AuthFilter", drogon::Delete);
     METHOD_LIST_END
 
     void list(const drogon::HttpRequestPtr&, std::function<void(const drogon::HttpResponsePtr&)>&&);

@@ -12,13 +12,13 @@ class TemplatesController : public drogon::HttpController<TemplatesController, f
     explicit TemplatesController(TemplateService& svc);
 
     METHOD_LIST_BEGIN
-    ADD_METHOD_TO(TemplatesController::list, "/api/v1/templates", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(TemplatesController::create, "/api/v1/templates", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(TemplatesController::get, "/api/v1/templates/{id}", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(TemplatesController::update, "/api/v1/templates/{id}", "AuthFilter", drogon::Put);
-    ADD_METHOD_TO(TemplatesController::remove, "/api/v1/templates/{id}", "AuthFilter", drogon::Delete);
-    ADD_METHOD_TO(TemplatesController::archive, "/api/v1/templates/{id}/archive", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(TemplatesController::instantiate, "/api/v1/templates/{id}/instantiate", "AuthFilter", drogon::Post);
+    ADD_METHOD_TO(TemplatesController::list, "/api/v1/templates", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(TemplatesController::create, "/api/v1/templates", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(TemplatesController::get, "/api/v1/templates/{id}", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(TemplatesController::update, "/api/v1/templates/{id}", "acadia::rest::AuthFilter", drogon::Put);
+    ADD_METHOD_TO(TemplatesController::remove, "/api/v1/templates/{id}", "acadia::rest::AuthFilter", drogon::Delete);
+    ADD_METHOD_TO(TemplatesController::archive, "/api/v1/templates/{id}/archive", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(TemplatesController::instantiate, "/api/v1/templates/{id}/instantiate", "acadia::rest::AuthFilter", drogon::Post);
     METHOD_LIST_END
 
     void list(const drogon::HttpRequestPtr&, std::function<void(const drogon::HttpResponsePtr&)>&&);

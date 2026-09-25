@@ -13,8 +13,8 @@ class SettingsController : public drogon::HttpController<SettingsController, fal
 {
   public:
     METHOD_LIST_BEGIN
-    ADD_METHOD_TO(SettingsController::get_retention, "/api/v1/settings/retention", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(SettingsController::put_retention, "/api/v1/settings/retention", "AuthFilter", drogon::Put);
+    ADD_METHOD_TO(SettingsController::get_retention, "/api/v1/settings/retention", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(SettingsController::put_retention, "/api/v1/settings/retention", "acadia::rest::AuthFilter", drogon::Put);
     METHOD_LIST_END
 
     void get_retention(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& cb);

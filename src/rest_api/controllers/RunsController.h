@@ -13,19 +13,19 @@ class RunsController : public drogon::HttpController<RunsController, false>
     explicit RunsController(RunService& svc, ConfigService& cfg_svc);
 
     METHOD_LIST_BEGIN
-    ADD_METHOD_TO(RunsController::list, "/api/v1/runs", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(RunsController::create, "/api/v1/runs", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(RunsController::get, "/api/v1/runs/{id}", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(RunsController::cancel, "/api/v1/runs/{id}/cancel", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(RunsController::pause, "/api/v1/runs/{id}/pause", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(RunsController::resume, "/api/v1/runs/{id}/resume", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(RunsController::results, "/api/v1/runs/{id}/results", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(RunsController::events, "/api/v1/runs/{id}/events", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(RunsController::remove, "/api/v1/runs/{id}", "AuthFilter", drogon::Delete);
-    ADD_METHOD_TO(RunsController::baseline, "/api/v1/runs/{id}/baseline", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(RunsController::rerun, "/api/v1/runs/{id}/rerun", "AuthFilter", drogon::Post);
-    ADD_METHOD_TO(RunsController::export_run, "/api/v1/runs/{id}/export", "AuthFilter", drogon::Get);
-    ADD_METHOD_TO(RunsController::report, "/api/v1/runs/{id}/report", "AuthFilter", drogon::Get);
+    ADD_METHOD_TO(RunsController::list, "/api/v1/runs", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(RunsController::create, "/api/v1/runs", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(RunsController::get, "/api/v1/runs/{id}", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(RunsController::cancel, "/api/v1/runs/{id}/cancel", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(RunsController::pause, "/api/v1/runs/{id}/pause", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(RunsController::resume, "/api/v1/runs/{id}/resume", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(RunsController::results, "/api/v1/runs/{id}/results", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(RunsController::events, "/api/v1/runs/{id}/events", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(RunsController::remove, "/api/v1/runs/{id}", "acadia::rest::AuthFilter", drogon::Delete);
+    ADD_METHOD_TO(RunsController::baseline, "/api/v1/runs/{id}/baseline", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(RunsController::rerun, "/api/v1/runs/{id}/rerun", "acadia::rest::AuthFilter", drogon::Post);
+    ADD_METHOD_TO(RunsController::export_run, "/api/v1/runs/{id}/export", "acadia::rest::AuthFilter", drogon::Get);
+    ADD_METHOD_TO(RunsController::report, "/api/v1/runs/{id}/report", "acadia::rest::AuthFilter", drogon::Get);
     METHOD_LIST_END
 
     void list(const drogon::HttpRequestPtr&, std::function<void(const drogon::HttpResponsePtr&)>&&);

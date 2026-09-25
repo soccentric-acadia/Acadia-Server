@@ -27,6 +27,14 @@ struct NetworkSettings
     std::string http_listen = "0.0.0.0:8080";
     std::string metrics_listen = "0.0.0.0:9100";
     bool metrics_enabled = true;
+
+    // VB-8/SRV-021: gRPC was InsecureServerCredentials only — the Client can
+    // do TLS, but the Server never could. All three empty (the default)
+    // keeps plaintext (dev/bench/CI); cert+key set enables TLS; ca_pem set
+    // in addition requires and verifies a client certificate (mTLS).
+    std::string grpc_tls_cert_pem_path;
+    std::string grpc_tls_key_pem_path;
+    std::string grpc_tls_ca_pem_path; // empty = no client-cert requirement
 };
 
 struct ConcurrencySettings
@@ -51,6 +59,11 @@ struct AuthSettings
     // X2-003: shared token required on ClientService stream connects.
     // Empty = open stream (dev/bench only); production MUST set a token.
     std::string stream_token;
+    // VB-8/SRV-025: shared token required on HalService calls (this is the
+    // RPC surface PySDK/direct HAL clients use). Empty = open (dev/bench
+    // only); production MUST set a token. Independent from stream_token —
+    // different callers, no reason to force the same secret on both.
+    std::string hal_service_token;
 };
 
 struct SmtpSettings

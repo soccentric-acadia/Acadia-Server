@@ -21,7 +21,7 @@ class BackupController : public drogon::HttpController<BackupController, false>
     METHOD_LIST_BEGIN
     // SRV-003: admin-only; the dump is written to disk on the server, never
     // streamed back to the caller.
-    ADD_METHOD_TO(BackupController::backup, "/api/v1/backup", "AuthFilter", drogon::Post);
+    ADD_METHOD_TO(BackupController::backup, "/api/v1/backup", "acadia::rest::AuthFilter", drogon::Post);
     METHOD_LIST_END
 
     // POST /api/v1/backup — triggers pg_dump asynchronously on a worker

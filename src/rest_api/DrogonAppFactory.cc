@@ -49,7 +49,19 @@ void configure_drogon_app(const Settings& settings, AuthService& auth_svc, RunSe
 
     // SRV-002: Drogon cannot auto-instantiate AuthFilter by name (it needs an
     // AuthService&). Register the instance here so every route that lists
-    // "AuthFilter" resolves against this instance.
+    // "acadia::rest::AuthFilter" resolves against this instance.
+    //
+    // SRV-153: this used to register correctly but every route referenced
+    // the filter by the *unqualified* string "AuthFilter". Drogon's
+    // DrObject<T> registers a class under its demangled, fully-qualified
+    // type name — "acadia::rest::AuthFilter" — not the bare class name, so
+    // every route's filter lookup silently failed ("AuthFilter not found",
+    // logged by Drogon itself, easy to miss among startup logs) and NO
+    // route in this file actually enforced authentication at runtime,
+    // despite SRV-001/SRV-002 being recorded as fixed and despite this
+    // exact registerFilter() call being correct. Verified live: a fresh
+    // server, no credentials, `curl .../api/v1/runs` returned 200. Fixed by
+    // qualifying every route's filter string to match the registered name.
     app.registerFilter(std::make_shared<AuthFilter>(auth_svc));
 
     // SRV-017: Secure session cookies when the deployment fronts HTTPS.

@@ -1,5 +1,41 @@
 # Changelog
 
+## 2026-09-25 — Task 017: Transport security (VB-8) + a critical REST auth bypass (SRV-153)
+
+- **Parent task:** `soccentric-acadia/Acadia` `tasks/017-transport-security/`.
+- **User-visible behaviour:**
+  - gRPC server can now be configured with TLS (`ACADIA_GRPC_TLS_CERT_PATH`/
+    `_KEY_PATH`) or mTLS (add `ACADIA_GRPC_TLS_CA_PATH`); unset keeps the
+    existing plaintext default (SRV-021).
+  - `HalServiceImpl`'s 8 RPCs now reject calls that don't present the
+    configured `ACADIA_HAL_SERVICE_TOKEN` in `x-acadia-hal-token`; unset
+    keeps the existing open default (SRV-025).
+  - **Critical fix (SRV-153):** the REST API's `AuthFilter` has never
+    actually run on any route, in any environment, despite SRV-001/SRV-002
+    being recorded as fixed — every route string referenced the filter by
+    its bare class name (`"AuthFilter"`), but Drogon registers filters by
+    their fully-qualified, namespaced name (`"acadia::rest::AuthFilter"`).
+    Live-verified before/after: `curl` with no credentials against
+    `/api/v1/runs` returned 200 before this fix, 401 after.
+- **Key files:** `src/grpc_server/StreamAuth.h/.cc` (new),
+  `src/grpc_server/HalServiceImpl.h/.cc`,
+  `src/grpc_server/GrpcServerRunner.cc`, `src/config/Settings.h/.cc`,
+  `src/rest_api/DrogonAppFactory.cc`, all 13 `src/rest_api/controllers/*.h`.
+- **Validation:** full rebuild + 92/92 unit tests (incl. new
+  `StreamAuthSharedTest`, 4 tests); live smoke test against a real Postgres
+  instance and a running binary, including the before/after `curl` check
+  above and a TLS-enabled gRPC listener start-up log confirmation.
+- **Compatibility/rollout:** all new settings default to today's behavior
+  (plaintext gRPC, open HalService) — opt-in only. The SRV-153 fix is a
+  behavior change the moment it ships: any deployment relying (even
+  accidentally) on the REST API being open will now see 401s — this is the
+  intended, correct behavior.
+- **Known limitations:** mTLS and a live authenticated HalService RPC call
+  were not exercised end-to-end in this pass (see
+  `tasks/017-transport-security/validation.md`). A DB-connection-pool
+  robustness issue unrelated to this task's code was found and logged as
+  `improvements.md` SRV-154 (not blocking).
+
 ## 2026-09-25 — Task 016: Ingest correctness fixes (VB-6) + a severe data-loss bug
 
 - **Parent task:** `soccentric-acadia/Acadia` `tasks/016-ingest-correctness-fixes/`.

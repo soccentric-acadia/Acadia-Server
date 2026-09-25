@@ -1,4 +1,5 @@
 #include "grpc_server/HalServiceImpl.h"
+#include "grpc_server/StreamAuth.h"
 #include "grpc_server/StreamBackpressure.h"
 #include "util/ResultConvert.h"
 #include "util/Time.h"
@@ -12,6 +13,7 @@
 #include <spdlog/spdlog.h>
 
 #include <chrono>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -21,6 +23,22 @@ namespace acadia::grpc
 HalServiceImpl::HalServiceImpl(RunService& run_svc, LogService& log_svc, ModuleService& mod_svc, const Settings& settings)
     : run_svc_(run_svc), log_svc_(log_svc), mod_svc_(mod_svc), settings_(settings)
 {
+}
+
+::grpc::Status HalServiceImpl::check_auth(::grpc::ServerContext* ctx)
+{
+    if (settings_.auth.hal_service_token.empty()) {
+        static std::once_flag open_warn;
+        std::call_once(open_warn, [] {
+            spdlog::warn("ACADIA_HAL_SERVICE_TOKEN not set: HalService calls are UNAUTHENTICATED "
+                         "(dev/bench mode — set it in production)");
+        });
+        return ::grpc::Status::OK;
+    }
+    auto status = verify_token_auth(ctx->client_metadata(), settings_.auth.hal_service_token, "x-acadia-hal-token");
+    if (!status.ok())
+        spdlog::warn("hal_svc: auth rejected: {}", status.error_message());
+    return status;
 }
 
 ::grpc::Status HalServiceImpl::validate_module(const std::string& module_id)
@@ -76,6 +94,8 @@ void HalServiceImpl::persist_result(const std::string& run_id, const hal::common
 
 ::grpc::Status HalServiceImpl::RunSingleShot(::grpc::ServerContext* ctx, const hal::SingleShotRequest* req, hal::common::ResultEnvelope* resp)
 {
+    if (auto auth = check_auth(ctx); !auth.ok())
+        return auth;
 
     auto status = validate_module(req->module_id());
     if (!status.ok())
@@ -195,6 +215,8 @@ void HalServiceImpl::run_streaming(::grpc::ServerContext* ctx, const std::string
 ::grpc::Status HalServiceImpl::StartLongTerm(::grpc::ServerContext* ctx, const hal::LongTermRequest* req,
                                              ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer)
 {
+    if (auto auth = check_auth(ctx); !auth.ok())
+        return auth;
     if (auto st = validate_module(req->module_id()); !st.ok())
         return st;
     run_streaming(ctx, req->module_id(), "long_term", hal::common::LONG_TERM, req->common(), writer);
@@ -204,6 +226,8 @@ void HalServiceImpl::run_streaming(::grpc::ServerContext* ctx, const std::string
 ::grpc::Status HalServiceImpl::StartMonitoring(::grpc::ServerContext* ctx, const hal::MonitoringRequest* req,
                                                ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer)
 {
+    if (auto auth = check_auth(ctx); !auth.ok())
+        return auth;
     if (auto st = validate_module(req->module_id()); !st.ok())
         return st;
     run_streaming(ctx, req->module_id(), "monitoring", hal::common::MONITORING, req->common(), writer);
@@ -213,14 +237,18 @@ void HalServiceImpl::run_streaming(::grpc::ServerContext* ctx, const std::string
 ::grpc::Status HalServiceImpl::StartEventBased(::grpc::ServerContext* ctx, const hal::EventBasedRequest* req,
                                                ::grpc::ServerWriter<hal::common::ResultEnvelope>* writer)
 {
+    if (auto auth = check_auth(ctx); !auth.ok())
+        return auth;
     if (auto st = validate_module(req->module_id()); !st.ok())
         return st;
     run_streaming(ctx, req->module_id(), "event_based", hal::common::EVENT_BASED, req->common(), writer);
     return ::grpc::Status::OK;
 }
 
-::grpc::Status HalServiceImpl::Pause(::grpc::ServerContext* /*ctx*/, const hal::PauseRequest* req, hal::PauseResponse* resp)
+::grpc::Status HalServiceImpl::Pause(::grpc::ServerContext* ctx, const hal::PauseRequest* req, hal::PauseResponse* resp)
 {
+    if (auto auth = check_auth(ctx); !auth.ok())
+        return auth;
 
     spdlog::info("grpc: Pause session_id={}", req->session_id());
     run_svc_.pause_run(req->session_id(), "");
@@ -228,8 +256,10 @@ void HalServiceImpl::run_streaming(::grpc::ServerContext* ctx, const std::string
     return ::grpc::Status::OK;
 }
 
-::grpc::Status HalServiceImpl::Resume(::grpc::ServerContext* /*ctx*/, const hal::ResumeRequest* req, hal::ResumeResponse* resp)
+::grpc::Status HalServiceImpl::Resume(::grpc::ServerContext* ctx, const hal::ResumeRequest* req, hal::ResumeResponse* resp)
 {
+    if (auto auth = check_auth(ctx); !auth.ok())
+        return auth;
 
     spdlog::info("grpc: Resume session_id={}", req->session_id());
     run_svc_.resume_run(req->session_id(), "");
@@ -237,8 +267,10 @@ void HalServiceImpl::run_streaming(::grpc::ServerContext* ctx, const std::string
     return ::grpc::Status::OK;
 }
 
-::grpc::Status HalServiceImpl::Stop(::grpc::ServerContext* /*ctx*/, const hal::StopRequest* req, hal::StopResponse* resp)
+::grpc::Status HalServiceImpl::Stop(::grpc::ServerContext* ctx, const hal::StopRequest* req, hal::StopResponse* resp)
 {
+    if (auto auth = check_auth(ctx); !auth.ok())
+        return auth;
 
     spdlog::info("grpc: Stop session_id={}", req->session_id());
     run_svc_.cancel_run(req->session_id(), "");
@@ -246,8 +278,10 @@ void HalServiceImpl::run_streaming(::grpc::ServerContext* ctx, const std::string
     return ::grpc::Status::OK;
 }
 
-::grpc::Status HalServiceImpl::ListModules(::grpc::ServerContext* /*ctx*/, const hal::ListModulesRequest* /*req*/, hal::ListModulesResponse* resp)
+::grpc::Status HalServiceImpl::ListModules(::grpc::ServerContext* ctx, const hal::ListModulesRequest* /*req*/, hal::ListModulesResponse* resp)
 {
+    if (auto auth = check_auth(ctx); !auth.ok())
+        return auth;
 
     for (const auto& m : mod_svc_.list_all()) {
         auto* entry = resp->add_modules();

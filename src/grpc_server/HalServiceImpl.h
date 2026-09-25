@@ -58,6 +58,10 @@ class HalServiceImpl final : public hal::HalService::Service
     // Validate module_id against registry.  Returns non-OK status if invalid.
     ::grpc::Status validate_module(const std::string& module_id);
 
+    // VB-8/SRV-025: this service had no auth of any kind. Checked at the top
+    // of every public RPC method.
+    ::grpc::Status check_auth(::grpc::ServerContext* ctx);
+
     // Persist a ResultEnvelope and broadcast to REST subscribers.
     void persist_result(const std::string& run_id, const hal::common::ResultEnvelope& env);
 
