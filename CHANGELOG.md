@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-09-25 — Task 016: Ingest correctness fixes (VB-6) + a severe data-loss bug
+
+- **Parent task:** `soccentric-acadia/Acadia` `tasks/016-ingest-correctness-fixes/`.
+- **User-visible behaviour:** result ingest is now correct. Fixed:
+  - **SRV-045** (ack race): each sample's pending-ack slot is registered
+    under `ack_mu` before it is enqueued, not after.
+  - **SRV-046** (empty batches never acked): `handle_result_batch` acks
+    immediately when a batch ends up with zero enqueued samples.
+  - **SRV-047** (failed ingest still acked): a failed
+    `ingest_test_result` now withholds the ack instead of acking data that
+    was never persisted.
+  - **SRV-049** (concurrent `stream->Write`): every ack now routes through a
+    new `send_ack` helper, serializing with `ClientRegistry::SendControl`.
+  - **SRV-050** (wrong/early finalization): the terminal batch's actual
+    `RunState` is captured and applied only after the writer thread drains,
+    via a new, unit-tested `terminal_run_state_to_status` function.
+  - **New, not previously tracked (`improvements.md` SRV-151):** the
+    pre-existing duplicate-batch check was keyed identically for every
+    sample in one network batch — only the first sample of any
+    multi-sample batch was ever persisted. Moved the dedupe decision to
+    once per network batch, before enqueueing.
+  - **New, unrelated to VB-6 (`improvements.md` SRV-152):** fixed a
+    pre-existing compile break — `StateReport::spool_pressure()` doesn't
+    exist in `client_service.proto`.
+- **Key files:** `src/grpc_server/ClientServiceImpl.{h,cc}`,
+  `src/grpc_server/ClientRegistry.{h,cc}` (doc comment only),
+  `tests/unit/grpc/ClientServiceLogicTest.cc` (new).
+- **Validation:** real build + test run — `ninja -C build` clean, 88/88 unit
+  tests passing (83 pre-existing + 5 new). First Acadia-Server change in
+  this pass validated with an actual toolchain rather than diff review.
+
 ## 2026-09-25 — Task 012: Live-run view contract fix (VB-5, DSH-001, SRV-141)
 
 - **Parent task:** `soccentric-acadia/Acadia` `tasks/012-live-run-view-contract-fix/`.
