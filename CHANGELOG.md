@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-09-25 — Task 011: Ship the module registry, fail fast when it's missing (VB-4, SRV-106)
+
+- **Parent task:** `soccentric-acadia/Acadia` `tasks/011-server-module-registry-deployment/`.
+- **User-visible behaviour:** `/api/v1/modules` is no longer permanently
+  empty — the production image now ships a vendored HAL module registry.
+  A deployment with a misconfigured `ACADIA_REGISTRY_PATH` now fails to
+  start (loudly) instead of silently running with no module validation.
+- **Key files:**
+  - `protos/registry/modules.yaml` (new) — vendored from
+    `Acadia-HAL@7184d94` (`master`); see the file's own header for
+    provenance and the drift caveat.
+  - `docker/Dockerfile.production` — copies the registry to
+    `/etc/acadia/modules.yaml`, sets `ACADIA_REGISTRY_PATH` there by
+    default.
+  - `src/main.cpp` — missing-but-configured registry path is now a fatal
+    startup error (`spdlog::critical` + exit 1), matching the existing
+    DB-init/migration failure pattern. `ACADIA_REGISTRY_PATH=""` remains a
+    documented way to opt into running without a registry.
+- **Validation:** diff-level review only; no build toolchain available in
+  this session for this Drogon/gRPC/Postgres service — see the parent
+  task's `validation.md`.
+
 ## 2026-09-21 — Root-agent feature workflow guard (task 006)
 
 - Added a canonical instruction requiring leaf-started agents to refuse feature
